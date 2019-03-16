@@ -1,0 +1,527 @@
+
+G4Isotope: Al27
+	N = 27
+	Z = 13
+	A = 26.9815 [amu]
+
+G4Element: Al
+	Isotopes and Fractions:
+		Al27: 1
+
+G4Material: G4_Al
+	State: solid
+	D = 2.699 [g/cm3]
+	MEE = 166 [eV]
+	Elements and Fractions:
+		Al: 1
+
+G4Isotope: W180
+	N = 180
+	Z = 74
+	A = 179.947 [amu]
+
+G4Isotope: W182
+	N = 182
+	Z = 74
+	A = 181.948 [amu]
+
+G4Isotope: W183
+	N = 183
+	Z = 74
+	A = 182.95 [amu]
+
+G4Isotope: W184
+	N = 184
+	Z = 74
+	A = 183.951 [amu]
+
+G4Isotope: W186
+	N = 186
+	Z = 74
+	A = 185.954 [amu]
+
+G4Element: W
+	Isotopes and Fractions:
+		W180: 0.0012
+		W182: 0.265
+		W183: 0.1431
+		W184: 0.3064
+		W186: 0.2843
+
+G4Material: G4_W
+	State: solid
+	MEE = 727 [eV]
+	D = 19.3 [g/cm3]
+	Elements and Fractions:
+		W: 1
+
+G4Isotope: C12
+	N = 12
+	Z = 6
+	A = 12 [amu]
+
+G4Isotope: C13
+	N = 13
+	Z = 6
+	A = 13.0034 [amu]
+
+G4Element: C
+	Isotopes and Fractions:
+		C12: 0.9893
+		C13: 0.0107
+
+G4Isotope: N14
+	N = 14
+	Z = 7
+	A = 14.0031 [amu]
+
+G4Isotope: N15
+	N = 15
+	Z = 7
+	A = 15.0001 [amu]
+
+G4Element: N
+	Isotopes and Fractions:
+		N14: 0.99632
+		N15: 0.00368
+
+G4Isotope: O16
+	N = 16
+	Z = 8
+	A = 15.9949 [amu]
+
+G4Isotope: O17
+	N = 17
+	Z = 8
+	A = 16.9991 [amu]
+
+G4Isotope: O18
+	N = 18
+	Z = 8
+	A = 17.9992 [amu]
+
+G4Element: O
+	Isotopes and Fractions:
+		O16: 0.99757
+		O17: 0.00038
+		O18: 0.00205
+
+G4Isotope: Ar36
+	N = 36
+	Z = 18
+	A = 35.9675 [amu]
+
+G4Isotope: Ar38
+	N = 38
+	Z = 18
+	A = 37.9627 [amu]
+
+G4Isotope: Ar40
+	N = 40
+	Z = 18
+	A = 39.9624 [amu]
+
+G4Element: Ar
+	Isotopes and Fractions:
+		Ar36: 0.003365
+		Ar38: 0.000632
+		Ar40: 0.996003
+
+G4Material: Beam_gas
+	State: gas
+	T = 293.15 [K]
+	P = 1.01325e-06 [pascal]
+	MEE = 85.6688774865423 [eV]
+	D = 1.20487895275456e-14 [g/cm3]
+	Elements and Fractions:
+		C: 0.000124000124000124
+		N: 0.755267755267755
+		O: 0.231781231781232
+		Ar: 0.0128270128270128
+
+G4Isotope: Fe54
+	N = 54
+	Z = 26
+	A = 53.9396 [amu]
+
+G4Isotope: Fe56
+	N = 56
+	Z = 26
+	A = 55.9349 [amu]
+
+G4Isotope: Fe57
+	N = 57
+	Z = 26
+	A = 56.9354 [amu]
+
+G4Isotope: Fe58
+	N = 58
+	Z = 26
+	A = 57.9333 [amu]
+
+G4Element: Fe
+	Isotopes and Fractions:
+		Fe54: 0.05845
+		Fe56: 0.91754
+		Fe57: 0.02119
+		Fe58: 0.00282
+
+G4Isotope: Cr50
+	N = 50
+	Z = 24
+	A = 49.946 [amu]
+
+G4Isotope: Cr52
+	N = 52
+	Z = 24
+	A = 51.9405 [amu]
+
+G4Isotope: Cr53
+	N = 53
+	Z = 24
+	A = 52.9407 [amu]
+
+G4Isotope: Cr54
+	N = 54
+	Z = 24
+	A = 53.9389 [amu]
+
+G4Element: Cr
+	Isotopes and Fractions:
+		Cr50: 0.04345
+		Cr52: 0.83789
+		Cr53: 0.09501
+		Cr54: 0.02365
+
+G4Isotope: Ni58
+	N = 58
+	Z = 28
+	A = 57.9353 [amu]
+
+G4Isotope: Ni60
+	N = 60
+	Z = 28
+	A = 59.9308 [amu]
+
+G4Isotope: Ni61
+	N = 61
+	Z = 28
+	A = 60.9311 [amu]
+
+G4Isotope: Ni62
+	N = 62
+	Z = 28
+	A = 61.9283 [amu]
+
+G4Isotope: Ni64
+	N = 64
+	Z = 28
+	A = 63.928 [amu]
+
+G4Element: Ni
+	Isotopes and Fractions:
+		Ni58: 0.680769
+		Ni60: 0.262231
+		Ni61: 0.011399
+		Ni62: 0.036345
+		Ni64: 0.009256
+
+G4Isotope: Mo92
+	N = 92
+	Z = 42
+	A = 91.9068 [amu]
+
+G4Isotope: Mo94
+	N = 94
+	Z = 42
+	A = 93.9051 [amu]
+
+G4Isotope: Mo95
+	N = 95
+	Z = 42
+	A = 94.9058 [amu]
+
+G4Isotope: Mo96
+	N = 96
+	Z = 42
+	A = 95.9047 [amu]
+
+G4Isotope: Mo97
+	N = 97
+	Z = 42
+	A = 96.906 [amu]
+
+G4Isotope: Mo98
+	N = 98
+	Z = 42
+	A = 97.9054 [amu]
+
+G4Isotope: Mo100
+	N = 100
+	Z = 42
+	A = 99.9075 [amu]
+
+G4Element: Mo
+	Isotopes and Fractions:
+		Mo92: 0.1484
+		Mo94: 0.0925
+		Mo95: 0.1592
+		Mo96: 0.1668
+		Mo97: 0.0955
+		Mo98: 0.2413
+		Mo100: 0.0963
+
+G4Isotope: Mn55
+	N = 55
+	Z = 25
+	A = 54.938 [amu]
+
+G4Element: Mn
+	Isotopes and Fractions:
+		Mn55: 1
+
+G4Isotope: Si28
+	N = 28
+	Z = 14
+	A = 27.9769 [amu]
+
+G4Isotope: Si29
+	N = 29
+	Z = 14
+	A = 28.9765 [amu]
+
+G4Isotope: Si30
+	N = 30
+	Z = 14
+	A = 29.9738 [amu]
+
+G4Element: Si
+	Isotopes and Fractions:
+		Si28: 0.922296077703922
+		Si29: 0.0468319531680468
+		Si30: 0.0308719691280309
+
+G4Isotope: P31
+	N = 31
+	Z = 15
+	A = 30.9738 [amu]
+
+G4Element: P
+	Isotopes and Fractions:
+		P31: 1
+
+G4Isotope: S32
+	N = 32
+	Z = 16
+	A = 31.9721 [amu]
+
+G4Isotope: S33
+	N = 33
+	Z = 16
+	A = 32.9715 [amu]
+
+G4Isotope: S34
+	N = 34
+	Z = 16
+	A = 33.9679 [amu]
+
+G4Isotope: S36
+	N = 36
+	Z = 16
+	A = 35.9671 [amu]
+
+G4Element: S
+	Isotopes and Fractions:
+		S32: 0.9493
+		S33: 0.0076
+		S34: 0.0429
+		S36: 0.0002
+
+G4Material: SST316
+	State: solid
+	MEE = 284.207568188367 [eV]
+	D = 8 [g/cm3]
+	Elements and Fractions:
+		Fe: 0.65345
+		Cr: 0.17
+		Ni: 0.12
+		Mo: 0.025
+		Mn: 0.02
+		Si: 0.01
+		C: 0.0008
+		P: 0.00045
+		S: 0.0003
+
+G4Isotope: Cu63
+	N = 63
+	Z = 29
+	A = 62.9296 [amu]
+
+G4Isotope: Cu65
+	N = 65
+	Z = 29
+	A = 64.9278 [amu]
+
+G4Element: Cu
+	Isotopes and Fractions:
+		Cu63: 0.6917
+		Cu65: 0.3083
+
+G4Material: G4_Cu
+	State: solid
+	MEE = 322 [eV]
+	D = 8.96 [g/cm3]
+	Elements and Fractions:
+		Cu: 1
+
+G4Material: WC_gas
+	State: gas
+	T = 293.15 [K]
+	MEE = 172.368080151286 [eV]
+	D = 0.0018 [g/cm3]
+	Elements and Fractions:
+		Ar: 0.89094103998905
+		O: 0.0792954338046469
+		C: 0.0297635262063033
+
+G4Isotope: H1
+	N = 1
+	Z = 1
+	A = 1.00782503081372 [amu]
+
+G4Isotope: H2
+	N = 2
+	Z = 1
+	A = 2.01410199966617 [amu]
+
+G4Element: H
+	Isotopes and Fractions:
+		H1: 0.999885
+		H2: 0.000115
+
+G4Material: NemaG10
+	State: solid
+	MEE = 96.3605255313062 [eV]
+	D = 1.7 [g/cm3]
+	Elements and Fractions:
+		Si: 0.2832894114898
+		O: 0.322763009541678
+		C: 0.363447105286765
+		H: 0.0305004736817568
+
+G4Isotope: Pb204
+	N = 204
+	Z = 82
+	A = 203.973 [amu]
+
+G4Isotope: Pb206
+	N = 206
+	Z = 82
+	A = 205.974 [amu]
+
+G4Isotope: Pb207
+	N = 207
+	Z = 82
+	A = 206.976 [amu]
+
+G4Isotope: Pb208
+	N = 208
+	Z = 82
+	A = 207.977 [amu]
+
+G4Element: Pb
+	Isotopes and Fractions:
+		Pb204: 0.014
+		Pb206: 0.241
+		Pb207: 0.221
+		Pb208: 0.524
+
+G4Material: G4_Pb
+	State: solid
+	MEE = 823 [eV]
+	D = 11.35 [g/cm3]
+	Elements and Fractions:
+		Pb: 1
+
+G4Material: G4_PLASTIC_SC_VINYLTOLUENE
+	State: solid
+	MEE = 64.7 [eV]
+	D = 1.032 [g/cm3]
+	Elements and Fractions:
+		H: 0.085
+		C: 0.915
+
+G4Material: G4_AIR
+	State: gas
+	MEE = 85.7 [eV]
+	D = 0.00120479 [g/cm3]
+	Elements and Fractions:
+		C: 0.000124000124000124
+		N: 0.755267755267755
+		O: 0.231781231781232
+		Ar: 0.0128270128270128
+
+G4Material: GEM_gas
+	State: gas
+	T = 293.15 [K]
+	MEE = 146.476333489127 [eV]
+	D = 0.0017 [g/cm3]
+	Elements and Fractions:
+		Ar: 0.679279550471532
+		O: 0.233191909888263
+		C: 0.0875285396402045
+
+G4Material: MWPC_gas
+	State: gas
+	T = 293.15 [K]
+	MEE = 146.476333489127 [eV]
+	D = 0.0017 [g/cm3]
+	Elements and Fractions:
+		Ar: 0.679279550471532
+		O: 0.233191909888263
+		C: 0.0875285396402045
+
+G4Material: G4_C
+	State: solid
+	MEE = 81 [eV]
+	D = 2 [g/cm3]
+	Elements and Fractions:
+		C: 1
+
+G4Isotope: F19
+	N = 19
+	Z = 9
+	A = 18.9984 [amu]
+
+G4Element: F
+	Isotopes and Fractions:
+		F19: 1
+
+G4Material: PbF2
+	State: solid
+	MEE = 577.501978093713 [eV]
+	D = 7.77 [g/cm3]
+	Elements and Fractions:
+		Pb: 0.845046241280058
+		F: 0.154953758719942
+
+G4Material: Vacuum
+	State: gas
+	T = 0.1 [K]
+	P = 1.e-19 [pascal]
+	MEE = 85.6688774865423 [eV]
+	D = 1.e-25 [g/cm3]
+	Elements and Fractions:
+		C: 0.000124000124000124
+		N: 0.755267755267755
+		O: 0.231781231781232
+		Ar: 0.0128270128270128
+
+G4Material: Mylar
+	State: solid
+	MEE = 78.7 [eV]
+	D = 1.4 [g/cm3]
+	Elements and Fractions:
+		H: 0.041959
+		C: 0.625017
+		O: 0.333025

@@ -1,0 +1,214 @@
+This is based on the.cooker 3D Event viewer by Brian Henderson. 
+Modifications by JCB
+
+The original README follows.
+
+The.cooker 3D Event Display
+
+Brian S. Henderson (bhender1@mit.edu)
+Massachusetts Institute of Technology
+Last Updated: December 4, 2012
+
+This is the main Event Display plugin, used for visualizing data and tracks.
+Tracks and hit points for the wire chambers and ToFs are produced and added
+to the common geometry managers in the WC2 and Det_ToF plugins respectively,
+so please see the documentation for the Event Display processes in those
+files.  Tracks from the Geant4e track-fitter are produced by the DrawTrack
+function in TrackFit.cpp, while tracks from Kalman Filter are produced by
+this program (which reads the Kalman Filter plugin output).  LumiGEM hits are
+also produced internally to this program.  Please see descriptions in the
+functions below in the code.
+
+This documentation is also available in a perhaps easier to read format on
+OLYMPUS Wookieepedia:
+
+https.cooker-docu.hiskp.uni-bonn.de/dokuwiki/doku.php?id=plugins:eventdisplay
+
+If you would like anything added for your subsystem, something made more user
+friendly, etc, please send me an e-mail.
+
+PREREQUISITES FOR RUNNING THE EVENT DISPLAY:
+
+To run the Event Display, you must configure ROOT with the "--enable-gdml"
+flag appended when you run the "./configure" script before compiling.
+
+Please note the versions of ROOT more recent than 5.30 have been exhibiting
+some bad behavior with Event Display.  The program may seg fault when two
+element of the plugin try to change the geometry simultaneously, giving a 
+seg fault in ROOT's "ESigHandler".  I am working on a workaround and/or patch
+to ROOT that will help alleviate this, or perhaps it will be fixed in the
+next release of ROOT.  As far as I have tested, the Event Display works with
+minimal fuss with ROOT 5.30/06 (the version installed on ocompile as of
+December 2012).
+
+RECIPES TO RUN FOR THE EVENT DISPLAY:
+
+Run the Event Display with Geant4e tracking:
+      /path/to/bin/visco recipes/EventDisplay.xml /path/to/yourinputROOTfile.root
+
+Run the Event Display with Kalman Filter tracking:
+      /path/to/bin/visco recipes/EventDisplayKF.xml /path/to/yourinputROOTfile.root
+
+The Event Display does not require an output ROOT file, but you may specify
+one after the input file if you desire.
+
+When using the Geant4e tracker, WC tracking may be turned off in the interest
+of speed by using the command line argument:
+
+-c WC2:useTracking:false
+
+NOTE: At this time, only one of the tracking methods may be used since
+      each instantiates Geant4 in a different way, and a workaround to make
+      them work simultaneously has not yet been implemented.  When this is
+      done, I will make it so that both can be used at once with a
+      "push-button" switch in the user interface.
+
+NOTE: Do not alter the Event Display recipes unless you are very confident
+      that you know what you are doing, or after you have consulted with me.
+      The ordering of processes is important to ensure that each plugin has
+      the information it needs when it starts.
+
+EVENT DISPLAY INTERFACE:
+
+The Event Display is fully controllable through a GUI incorporated into the
+Visual Cooker ("visco") framework.  The Event Display tab should be
+automatically opened when you run an Event Display recipe, but you may switch
+to tabs produced by other plugins at any time.  Note that by clicking the
+double vertical bar at the far left hand side, you can detach the Event
+Display into a separate window in order to simultaneously use another tab or
+to make the display truly full screen without the visco control window.
+
+A guide to the various controls implemented for the Event Display can be
+found on the.cooker Wookieepedia version of this documentation:
+
+https.cooker-docu.hiskp.uni-bonn.de/dokuwiki/doku.php?id=plugins:eventdisplay
+
+Hits in the various detectors are visualized in the following ways:
+
+   Wire Chambers:
+      Hit Wire:      Entire planar area swept by wire colored red (unless
+                     tri-coloring is on, see below)
+      Tracks:        Drawn as trajectories produced by the tracking codes
+                     (with hits in "sensitive planes" used by the Geant4e
+                     tracker drawn as points along the tracks).  The colors
+                     used for the tracks are as follows:
+                    
+                     Blue:  Protons
+                     Red:   Electrons
+                     Gold:  Positrons
+                     Green: Other or Kalman Filter track (KF tracks currently
+                            don't produce a particle ID)
+
+   ToFs:
+      Hit ToF:       Entire ToF colored red, with a cyan horizontal line with
+                     a central point indicating the vertical position of the
+                     hit determined by the PMT time difference.
+
+   12 Degree Telescopes:
+      LumiGEM Hits:  2D hits are drawn as cyan points, 1D hits are drawn as
+                     cyan lines parallel to the appropriate axis in the GEM
+                     sensitive volumes.
+      MWPC Hits:     NO CURRENT IMPLEMENTATION.  INPUT FROM THE MWPC GROUP
+                     AS TO WHAT THEY WOULD LIKE WOULD BE MUCH APPRECIATED.
+      Tracks:        Same as Wire Chamber tracks; see above.
+
+   SYMB:
+      NO CURRENT IMPLEMENTATION.  INPUT FROM THE SYMB GROUP AS TO WHAT THEY
+      WOULD LIKE WOULD BE MUCH APPRECIATED.
+
+Down the left-hand column, below the.cooker logo (unless it is turned off,
+see the option below) various parameters of the run are listed, including the
+run number, beam species, beam energy, beam current, target flow, and toroid
+current.  These values are updated every event.  In the very near future, I
+will update this to include the trigger fired on each event.
+
+Below the Run/Event Information is an array of buttons which allows you to
+turn each of the different elements of the detector geometry off in the
+visualization.  This is good for making nice pictures that highlight specific
+elements of the detector or for getting stuff you don't need out of the way
+(e.g. the toroid is off by default).  Multi-component detectors have menu
+buttons that allow you to turn off all or certain parts of the detectors.
+
+Additionally, this column of buttons contains two special options for the
+Wire Chambers.  The "WC Hit Tri-Coloring" button activates a feature in which
+hits in the wire chamber are colored based on how many wires in a cell fired.
+The button will change to indicate when this is feature is on.  The various
+colors signify:
+
+   Green:  All three wires in cell hit
+   Blue:   Any two wires in the cell hit
+   Red:    Only one wire in the cell hit
+
+The second button, "WC All Times", causes the display to show wires which
+fired in the event but registered times outside the accepted hit window by
+coloring them violet.  This button also changes to indicated when it is on.
+
+Along the bottom (above the usual visco controls), are several more Event
+Display controls.  The "Change Camera" menu allows you to switch between a
+free perspective view of the detector and preset top and rear orthographic
+views.  Note that the Event Display will remember any zooming, translations,
+rotations, etc. you have done manually for each of these three individual
+views when you switch between them.  You can reset the views to their 
+defaults by choosing "Reset Main Window Cameras" from this menu.
+
+Next to the camera menu, a button labeled "12 Degree Views" opens a new
+window that will eventually contain dedicated top and side orthographic views
+of the 12 degree arms, but this is a work in progress.  Opening it won't hurt
+anything, but it doesn't do much right now.
+
+In the bottom right, is the Event Display image saver.  By entering a
+filename in the text box and pressing return or clicking "Save Image",
+exactly what you see in the main viewer window at that time will be saved to
+the file you specify.  Your filename must include an extension (to tell ROOT
+what format you want), and must be one of the following 6 types supported by
+ROOT: ".png", ".pdf", ".eps", ".jpg", ".gif", or ".gif+", the latter of which
+appends the image to a GIF file to make animated GIFs.  By default, the Event
+Display automatically generates filenames with the run and event number using
+the PNG format, but if you save one image with a different format it will
+recognize this and change the default to the one you used.  By default, the
+image is saved in the directory that the Event Display command was called in,
+but you can always specify a path relative to this location in your filename.
+
+EVENT DISPLAY COMMAND LINE OPTIONS:
+
+The following command line options may be added when calling the Event
+Display by appending these after the ROOT files in the command line call to
+run the Event Display.
+
+CHANGE THE GEOMETRY FILE:
+
+The Event Display by default uses the most recent survey geometry, which are
+the "survey2" family of GDML files (as of December 2012).  A variety of GDML
+files are available in src/gdml of your.cooker repository, including the
+defaults.  Note that due to the different ways ROOT and Geant4 read GDML
+files, slightly different GDML files are produced (from the same source data)
+for each program.  The Event Display with work with any of the files named
+in the format "Root*.gdml" available in the src/gdml directory, but will
+likely fail for other geometries with a segmentation fault when it tries to
+access an unavailable geometry element.  The ROOT geometry files provided
+should suffice for almost all conceivable purposes, but if you must visualize
+a different geometry you can speak to me and I can show you other options or
+build in a workaround if absolutely necessary.
+
+To specify a non-default geometry file, use the command line option:
+
+-c EventDisplay:useGeo:\"filename\"
+
+where filename is the filename WITHOUT the .gdml extension.  By default, the
+program looks in your .cooker/shared/gdml directory, so either put any file
+you are using there or specify a relative path to that in the file name. For
+example, if you wanted the nominal position geometry, you would call:
+
+-c EventDisplay:useGeo:\"Root_nominal\"
+
+SAVE SPACE BY DISABLING LOGO:
+
+By default, the might.cooker logo is displayed in the top-left hand corner
+of the Event Display window to make things look super-awesome when showing
+off our data to your friends, family, and colleagues.  If you have a small
+screen, however, this logo may push some of the option buttons off your
+screen making them inaccessible.  If this happens to you, you can disable the
+logo with the command line option:
+
+-c EventDisplay:noLogo:true
+

@@ -1,0 +1,1165 @@
+
+Logical Volume: Big_TC_Frame_log0
+	Solid: Big_TC_Frame_solid0
+	Material: Vacuum
+	Color: t663675714
+
+Logical Volume: Big_Cell_log0
+	Solid: Big_Cell_solid0
+	Material: G4_Al
+	Color: t663675714
+
+Logical Volume: Big_TC_log0
+	Solid: Big_TC_solid0
+	Material: Vacuum
+	Color: f999999999
+		Daughter (Physical Volume): Big_TC_Frame_phys0
+			Daughter Logical Volume: Big_TC_Frame_log0
+		Daughter (Physical Volume): Big_Cell_phys0
+			Daughter Logical Volume: Big_Cell_log0
+			Daughter Position: Cell_phys0_pos
+
+Logical Volume: Big_Win_log0
+	Solid: Big_Win_1_solid0
+	Material: G4_Al
+	Color: t663675714
+
+Logical Volume: Big_WC_wire0_log0
+	Solid: Big_WC_wire0_solid0
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log0
+	Solid: Big_WC_wire1_solid0
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log0
+	Solid: Big_WC_wire2_solid0
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_log18
+	Solid: Big_WC_wire0_solid18
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log18
+	Solid: Big_WC_wire1_solid18
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log18
+	Solid: Big_WC_wire2_solid18
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_log37
+	Solid: Big_WC_wire0_solid37
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log37
+	Solid: Big_WC_wire1_solid37
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log37
+	Solid: Big_WC_wire2_solid37
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_log63
+	Solid: Big_WC_wire0_solid63
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log63
+	Solid: Big_WC_wire1_solid63
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log63
+	Solid: Big_WC_wire2_solid63
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_log90
+	Solid: Big_WC_wire0_solid90
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log90
+	Solid: Big_WC_wire1_solid90
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log90
+	Solid: Big_WC_wire2_solid90
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_log124
+	Solid: Big_WC_wire0_solid124
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_log124
+	Solid: Big_WC_wire1_solid124
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_log124
+	Solid: Big_WC_wire2_solid124
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_layer_log0
+	Solid: Big_WC_layer_solid0
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys0
+			Daughter Logical Volume: Big_WC_wire0_log0
+			Daughter Position: WC_wire0_phys0_pos
+
+Logical Volume: Big_WC_layer_log1
+	Solid: Big_WC_layer_solid1
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys0
+			Daughter Logical Volume: Big_WC_wire1_log0
+			Daughter Position: WC_wire1_phys0_pos
+
+Logical Volume: Big_WC_layer_log2
+	Solid: Big_WC_layer_solid2
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys0
+			Daughter Logical Volume: Big_WC_wire2_log0
+			Daughter Position: WC_wire2_phys0_pos
+
+Logical Volume: Big_WC_layer_log3
+	Solid: Big_WC_layer_solid3
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys18
+			Daughter Logical Volume: Big_WC_wire0_log18
+			Daughter Position: WC_wire0_phys18_pos
+
+Logical Volume: Big_WC_layer_log4
+	Solid: Big_WC_layer_solid4
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys18
+			Daughter Logical Volume: Big_WC_wire1_log18
+			Daughter Position: WC_wire1_phys18_pos
+
+Logical Volume: Big_WC_layer_log5
+	Solid: Big_WC_layer_solid5
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys18
+			Daughter Logical Volume: Big_WC_wire2_log18
+			Daughter Position: WC_wire2_phys18_pos
+
+Logical Volume: Big_WC_layer_log6
+	Solid: Big_WC_layer_solid6
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys37
+			Daughter Logical Volume: Big_WC_wire0_log37
+			Daughter Position: WC_wire0_phys37_pos
+
+Logical Volume: Big_WC_layer_log7
+	Solid: Big_WC_layer_solid7
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys37
+			Daughter Logical Volume: Big_WC_wire1_log37
+			Daughter Position: WC_wire1_phys37_pos
+
+Logical Volume: Big_WC_layer_log8
+	Solid: Big_WC_layer_solid8
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys37
+			Daughter Logical Volume: Big_WC_wire2_log37
+			Daughter Position: WC_wire2_phys37_pos
+
+Logical Volume: Big_WC_layer_log9
+	Solid: Big_WC_layer_solid9
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys63
+			Daughter Logical Volume: Big_WC_wire0_log63
+			Daughter Position: WC_wire0_phys63_pos
+
+Logical Volume: Big_WC_layer_log10
+	Solid: Big_WC_layer_solid10
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys63
+			Daughter Logical Volume: Big_WC_wire1_log63
+			Daughter Position: WC_wire1_phys63_pos
+
+Logical Volume: Big_WC_layer_log11
+	Solid: Big_WC_layer_solid11
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys63
+			Daughter Logical Volume: Big_WC_wire2_log63
+			Daughter Position: WC_wire2_phys63_pos
+
+Logical Volume: Big_WC_layer_log12
+	Solid: Big_WC_layer_solid12
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys90
+			Daughter Logical Volume: Big_WC_wire0_log90
+			Daughter Position: WC_wire0_phys90_pos
+
+Logical Volume: Big_WC_layer_log13
+	Solid: Big_WC_layer_solid13
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys90
+			Daughter Logical Volume: Big_WC_wire1_log90
+			Daughter Position: WC_wire1_phys90_pos
+
+Logical Volume: Big_WC_layer_log14
+	Solid: Big_WC_layer_solid14
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys90
+			Daughter Logical Volume: Big_WC_wire2_log90
+			Daughter Position: WC_wire2_phys90_pos
+
+Logical Volume: Big_WC_layer_log15
+	Solid: Big_WC_layer_solid15
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_phys124
+			Daughter Logical Volume: Big_WC_wire0_log124
+			Daughter Position: WC_wire0_phys124_pos
+
+Logical Volume: Big_WC_layer_log16
+	Solid: Big_WC_layer_solid16
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_phys124
+			Daughter Logical Volume: Big_WC_wire1_log124
+			Daughter Position: WC_wire1_phys124_pos
+
+Logical Volume: Big_WC_layer_log17
+	Solid: Big_WC_layer_solid17
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_phys124
+			Daughter Logical Volume: Big_WC_wire2_log124
+			Daughter Position: WC_wire2_phys124_pos
+
+Logical Volume: Big_WC_superlayer_log0
+	Solid: Big_WC_superlayer_solid0
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_phys0
+			Daughter Logical Volume: Big_WC_layer_log0
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_phys1
+			Daughter Logical Volume: Big_WC_layer_log1
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_phys2
+			Daughter Logical Volume: Big_WC_layer_log2
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_log1
+	Solid: Big_WC_superlayer_solid1
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_phys3
+			Daughter Logical Volume: Big_WC_layer_log3
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_phys4
+			Daughter Logical Volume: Big_WC_layer_log4
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_phys5
+			Daughter Logical Volume: Big_WC_layer_log5
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_superlayer_log2
+	Solid: Big_WC_superlayer_solid2
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_phys6
+			Daughter Logical Volume: Big_WC_layer_log6
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_phys7
+			Daughter Logical Volume: Big_WC_layer_log7
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_phys8
+			Daughter Logical Volume: Big_WC_layer_log8
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_log3
+	Solid: Big_WC_superlayer_solid3
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_phys9
+			Daughter Logical Volume: Big_WC_layer_log9
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_phys10
+			Daughter Logical Volume: Big_WC_layer_log10
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_phys11
+			Daughter Logical Volume: Big_WC_layer_log11
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_superlayer_log4
+	Solid: Big_WC_superlayer_solid4
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_phys12
+			Daughter Logical Volume: Big_WC_layer_log12
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_phys13
+			Daughter Logical Volume: Big_WC_layer_log13
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_phys14
+			Daughter Logical Volume: Big_WC_layer_log14
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_log5
+	Solid: Big_WC_superlayer_solid5
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_phys15
+			Daughter Logical Volume: Big_WC_layer_log15
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_phys16
+			Daughter Logical Volume: Big_WC_layer_log16
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_phys17
+			Daughter Logical Volume: Big_WC_layer_log17
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_chamber_log0
+	Solid: Big_WC_chamber_solid0
+	Material: WC_gas
+	Color: t000999000
+		Daughter (Physical Volume): Big_WC_superlayer_phys0
+			Daughter Logical Volume: Big_WC_superlayer_log0
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_phys1
+			Daughter Logical Volume: Big_WC_superlayer_log1
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_chamber_log1
+	Solid: Big_WC_chamber_solid1
+	Material: WC_gas
+	Color: t333999333
+		Daughter (Physical Volume): Big_WC_superlayer_phys2
+			Daughter Logical Volume: Big_WC_superlayer_log2
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_phys3
+			Daughter Logical Volume: Big_WC_superlayer_log3
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_chamber_log2
+	Solid: Big_WC_chamber_solid2
+	Material: WC_gas
+	Color: t666999666
+		Daughter (Physical Volume): Big_WC_superlayer_phys4
+			Daughter Logical Volume: Big_WC_superlayer_log4
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_phys5
+			Daughter Logical Volume: Big_WC_superlayer_log5
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_gas_log0
+	Solid: Big_WC_gas_solid0
+	Material: WC_gas
+	Color: t500500500
+		Daughter (Physical Volume): Big_WC_chamber_phys0
+			Daughter Logical Volume: Big_WC_chamber_log0
+			Daughter Position: WC_chamber_phys0_pos
+			Daughter Rotation: WC_chamber_phys0_rot
+		Daughter (Physical Volume): Big_WC_chamber_phys1
+			Daughter Logical Volume: Big_WC_chamber_log1
+			Daughter Position: WC_chamber_phys1_pos
+			Daughter Rotation: WC_chamber_phys1_rot
+		Daughter (Physical Volume): Big_WC_chamber_phys2
+			Daughter Logical Volume: Big_WC_chamber_log2
+			Daughter Position: WC_chamber_phys2_pos
+			Daughter Rotation: WC_chamber_phys2_rot
+
+Logical Volume: Big_WC_wire0_2_log0
+	Solid: Big_WC_wire0_solid0
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log0
+	Solid: Big_WC_wire1_solid0
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log0
+	Solid: Big_WC_wire2_solid0
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_2_log18
+	Solid: Big_WC_wire0_solid18
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log18
+	Solid: Big_WC_wire1_solid18
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log18
+	Solid: Big_WC_wire2_solid18
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_2_log37
+	Solid: Big_WC_wire0_solid37
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log37
+	Solid: Big_WC_wire1_solid37
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log37
+	Solid: Big_WC_wire2_solid37
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_2_log63
+	Solid: Big_WC_wire0_solid63
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log63
+	Solid: Big_WC_wire1_solid63
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log63
+	Solid: Big_WC_wire2_solid63
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_2_log90
+	Solid: Big_WC_wire0_solid90
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log90
+	Solid: Big_WC_wire1_solid90
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log90
+	Solid: Big_WC_wire2_solid90
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire0_2_log124
+	Solid: Big_WC_wire0_solid124
+	Material: WC_gas
+	Color: t500500999
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire1_2_log124
+	Solid: Big_WC_wire1_solid124
+	Material: WC_gas
+	Color: t500999500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_wire2_2_log124
+	Solid: Big_WC_wire2_solid124
+	Material: WC_gas
+	Color: t999500500
+	Sensitive Detector:.cooker/WC_Cell
+
+Logical Volume: Big_WC_layer_2_log0
+	Solid: Big_WC_layer_solid0
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys0
+			Daughter Logical Volume: Big_WC_wire0_2_log0
+			Daughter Position: WC_wire0_phys0_pos
+
+Logical Volume: Big_WC_layer_2_log1
+	Solid: Big_WC_layer_solid1
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys0
+			Daughter Logical Volume: Big_WC_wire1_2_log0
+			Daughter Position: WC_wire1_phys0_pos
+
+Logical Volume: Big_WC_layer_2_log2
+	Solid: Big_WC_layer_solid2
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys0
+			Daughter Logical Volume: Big_WC_wire2_2_log0
+			Daughter Position: WC_wire2_phys0_pos
+
+Logical Volume: Big_WC_layer_2_log3
+	Solid: Big_WC_layer_solid3
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys18
+			Daughter Logical Volume: Big_WC_wire0_2_log18
+			Daughter Position: WC_wire0_phys18_pos
+
+Logical Volume: Big_WC_layer_2_log4
+	Solid: Big_WC_layer_solid4
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys18
+			Daughter Logical Volume: Big_WC_wire1_2_log18
+			Daughter Position: WC_wire1_phys18_pos
+
+Logical Volume: Big_WC_layer_2_log5
+	Solid: Big_WC_layer_solid5
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys18
+			Daughter Logical Volume: Big_WC_wire2_2_log18
+			Daughter Position: WC_wire2_phys18_pos
+
+Logical Volume: Big_WC_layer_2_log6
+	Solid: Big_WC_layer_solid6
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys37
+			Daughter Logical Volume: Big_WC_wire0_2_log37
+			Daughter Position: WC_wire0_phys37_pos
+
+Logical Volume: Big_WC_layer_2_log7
+	Solid: Big_WC_layer_solid7
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys37
+			Daughter Logical Volume: Big_WC_wire1_2_log37
+			Daughter Position: WC_wire1_phys37_pos
+
+Logical Volume: Big_WC_layer_2_log8
+	Solid: Big_WC_layer_solid8
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys37
+			Daughter Logical Volume: Big_WC_wire2_2_log37
+			Daughter Position: WC_wire2_phys37_pos
+
+Logical Volume: Big_WC_layer_2_log9
+	Solid: Big_WC_layer_solid9
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys63
+			Daughter Logical Volume: Big_WC_wire0_2_log63
+			Daughter Position: WC_wire0_phys63_pos
+
+Logical Volume: Big_WC_layer_2_log10
+	Solid: Big_WC_layer_solid10
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys63
+			Daughter Logical Volume: Big_WC_wire1_2_log63
+			Daughter Position: WC_wire1_phys63_pos
+
+Logical Volume: Big_WC_layer_2_log11
+	Solid: Big_WC_layer_solid11
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys63
+			Daughter Logical Volume: Big_WC_wire2_2_log63
+			Daughter Position: WC_wire2_phys63_pos
+
+Logical Volume: Big_WC_layer_2_log12
+	Solid: Big_WC_layer_solid12
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys90
+			Daughter Logical Volume: Big_WC_wire0_2_log90
+			Daughter Position: WC_wire0_phys90_pos
+
+Logical Volume: Big_WC_layer_2_log13
+	Solid: Big_WC_layer_solid13
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys90
+			Daughter Logical Volume: Big_WC_wire1_2_log90
+			Daughter Position: WC_wire1_phys90_pos
+
+Logical Volume: Big_WC_layer_2_log14
+	Solid: Big_WC_layer_solid14
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys90
+			Daughter Logical Volume: Big_WC_wire2_2_log90
+			Daughter Position: WC_wire2_phys90_pos
+
+Logical Volume: Big_WC_layer_2_log15
+	Solid: Big_WC_layer_solid15
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire0_2_phys124
+			Daughter Logical Volume: Big_WC_wire0_2_log124
+			Daughter Position: WC_wire0_phys124_pos
+
+Logical Volume: Big_WC_layer_2_log16
+	Solid: Big_WC_layer_solid16
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire1_2_phys124
+			Daughter Logical Volume: Big_WC_wire1_2_log124
+			Daughter Position: WC_wire1_phys124_pos
+
+Logical Volume: Big_WC_layer_2_log17
+	Solid: Big_WC_layer_solid17
+	Material: WC_gas
+	Color: f500500500
+		Daughter (Physical Volume): Big_WC_wire2_2_phys124
+			Daughter Logical Volume: Big_WC_wire2_2_log124
+			Daughter Position: WC_wire2_phys124_pos
+
+Logical Volume: Big_WC_superlayer_2_log0
+	Solid: Big_WC_superlayer_solid0
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_2_phys0
+			Daughter Logical Volume: Big_WC_layer_2_log0
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys1
+			Daughter Logical Volume: Big_WC_layer_2_log1
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys2
+			Daughter Logical Volume: Big_WC_layer_2_log2
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_2_log1
+	Solid: Big_WC_superlayer_solid1
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_2_phys3
+			Daughter Logical Volume: Big_WC_layer_2_log3
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys4
+			Daughter Logical Volume: Big_WC_layer_2_log4
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys5
+			Daughter Logical Volume: Big_WC_layer_2_log5
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_superlayer_2_log2
+	Solid: Big_WC_superlayer_solid2
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_2_phys6
+			Daughter Logical Volume: Big_WC_layer_2_log6
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys7
+			Daughter Logical Volume: Big_WC_layer_2_log7
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys8
+			Daughter Logical Volume: Big_WC_layer_2_log8
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_2_log3
+	Solid: Big_WC_superlayer_solid3
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_2_phys9
+			Daughter Logical Volume: Big_WC_layer_2_log9
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys10
+			Daughter Logical Volume: Big_WC_layer_2_log10
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys11
+			Daughter Logical Volume: Big_WC_layer_2_log11
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_superlayer_2_log4
+	Solid: Big_WC_superlayer_solid4
+	Material: WC_gas
+	Color: f999000000
+		Daughter (Physical Volume): Big_WC_layer_2_phys12
+			Daughter Logical Volume: Big_WC_layer_2_log12
+			Daughter Position: WC_layer_phys0_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys13
+			Daughter Logical Volume: Big_WC_layer_2_log13
+			Daughter Position: WC_layer_phys1_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys14
+			Daughter Logical Volume: Big_WC_layer_2_log14
+			Daughter Position: WC_layer_phys2_pos
+
+Logical Volume: Big_WC_superlayer_2_log5
+	Solid: Big_WC_superlayer_solid5
+	Material: WC_gas
+	Color: f999500500
+		Daughter (Physical Volume): Big_WC_layer_2_phys15
+			Daughter Logical Volume: Big_WC_layer_2_log15
+			Daughter Position: WC_layer_phys3_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys16
+			Daughter Logical Volume: Big_WC_layer_2_log16
+			Daughter Position: WC_layer_phys4_pos
+		Daughter (Physical Volume): Big_WC_layer_2_phys17
+			Daughter Logical Volume: Big_WC_layer_2_log17
+			Daughter Position: WC_layer_phys5_pos
+
+Logical Volume: Big_WC_chamber_2_log0
+	Solid: Big_WC_chamber_solid0
+	Material: WC_gas
+	Color: t000999000
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys0
+			Daughter Logical Volume: Big_WC_superlayer_2_log0
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys1
+			Daughter Logical Volume: Big_WC_superlayer_2_log1
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_chamber_2_log1
+	Solid: Big_WC_chamber_solid1
+	Material: WC_gas
+	Color: t333999333
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys2
+			Daughter Logical Volume: Big_WC_superlayer_2_log2
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys3
+			Daughter Logical Volume: Big_WC_superlayer_2_log3
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_chamber_2_log2
+	Solid: Big_WC_chamber_solid2
+	Material: WC_gas
+	Color: t666999666
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys4
+			Daughter Logical Volume: Big_WC_superlayer_2_log4
+			Daughter Position: WC_superlayer_phys0_pos
+			Daughter Rotation: WC_superlayer_phys0_rot
+		Daughter (Physical Volume): Big_WC_superlayer_2_phys5
+			Daughter Logical Volume: Big_WC_superlayer_2_log5
+			Daughter Position: WC_superlayer_phys1_pos
+			Daughter Rotation: WC_superlayer_phys1_rot
+
+Logical Volume: Big_WC_gas_2_log0
+	Solid: Big_WC_gas_solid0
+	Material: WC_gas
+	Color: t500500500
+		Daughter (Physical Volume): Big_WC_chamber_2_phys0
+			Daughter Logical Volume: Big_WC_chamber_2_log0
+			Daughter Position: WC_chamber_2_phys0_pos
+			Daughter Rotation: WC_chamber_2_phys0_rot
+		Daughter (Physical Volume): Big_WC_chamber_2_phys1
+			Daughter Logical Volume: Big_WC_chamber_2_log1
+			Daughter Position: WC_chamber_2_phys1_pos
+			Daughter Rotation: WC_chamber_2_phys1_rot
+		Daughter (Physical Volume): Big_WC_chamber_2_phys2
+			Daughter Logical Volume: Big_WC_chamber_2_log2
+			Daughter Position: WC_chamber_2_phys2_pos
+			Daughter Rotation: WC_chamber_2_phys2_rot
+
+Logical Volume: Big_WC_Win_log0
+	Solid: Big_WC_Win_solid0
+	Material: Mylar
+	Color: t800000800
+
+Logical Volume: Big_WC_Win_log1
+	Solid: Big_WC_Win_solid1
+	Material: Mylar
+	Color: t800000800
+
+Logical Volume: Big_WC_Win_2_log0
+	Solid: Big_WC_Win_solid0
+	Material: Mylar
+	Color: t800000800
+
+Logical Volume: Big_WC_Win_2_log1
+	Solid: Big_WC_Win_solid1
+	Material: Mylar
+	Color: t800000800
+
+Logical Volume: SC_tracker_log0
+	Solid: SC_tracker_solid0
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log0
+	Solid: TF_solid0
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys0
+			Daughter Logical Volume: SC_tracker_log0
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: SC_tracker_log4
+	Solid: SC_tracker_solid1
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log4
+	Solid: TF_solid1
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys4
+			Daughter Logical Volume: SC_tracker_log4
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: SC_tracker_log9
+	Solid: SC_tracker_solid1
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log9
+	Solid: TF_solid1
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys9
+			Daughter Logical Volume: SC_tracker_log9
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: SC_tracker_log18
+	Solid: SC_tracker_solid0
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log18
+	Solid: TF_solid0
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys18
+			Daughter Logical Volume: SC_tracker_log18
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: SC_tracker_log22
+	Solid: SC_tracker_solid1
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log22
+	Solid: TF_solid1
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys22
+			Daughter Logical Volume: SC_tracker_log22
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: SC_tracker_log27
+	Solid: SC_tracker_solid1
+	Material: G4_AIR
+	Color: t800000800
+
+Logical Volume: TF_log27
+	Solid: TF_solid1
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): SC_tracker_phys27
+			Daughter Logical Volume: SC_tracker_log27
+			Daughter Position: SC_tracker_phys0_pos
+
+Logical Volume: LM_Drift_log0
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log0
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys0
+			Daughter Logical Volume: LM_Drift_log0
+			Daughter Position: LM_Drift_phys0_pos
+
+Logical Volume: LM_Drift_log1
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log1
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys1
+			Daughter Logical Volume: LM_Drift_log1
+			Daughter Position: LM_Drift_phys1_pos
+
+Logical Volume: LM_Drift_log2
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log2
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys2
+			Daughter Logical Volume: LM_Drift_log2
+			Daughter Position: LM_Drift_phys2_pos
+
+Logical Volume: LM_Drift_log3
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log3
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys3
+			Daughter Logical Volume: LM_Drift_log3
+			Daughter Position: LM_Drift_phys3_pos
+
+Logical Volume: LM_Drift_log4
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log4
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys4
+			Daughter Logical Volume: LM_Drift_log4
+			Daughter Position: LM_Drift_phys4_pos
+
+Logical Volume: LM_Drift_log5
+	Solid: LM_Drift_solid0
+	Material: GEM_gas
+	Color: t999999999
+	Sensitive Detector:.cooker/LM
+
+Logical Volume: LM_log5
+	Solid: LM_solid0
+	Material: GEM_gas
+	Color: f999999999
+		Daughter (Physical Volume): LM_Drift_phys5
+			Daughter Logical Volume: LM_Drift_log5
+			Daughter Position: LM_Drift_phys5_pos
+
+Logical Volume: MW_Drift_log0
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log0
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys0
+			Daughter Logical Volume: MW_Drift_log0
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: MW_Drift_log1
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log1
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys1
+			Daughter Logical Volume: MW_Drift_log1
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: MW_Drift_log2
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log2
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys2
+			Daughter Logical Volume: MW_Drift_log2
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: MW_Drift_log3
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log3
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys3
+			Daughter Logical Volume: MW_Drift_log3
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: MW_Drift_log4
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log4
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys4
+			Daughter Logical Volume: MW_Drift_log4
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: MW_Drift_log5
+	Solid: MW_Drift_solid0
+	Material: MWPC_gas
+	Color: t999000123
+	Sensitive Detector:.cooker/MW
+
+Logical Volume: MW_log5
+	Solid: MW_solid0
+	Material: MWPC_gas
+	Color: f999999999
+		Daughter (Physical Volume): MW_Drift_phys5
+			Daughter Logical Volume: MW_Drift_log5
+			Daughter Position: MW_Drift_phys0_pos
+
+Logical Volume: SI_log0
+	Solid: SI_solid0
+	Material: G4_PLASTIC_SC_VINYLTOLUENE
+	Color: t800000800
+	Sensitive Detector:.cooker/SI
+
+Logical Volume: SI_log1
+	Solid: SI_solid0
+	Material: G4_PLASTIC_SC_VINYLTOLUENE
+	Color: t800000800
+	Sensitive Detector:.cooker/SI
+
+Logical Volume: SI_log2
+	Solid: SI_solid0
+	Material: G4_PLASTIC_SC_VINYLTOLUENE
+	Color: t800000800
+	Sensitive Detector:.cooker/SI
+
+Logical Volume: SI_log3
+	Solid: SI_solid0
+	Material: G4_PLASTIC_SC_VINYLTOLUENE
+	Color: t800000800
+	Sensitive Detector:.cooker/SI
+
+Logical Volume: World_log0
+	Solid: World_solid0
+	Material: G4_AIR
+	Color: f999999999
+		Daughter (Physical Volume): Big_TC_phys0
+			Daughter Logical Volume: Big_TC_log0
+			Daughter Position: TC_phys0_pos
+			Daughter Rotation: TC_phys0_rot
+		Daughter (Physical Volume): Big_Win_phys0
+			Daughter Logical Volume: Big_Win_log0
+			Daughter Position: Big_Win_phys0_pos
+			Daughter Rotation: Win_phys0_rot
+		Daughter (Physical Volume): Big_Win_phys1
+			Daughter Logical Volume: Big_Win_log0
+			Daughter Position: Big_Win_phys1_pos
+			Daughter Rotation: Win_phys1_rot
+		Daughter (Physical Volume): Big_WC_gas_phys0
+			Daughter Logical Volume: Big_WC_gas_log0
+			Daughter Position: WC_phys0_pos
+			Daughter Rotation: WC_phys0_rot
+		Daughter (Physical Volume): Big_WC_gas_2_phys0
+			Daughter Logical Volume: Big_WC_gas_2_log0
+			Daughter Position: WC_2_phys0_pos
+			Daughter Rotation: WC_2_phys0_rot
+		Daughter (Physical Volume): Big_WC_Win_phys0
+			Daughter Logical Volume: Big_WC_Win_log0
+			Daughter Position: WC_Win_phys0_pos
+			Daughter Rotation: WC_phys0_rot
+		Daughter (Physical Volume): Big_WC_Win_phys1
+			Daughter Logical Volume: Big_WC_Win_log1
+			Daughter Position: WC_Win_phys1_pos
+			Daughter Rotation: WC_phys0_rot
+		Daughter (Physical Volume): Big_WC_Win_2_phys0
+			Daughter Logical Volume: Big_WC_Win_2_log0
+			Daughter Position: WC_Win_2_phys0_pos
+			Daughter Rotation: WC_2_phys0_rot
+		Daughter (Physical Volume): Big_WC_Win_2_phys1
+			Daughter Logical Volume: Big_WC_Win_2_log1
+			Daughter Position: WC_Win_2_phys1_pos
+			Daughter Rotation: WC_2_phys0_rot
+		Daughter (Physical Volume): TF_phys0
+			Daughter Logical Volume: TF_log0
+			Daughter Position: TF_phys0_pos
+			Daughter Rotation: TF_phys0_rot
+		Daughter (Physical Volume): TF_phys4
+			Daughter Logical Volume: TF_log4
+			Daughter Position: TF_phys4_pos
+			Daughter Rotation: TF_phys4_rot
+		Daughter (Physical Volume): TF_phys9
+			Daughter Logical Volume: TF_log9
+			Daughter Position: TF_phys9_pos
+			Daughter Rotation: TF_phys9_rot
+		Daughter (Physical Volume): TF_phys18
+			Daughter Logical Volume: TF_log18
+			Daughter Position: TF_phys18_pos
+			Daughter Rotation: TF_phys18_rot
+		Daughter (Physical Volume): TF_phys22
+			Daughter Logical Volume: TF_log22
+			Daughter Position: TF_phys22_pos
+			Daughter Rotation: TF_phys22_rot
+		Daughter (Physical Volume): TF_phys27
+			Daughter Logical Volume: TF_log27
+			Daughter Position: TF_phys27_pos
+			Daughter Rotation: TF_phys27_rot
+

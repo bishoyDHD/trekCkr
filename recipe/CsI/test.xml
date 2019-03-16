@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cooker xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation='recipe.xsd'>
+
+<init>/${HOME}/.cooker/shared/init/demo.xml</init>
+
+<source>vf48_hdw</source> <!-- the source tree name-->
+<destination>csi_cali</destination> <!-- the destination tree name-->
+
+<plugins>
+  <plugin>
+     <name>CsI</name>
+     <file>libCsI</file>
+  </plugin>
+
+
+</plugins>
+
+
+<defineHistograms>
+ <CsI>histos_fit</CsI>
+</defineHistograms>
+
+<!-- These functions will be called at the beginning -->
+<startup>
+ <CsI>startup_fit</CsI>
+</startup>
+
+<!-- These functions will be executed for every event, in order of appearance -->
+<execute>
+ <CsI>process_fit</CsI>
+</execute>
+
+<!-- These functions will be called at the end of the file -->
+<finalize>
+ <CsI>finalize_fit</CsI>
+</finalize>
+
+</cooker>
+

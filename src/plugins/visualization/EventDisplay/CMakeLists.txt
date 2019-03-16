@@ -1,0 +1,60 @@
+# Check if cmake has the required version
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4.3 FATAL_ERROR)
+# Needed for cmake 2.6
+IF(COMMAND cmake_policy)
+	cmake_policy(SET CMP0003 NEW)
+ENDIF(COMMAND cmake_policy)
+
+# Set project name
+PROJECT(EventDisplay)
+
+# Set the library version
+SET(EVENTDISPLAY_MAJOR_VERSION 1)
+SET(EVENTDISPLAY_MINOR_VERSION 1)
+SET(EVENTDISPLAY_PATCH_VERSION 0)
+SET(EVENTDISPLAY_VERSION "${EVENTDISPLAY_MAJOR_VERSION}.${EVENTDISPLAY_MINOR_VERSION}.${EVENTDISPLAY_PATCH_VERSION}")
+LIST(APPEND EVENTDISPLAY_LIBRARY_PROPERTIES VERSION "${EVENTDISPLAY_VERSION}" SOVERSION "${EVENTDISPLAY_MAJOR_VERSION}")
+
+# find source and header files, set paths, includes...
+SET(LIBNAME "EVENTDISPLAY")
+
+
+FILE(GLOB SRCS src/*.cpp)
+FILE(GLOB HEADERS src/include/*.h ${CMAKE_SOURCE_DIR}/include.cookerrawtree.h)
+
+SET(INCLUDES ${ROOT_INCLUDE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/include" "${CMAKE_SOURCE_DIR}/include")
+INCLUDE_DIRECTORIES(${INCLUDES})
+
+# create root dictionary
+SET(LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/src/include/LinkDef.hh)
+SET(DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}Dict.cpp)
+ROOT_GENERATE_DICTIONARY("${HEADERS}" "${LINKDEF}" "${DICTIONARY}" "${INCLUDES}")
+LIST(APPEND SRCS ${DICTIONARY})
+
+# build the library
+ADD_LIBRARY(${LIBNAME} SHARED ${SRCS})
+TARGET_LINK_LIBRARIES(${LIBNAME} cookerrawtree Plugin "-L${ROOT_LIBRARY_DIR}" ${ROOT_LIBRARIES} Eve RGL)
+
+SET_TARGET_PROPERTIES(${LIBNAME} PROPERTIES ${EVENTDISPLAY_LIBRARY_PROPERTIES})
+
+
+# install the library
+INSTALL(TARGETS ${LIBNAME} RUNTIME DESTINATION ${BINDIR} LIBRARY DESTINATION ${LIBDIR} ARCHIVE DESTINATION ${LIBDIR})
+
+
+#set internal cache value to mark completion of first cmake run
+SET(RERUN TRUE CACHE INTERNAL "Flag to mark completion of first cmake run" FORCE)
+
+# # Install all available GDML files
+# INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/src/gdml/
+#     DESTINATION "../shared/EventDisplay"
+#     FILES_MATCHING
+#     PATTERN "*.gdml"
+#     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+# Install the init file
+INSTALL(FILES init/EventDisplay.xml DESTINATION "../shared/init" )
+
+# Install the logo image
+INSTALL(FILES.cooker.png DESTINATION "../shared/EventDisplay")
+

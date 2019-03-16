@@ -1,0 +1,26 @@
+echo
+echo
+echo "bashscript is over-writing GDML files based on nominal and survey1 positions and rotations..."
+
+cd python_gdml_generator
+
+python generateGDML.py -nominal -tag _nominal
+
+python generateGDML.py -survey1 -tag _survey1
+
+python generateGDML.py -survey2 -tag _survey2
+
+python generateGDML.py -nominal -volfile ../human_readable/volumes1_WC_cells.txt -tag _nominal_WC_cells
+
+python generateGDML.py -survey1 -volfile ../human_readable/volumes1_WC_cells.txt -tag _survey1_WC_cells
+
+python generateGDML.py -survey2 -volfile ../human_readable/volumes2_WC_cells.txt -tag _survey2_WC_cells
+
+cd ..
+
+rm ./bashscript~
+
+echo
+echo
+echo "bashscript is done."
+echo
