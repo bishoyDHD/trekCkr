@@ -33,6 +33,7 @@ MESSAGE(STATUS "${Boost_LIBRARIES}" )
 
 FIND_PACKAGE( OpenMP)
 
+FIND_PACKAGE(Minuit2)
 
 # Set path to custom cmake modules for this project
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")

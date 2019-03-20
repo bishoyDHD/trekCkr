@@ -2,7 +2,7 @@
 <cooker xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:noNamespaceSchemaLocation='recipe.xsd'>
 
-<init>/${HOME}/.cooker/shared/init/demo.xml</init>
+<init>/${HOME}/.cooker/shared/init/CsI.xml</init>
 
 <source>vf48_hdw</source> <!-- the source tree name-->
 <destination>csi_cali</destination> <!-- the destination tree name-->
@@ -18,22 +18,22 @@
 
 
 <defineHistograms>
- <CsI>histos_fit</CsI>
+ <CsI>histos</CsI>
 </defineHistograms>
 
 <!-- These functions will be called at the beginning -->
 <startup>
- <CsI>startup_fit</CsI>
+ <CsI>startup</CsI>
 </startup>
 
 <!-- These functions will be executed for every event, in order of appearance -->
 <execute>
- <CsI>process_fit</CsI>
+ <CsI>process</CsI>
 </execute>
 
 <!-- These functions will be called at the end of the file -->
 <finalize>
- <CsI>finalize_fit</CsI>
+ <CsI>finalize</CsI>
 </finalize>
 
 </cooker>

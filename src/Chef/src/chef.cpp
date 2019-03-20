@@ -8,16 +8,13 @@
 #include "InitReader.h"
 #include "TBranchElement.h"
 #include <boost/algorithm/string.hpp>
-#include "MIDASreader.h"
+
+#include<string.h>
 
 #include <iostream>
 #include <dlfcn.h>
 
 #include <gsl/gsl_rng.h>
-
-
-#include "TBufferFile.h"
-#include "TH1.h"
 
 CRTEventInfo dummy;
 
@@ -34,14 +31,14 @@ Long_t callinfo::execute()
   mc.Execute(plug,rval);
   if (!mc.IsValid()) {kval = -9001;}
   if ((rval<0) || (kval<0))
-    {
-      std::cout<<"\n********************************************************************************\n";
-      std::cerr<<"\nError while calling: "<<plug->IsA()->GetName()<<"::"<<mc.GetMethodName()<<"\n";
-      std::cerr<<"The function returned value: "<<rval<<"\n\n";
-      std::cerr<<"Check above for errors from the function and/or make sure the function exists!\n\n";
-      std::cout<<"********************************************************************************\n\n";
-      abort(); // Kill all processes
-    }
+  {
+    std::cout<<"\n********************************************************************************\n";
+    std::cerr<<"\nError while calling: "<<plug->IsA()->GetName()<<"::"<<mc.GetMethodName()<<"\n";
+    std::cerr<<"The function returned value: "<<rval<<"\n\n";
+    std::cerr<<"Check above for errors from the function and/or make sure the function exists!\n\n";
+    std::cout<<"********************************************************************************\n\n";
+    abort(); // Kill all processes
+  }
   return rval;
 }
 
@@ -50,8 +47,8 @@ std::vector<callinfo*> Chef::compilelist(std::vector<class_method> &list)
   std::vector<callinfo*> erg;
   for (std::vector<class_method>::iterator iter=list.begin();iter!=list.end();iter++)
     {
-      std::cout<<"  "<<iter->classname<<"::"<<iter->method<<std::endl; 
       callinfo *mc=new callinfo(plugins[iter->classname],plugins[iter->classname]->IsA(),iter->method);
+
       erg.push_back(mc);
     }
   return erg;
@@ -61,31 +58,33 @@ std::vector<callinfo*> Chef::compilelist(std::vector<class_method> &list)
 Chef::Chef(std::string recipename,unsigned int seed,unsigned int gskip, unsigned int gseed):recipe(recipename)
 {
   // set dynamic path
-  gSystem->AddDynamicPath("~/.cooker/" ARCHDIR "/lib");
+  gSystem->AddDynamicPath("~/.cooker/"ARCHDIR"/lib");
   
   //set COOKERHOME
   setenv("COOKERHOME",getenv("HOME"),0);
   printf("COOKERHOME: %s\n",getenv("COOKERHOME"));
 
+  printf("Supplied seeds: %i %i %i\n",seed,gskip,gseed);
   weight=1;
+  treeprint = true; // Print tree by default
   addRepo("Weight",(TObject *) &weight);
   lastresult=Plugin::ok;
   addRepo("LastEventResult",(TObject *) &lastresult);
   
   //pseudo random
-  gsl_rng *random=gsl_rng_alloc(gsl_rng_mt19937);
-  if (seed==0)
-    {
-      FILE *f=fopen("/dev/urandom","r");
-      fread(&seed,sizeof(unsigned int),1,f);
-      fclose(f);
-    }
-  if (gseed==0)
-    {
-      FILE *f=fopen("/dev/urandom","r");
-      fread(&gseed,sizeof(unsigned int),1,f);
-      fclose(f);
-    }
+   gsl_rng *random=gsl_rng_alloc(gsl_rng_mt19937);
+   if (seed==0)
+     {
+       FILE *f=fopen("/dev/urandom","r");
+       fread(&seed,sizeof(unsigned int),1,f);
+       fclose(f);
+     }
+   if (gseed==0)
+     {
+       FILE *f=fopen("/dev/urandom","r");
+       fread(&gseed,sizeof(unsigned int),1,f);
+       fclose(f);
+     }
   gsl_rng_set(random,seed); 
 
   genskip=gskip;
@@ -97,51 +96,86 @@ Chef::Chef(std::string recipename,unsigned int seed,unsigned int gskip, unsigned
   addRepo("GeneratorSkip",(TObject *) &genskip);
   addRepo("GeneratorSeed",(TObject *) &genseed);
   addRepo("GlobalSeed",(TObject *) &globseed);
-  addRepo("Callbacks",(TObject *)this);
 }
 
-void Chef::prepareTrees(std::string input, std::string output,bool empty)
+void Chef::prepareTreesExplora(TTree *in_,std::string output)
+{
+  infile=0;
+  outfile=0;
+  in=in_;
+  if (output!="")
+    {
+
+      if (output.find("root://",0)==0)
+	outfile=TFile::Open(output.c_str(),"NEW");  // root network protocol. Does not allow recreate (maybe because of dcache backend?
+      else
+	outfile=TFile::Open(output.c_str(),"RECREATE"); //normal file -> Recreate
+      if (outfile) std::cout<<"................success"<<std::endl;
+      else {
+	std::cout<<"................fail"<<std::endl;
+	exit(-5);
+      }
+      out=new TTree(recipe.dsttree.c_str(),recipe.dsttree.c_str());
+    }
+  else
+    {
+      std::cout<<"No output file given. Will use dummy tree and discard."<<std::endl;
+      out=new TTree("dummy","dummy");
+    }
+}
+
+void Chef::prepareTrees(std::string input, std::string output)
 {
 
   // split up input string and recipe str by ":"
 
   std::vector <std::string> inputfilenames,inputtreetypes;
-  std::cout<<input<<" "<<output<<" "<<empty<<"\n";
-  
-  if (empty)
+  boost::split(inputtreetypes,recipe.srctree,boost::is_any_of(":"));
+  boost::split(inputfilenames,input,boost::is_any_of(":"));
+  int roots=0;
+  for (unsigned int i=0;i<inputfilenames.size();i++)
+    if (inputfilenames[i]=="root") roots++;
+  if (inputtreetypes.size()!=inputfilenames.size()-roots)
     {
-      infile=new TFile();
-      in=new TTree;
+      std::cerr<<"The recipe specifies "<< inputtreetypes.size()<< " input trees, but "<<inputfilenames.size()<<" files were specified."<<std::endl;
+      exit(-1);
     }
-  else
+  int offset=0;
+  roots=0;
+  if (inputfilenames[offset]=="root")
     {
-      boost::split(inputtreetypes,recipe.srctree,boost::is_any_of(":"));
-      boost::split(inputfilenames,input,boost::is_any_of(":"));
-      
-      /* <-- Temporary disabled in case MIDAS libs not needed -Bishoy
-      if (boost::algorithm::ends_with(inputfilenames[0],".mid"))
-	//infile=new MIDASfile(inputfilenames[0].c_str()); 
-      else
-	inifile=TFile::Open(inputfilenames[0].c_str(),"READ");*/
-      in=(TTree*)infile->Get(inputtreetypes[0].c_str());
-      if (!in)
-	{
-	  std::cerr<<"Tree "<<recipe.srctree<<" not found in "<<input<<std::endl;
-	  std::cerr<<"Maybe wrong recipe for this type of tree?"<<std::endl;
-	  exit(-1);
-	}
-      // adding all friends:
-      for (unsigned int i=1;i<inputtreetypes.size();i++)
-	if (!in->AddFriend(inputtreetypes[i].c_str(),inputfilenames[i].c_str())->GetTree())
-	  {
-	    std::cerr<<"Could not add friend tree of type "<<inputtreetypes[i]<<" from file "<<inputfilenames[i]<<". Bailing out."<<std::endl;
-	    exit(-1);
-	      }
-      //disabling all branches
-      in->SetBranchStatus("*",0);
+      offset++;
+      roots++;
+      inputfilenames[offset]="root:"+inputfilenames[offset];
     }
-  
+  infile=TFile::Open(inputfilenames[offset].c_str(),"READ");
   outfile=0;
+  in=(TTree*)infile->Get(inputtreetypes[offset-roots].c_str());
+  if (!in)
+    {
+      std::cerr<<"Tree "<<recipe.srctree<<" not found in "<<input<<std::endl;
+      std::cerr<<"Maybe wrong recipe for this type of tree?"<<std::endl;
+      exit(-1);
+    }
+  // adding all friends:
+  for (unsigned int i=offset+1;i<inputfilenames.size();i++)
+    {
+      if (inputfilenames[i]=="root")
+	{
+	  i++;
+	  roots++;
+	  inputfilenames[i]="root:"+inputfilenames[i];
+	}
+
+    if (!in->AddFriend(inputtreetypes[i-roots].c_str(),inputfilenames[i].c_str())->GetTree())
+      {
+    	std::cerr<<"Could not add friend tree of type "<<inputtreetypes[i-roots]<<" from file "<<inputfilenames[i]<<". Bailing out."<<std::endl;
+    	exit(-1);
+      }
+    }
+
+  //disabling all branches
+  in->SetBranchStatus("*",0);
 
   if (output!="")
     {
@@ -165,7 +199,7 @@ void Chef::prepareTrees(std::string input, std::string output,bool empty)
       TObject **p = new (TObject *);
       in->SetBranchStatus("EventInfo",1);
       TBranchElement *br=(TBranchElement *)in->GetBranch("EventInfo");
-      if (br)
+     if (br)
 	{
 	  *p=(TObject *)br->GetObject();
 	  if (*p==0)
@@ -181,7 +215,7 @@ void Chef::prepareTrees(std::string input, std::string output,bool empty)
     }
 }
 
-void Chef::loadPlugins(int rank)
+void Chef::loadPlugins()
 {
   std::cout<<std::endl<<"Plugins:"<<std::endl;
   
@@ -196,6 +230,7 @@ void Chef::loadPlugins(int rank)
       if (handle) std::cout<<"................success"<<std::endl;
       else  {
 	std::cout<<"................fail"<<std::endl<<dlerror()<<std::endl;
+	std::cerr<<dlerror()<<std::endl;
 	exit(-2);
       }
       std::cout<<"Creating factory";
@@ -204,6 +239,7 @@ void Chef::loadPlugins(int rank)
       if (factory) std::cout<<"................success"<<std::endl;
       else {
 	std::cout<<"................fail"<<std::endl;
+	std::cerr<<dlerror()<<std::endl;
 	exit(-3);
       }
       std::cout<<"Creating object";
@@ -214,20 +250,11 @@ void Chef::loadPlugins(int rank)
 	exit(-4);
       }
       plugins[iter->first]=plug;
-      plug->rank=rank;
     }
 
-  std::cout<<std::endl<<"defineHistograms:"<<std::endl;
   cldefineHistograms=compilelist(recipe.defineHistograms);
-  std::cout<<std::endl<<"Startup:"<<std::endl;
   clstartup=compilelist(recipe.startup);
-  std::cout<<std::endl<<"Execute:"<<std::endl;
   clexecute=compilelist(recipe.commands);
-  std::cout<<std::endl<<"Post Process:"<<std::endl;
-  clpostprocess=compilelist(recipe.postprocess);
-  std::cout<<std::endl<<"Execute2:"<<std::endl;
-  clexecute2=compilelist(recipe.commands2);
-  std::cout<<std::endl<<"Finalize:"<<std::endl;
   clfinalize=compilelist(recipe.finalize); 
 }
 
@@ -239,19 +266,18 @@ void Chef::processInit(int debug,std::map<std::string,std::vector<std::pair<std:
   CRTRunInfo *ri=0;
   if (infile)
     ri=(CRTRunInfo*)  infile->Get("RunInfo");
-
   TTimeStamp ttsstarttime;
+  int runNumber=0;
   if (ri==0)
     {
       std::cerr<<"Could not read runinfo to get start time. Defaulting to *now*.\n";
       addRepo("Runnumber",(TObject *) 0);
-      ri= new CRTRunInfo;
-      ri->runNumber=0;
     }
   else
     {
       ttsstarttime=ri->startTime;
       addRepo("Runnumber",(TObject *) ri->runNumber);
+      runNumber=ri->runNumber;
     }  
   
 
@@ -259,8 +285,9 @@ void Chef::processInit(int debug,std::map<std::string,std::vector<std::pair<std:
   // root is "almost" ISO8601 compliant. Great. Almost. 
   starttimestr[10]='T'; // hopefully it is now.
 
-  std::cout<< "Using run start time:"<<starttimestr<<" Run number:"<< ri->runNumber<<std::endl;
-  InitReader init(recipe.InitXML,starttimestr,ri->runNumber);
+  std::cout<< "Using run start time:"<<starttimestr<<std::endl;
+
+  InitReader init(recipe.InitXML,starttimestr,runNumber);
   std::cout<<std::endl;
 
 
@@ -279,7 +306,7 @@ void Chef::processInit(int debug,std::map<std::string,std::vector<std::pair<std:
 
       for ( std::map<std::string,std::vector<std::string> >::iterator iter=calls.begin();iter!=calls.end();iter++)
 	{
-	  TMethodCall mc(piter->second->IsA(),iter->first.c_str(),iter->second[0].c_str());
+	  TMethodCall mc(piter->second->IsA(),iter->first.c_str(),iter->second[0].c_str());	  
 	  for ( std::vector<std::string>::iterator iter2=iter->second.begin() ; iter2!=iter->second.end();iter2++) 	 
 	    {
 	      Long_t rval;
@@ -322,14 +349,16 @@ void Chef::processInit(int debug,std::map<std::string,std::vector<std::pair<std:
    
 }
 
+
+
 void Chef::defineHistograms()
 {
   int rval=0;
   for (std::vector<callinfo*>::iterator iter=cldefineHistograms.begin();iter!=cldefineHistograms.end();iter++)
     {
       gDirectory->cd("/");
-      if ((rval=(*iter)->execute())<0)
-	exit(rval-1000);
+    if ((rval=(*iter)->execute())<0)
+      exit(rval-1000);
     }
 }
 
@@ -339,10 +368,11 @@ void Chef::startup()
   for (std::vector<callinfo*>::iterator iter=clstartup.begin();iter!=clstartup.end();iter++)
     {
       gDirectory->cd("/");
-      if ((rval=(*iter)->execute())<0)
-	exit(rval-1000);
+    if ((rval=(*iter)->execute())<0)
+      exit(rval-1000);
     }
 }
+
 
 int Chef::processEvent(int i)
 {
@@ -364,42 +394,7 @@ int Chef::processEvent(int i)
 	  return Plugin::skip; // We skip, no fill
 	}
       if (rval & Plugin::stop)
-	returncode|= Plugin::stop; // We stop, no fill, and loop should stop.
-      if (!(rval & Plugin::maySkip)) // we skip if ALL plugins give maySkip
-	mskip=false;      
-      if (rval & Plugin::redo)
-	returncode|=Plugin::redo;
-    }
-
-  //  if (!mskip && outfile) out->Fill();
-  //if (outfile) out->Fill();
-  int pass2 = clexecute2.size();
-  if (!pass2 && outfile) out->Fill();
-  lastresult=returncode;
-  return returncode;
-}
-
-int Chef::processEvent2(int i)
-{
-  int rval=0;
-  if (i>=0)
-    in->GetEntry(i);
-  bool mskip=true;
-  int returncode=0;
-  weight=1; // set default weight.
-
-  for (std::vector<callinfo*>::iterator iter=clexecute2.begin();iter!=clexecute2.end();iter++)
-    {
-      gDirectory->cd("/");
-      if ((rval=(*iter)->execute())<0)
-	exit(rval-1000);
-      if (rval & Plugin::skip)
-	{
-	  lastresult=Plugin::skip;
-	  return Plugin::skip; // We skip, no fill
-	}
-      if (rval & Plugin::stop)
-	returncode|= Plugin::stop; // We stop, no fill, and loop should stop.
+       returncode|= Plugin::stop; // We stop, no fill, and loop should stop.
       if (!(rval & Plugin::maySkip)) // we skip if ALL plugins give maySkip
 	mskip=false;      
       if (rval & Plugin::redo)
@@ -412,23 +407,6 @@ int Chef::processEvent2(int i)
   return returncode;
 }
 
-void Chef::postprocess()
-{
-  //std::cout << "postprocess size: " << clpostprocess.size() << std::endl;
-  int rval=0;
-  for (std::vector<callinfo*>::iterator iter=clpostprocess.begin();iter!=clpostprocess.end();iter++)
-    {
-      gDirectory->cd("/");
-      if ((rval=(*iter)->execute()<0))
-	exit(rval-1000);
-    }
-}
-
-int Chef::secondpasssize()
-{
-  //std::cout << "execute2 size: " << clexecute2.size() << std::endl;
-  return clexecute2.size();
-}
 
 void Chef::finalize()
 {
@@ -440,79 +418,25 @@ void Chef::finalize()
 	exit(rval-1000);
     }
   std::cout<<"--Saving Tree--"<<std::endl;
-  std::cout<<"Source tree:"<<std::endl;
-  in->Print();
-  std::cout<<"Destination tree:"<<std::endl;
-  out->Print();
+  if (treeprint)
+  {
+  	 std::cout<<"Source tree:"<<std::endl;
+  	 in->Print();
+  	 std::cout<<"Destination tree:"<<std::endl;
+  	 out->Print();
+  }
+  else
+    std::cout<<"\nPrinting of tree info suppressed by user.\n\n";
+
   if (outfile) outfile->Write();
 }
+
+Long_t Chef::printTrees(bool yn)
+{
+	treeprint = yn;
+};
 
 void  Chef::addRepo(std::string name,TObject *obj)
 {
   repo[name]=obj;
-}
-
-
-void Chef::serializeBranches(TBufferFile &buf)
-{
-  auto branches=out->GetListOfBranches();
-  for (int i=0;i<branches->GetEntries();i++)
-    {
-      TBranchElement *br=(TBranchElement*) branches->At(i);
-      TObject *obj=(TObject*)br->GetObject();
-      //printf("%s %s\n",br->GetClassName(),obj->GetName());
-      obj->Streamer(buf);
-      //
-      //br->Streamer(buf);
-    }
-}
-
-void Chef::serializeHistogramList(TBufferFile &buf)
-{
-
-  buf.WriteInt(histograms.size());
-  for (auto&& h :histograms)
-    {
-      TString name=h.first;
-      name.Streamer(buf);
-    }
-}
-
-void Chef::serializeHistogram(TString name, TBufferFile &buf)
-{
-  if (buf.IsReading())
-    {
-      TH1 *h=(TH1 *)buf.ReadObject(NULL);
-      if (histograms.find(name)!=histograms.end())
-	{
-	  histograms[name]->Add(h);
-	  //	delete h;
-	}
-      else
-	{
-	  gDirectory->Cd("/");
-	  histograms[name]=h;
-	  TObjArray *dirs=TString(name).Tokenize("/");
-	  for (int i=0;i<dirs->GetEntriesFast()-1;i++)
-	    {
-	      if (!gDirectory->GetDirectory(((TObjString *) dirs->At(i))->GetString().Data()))
-		gDirectory->mkdir(((TObjString *) dirs->At(i))->GetString().Data());
-	      gDirectory->cd(((TObjString *) dirs->At(i))->GetString().Data());
-	    }
-	  delete dirs;
-	  gDirectory->Add(h);
-	}
-    }
-  else
-    {
-      buf.WriteObject(histograms[name]);
-      //      histograms[name]->Streamer(buf);
-    }
-}
-
-void Chef::addHisto(const char *path,TH1D *h)
-{
-  TString tsp(path);
-  tsp.Remove(0,tsp.First(":")+1);
-  histograms[tsp]=h;
 }

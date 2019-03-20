@@ -14,7 +14,7 @@
 
 char commanddate[]="declare variable $date as xs:dateTime external;\n\
  declare variable $detector as xs:string external;\n\
- for $i in     for $h in .cookerinit/*[name()=$detector]/date/*\
+ for $i in     for $h in /cookerinit/*[name()=$detector]/date/*\
  let $n:=name($h)\n\
  where $h/../@time<=$date\n\
    return \n\
@@ -22,17 +22,17 @@ char commanddate[]="declare variable $date as xs:dateTime external;\n\
 	       	      if ( $h/id ) then \n\
 	       	      	 for $k in $h/id\n\
 		      	     return element{node-name ($h)}\n\
-		      	       { $h/../@time, $h/@* ,$k/@id, attribute {\"fct\"}{data(.cookerinit/*[name()=$detector]/config/*[name()=$n]) },$k/node()}\n\
+		      	       { $h/../@time, $h/@* ,$k/@id, attribute {\"fct\"}{data(/cookerinit/*[name()=$detector]/config/*[name()=$n]) },$k/node()}\n\
 		      else\n\
 			    element{node-name ($h)}\n\
-		       	       { $h/../@time, $h/@* , attribute {\"fct\"}{data(.cookerinit/*[name()=$detector]/config/*[name()=$n]) },$h/node()}\n\
+		       	       { $h/../@time, $h/@* , attribute {\"fct\"}{data(/cookerinit/*[name()=$detector]/config/*[name()=$n]) },$h/node()}\n\
 		 	       (: Attach time to child :)\n\
     order by name($i),$i/@id, $i/@time descending\n\
     return $i";
 
 char commandrun[]="declare variable $runnum as xs:integer external;\n\
  declare variable $detector as xs:string external;\n\
- for $i in     for $h in .cookerinit/*[name()=$detector]/run/*\
+ for $i in     for $h in /cookerinit/*[name()=$detector]/run/*\
  let $n:=name($h)\n\
  where $h/../@nr<=$runnum\n\
    return \n\
@@ -40,14 +40,15 @@ char commandrun[]="declare variable $runnum as xs:integer external;\n\
 	       	      if ( $h/id ) then \n\
 	       	      	 for $k in $h/id\n\
 		      	     return element{node-name ($h)}\n\
-		      	       { $h/../@nr, $h/@* ,$k/@id, attribute {\"fct\"}{data(.cookerinit/*[name()=$detector]/config/*[name()=$n]) },$k/node()}\n\
+		      	       { $h/../@nr, $h/@* ,$k/@id, attribute {\"fct\"}{data(/cookerinit/*[name()=$detector]/config/*[name()=$n]) },$k/node()}\n\
 		      else\n\
 			    element{node-name ($h)}\n\
-		       	       { $h/../@nr, $h/@* , attribute {\"fct\"}{data(.cookerinit/*[name()=$detector]/config/*[name()=$n]) },$h/node()}\n\
+		       	       { $h/../@nr, $h/@* , attribute {\"fct\"}{data(/cookerinit/*[name()=$detector]/config/*[name()=$n]) },$h/node()}\n\
 		 	       (: Attach time to child :)\n\
     order by name($i),$i/@id, $i/@nr descending\n\
     return $i";
 
+ 
 XERCES_CPP_NAMESPACE_USE;
 
 class xmlbasefilter: public DOMLSParserFilter::DOMLSParserFilter
@@ -134,7 +135,23 @@ public:
     return true;
 }
 };
+static std::string expand_environment_variables( std::string s ) {
+  if( s.find( "${" ) == std::string::npos ) return s;
 
+  std::string pre  = s.substr( 0, s.find( "${" ) );
+  std::string post = s.substr( s.find( "${" ) + 2 );
+
+  if( post.find( '}' ) == std::string::npos ) return s;
+
+  std::string variable = post.substr( 0, post.find( '}' ) );
+  std::string value    = "";
+
+  post = post.substr( post.find( '}' ) + 1 );
+
+  if( getenv( variable.c_str() ) != NULL ) value = std::string( getenv( variable.c_str() ) );
+
+  return expand_environment_variables( pre + value + post );
+}
 InitReader::InitReader(std::string filename,std::string date, int runnr)
 {
   try{ 
@@ -160,6 +177,8 @@ InitReader::InitReader(std::string filename,std::string date, int runnr)
     xmlbasefilter filter;
     parser->setFilter(&filter);
     // Parse a DOMDocument
+    filename=expand_environment_variables(filename);
+
     DOMDocument *document = parser->parseURI(filename.c_str());
     if(document == 0) {
       std::cerr << "InitReader: Document not found: " <<  filename<< std::endl;
@@ -174,7 +193,7 @@ InitReader::InitReader(std::string filename,std::string date, int runnr)
     context =xqilla.createContext(XQilla::XQUERY);
     querynr= xqilla.parse(X(commandrun),context);
 
-    //   query= xqilla.parse(X("for $i in .cookerinit/ToF/*\nreturn $i"),context);
+    //   query= xqilla.parse(X("for $i in /cookerinit/ToF/*\nreturn $i"),context);
 
     
     Item::Ptr item;
@@ -183,6 +202,7 @@ InitReader::InitReader(std::string filename,std::string date, int runnr)
     sdate.addItem(item);
     context->setExternalVariable(X("date"), sdate);
 
+    
     item= context->getItemFactory()->createInteger(runnr,context); 
     Sequence srunnr(1);
     srunnr.addItem(item);
@@ -232,7 +252,7 @@ std::map<std::string,std::vector<std::string> > InitReader::getConfig(std::strin
 	if (i==0)
 	  result = querydate->execute(context);
 	else
-	  result = querynr->execute(context);	
+	  result = querynr->execute(context);
 	while(item = result->next(context)) {
 	  Result attribs=item->dmAttributes(context,0);
 	  Node::Ptr attrib;
@@ -261,9 +281,9 @@ std::map<std::string,std::vector<std::string> > InitReader::getConfig(std::strin
 	      lastid=id;
 	      lastfct=fct;
 	    }
+	  
 	}
       }
-    
   }
   catch(   XQException E)
     {
