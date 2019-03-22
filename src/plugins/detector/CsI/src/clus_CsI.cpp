@@ -39,6 +39,44 @@ Long_t Det_CsI::histos_clus(){
   h1Intg=dH1("Integr","Integrated pulse height distribution", 250, 0, 100000);
   h1cali=dH1("Calibr","Integrated pulse height distribution", 250, 0, 1000);
   h1ped=dH1("Ped","Pedestals for the waveform ", 250, 0, 1000);
+  for(int i=0;i<11;i++){
+    hbox1[i]=new TLine(-2.0,4*(i+1),4.00,4*(i+1));
+    vbox1[i]=new TLine(-2.0,4*(i+1),-2.0,4*(i+1)+2);
+    hbox1[i+11]=new TLine(-2.0,4*(i+1)+2,4.00,4*(i+1)+2);
+    vbox1[i+11]=new TLine(4.0,4*(i+1),4.00,4*(i+1)+2);
+    hline1[i]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
+    hline1[i+11]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
+    hline2[i]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
+    hline2[i+11]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
+    hline3[i]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
+    hline3[i+11]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
+  }
+  hline2[22]=new TLine(-9.0,1,-2.0,1);
+  hline2[23]=new TLine(4.00,1,11.0,1);
+  hline2[24]=new TLine(-9.0,49,-2.0,49);
+  hline2[25]=new TLine(4.00,49,11.0,49);
+  hbox2[0]=new TLine(-2.0,2.0,4,2.0);
+  hbox2[1]=new TLine(-2.0,48.,4,48.);
+  vbox2[0]=new TLine(-2.0,1.0,-2,2.0);
+  vbox2[1]=new TLine(4.00,1.0,4.,2.0);
+  vbox2[2]=new TLine(-2.0,48.,-2,49.);
+  vbox2[3]=new TLine(4.00,48.,4.,49.);
+  hline1[22]=new TLine(-9.0,47,11.0,47);
+  for(int n=0;n<22;n++){
+    hbox1[n]->Draw("l");
+    vbox1[n]->Draw("l");
+    hline1[n]->Draw("l");
+    hline2[n]->Draw("l");
+    hline3[n]->Draw("l");
+  }
+  for(int n=0;n<2;n++){
+    hbox2[n]->Draw("l");
+  }
+  for(int n=0;n<4;n++){
+    vbox2[n]->Draw("l");
+    hline2[n+22]->Draw("l");
+  }
+  hline1[22]->Draw("l");
   return 0;
 }
 
