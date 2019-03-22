@@ -8,6 +8,13 @@ double gaanKak=800815;
 Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):Plugin(in,out,inf_,outf_,p){
   // Set defaults for various options
   treeCali=0;
+  h1Mnft[12][2][2][16]=NULL;
+  h1Diff[12][2][2][16]=NULL;
+  h1rate[12][2][2][16]=NULL; // normalized diff b/n fit and histogram
+  h2Fits[12][2][2][16]=NULL;
+  h1Fits[12][2][2][16]=NULL;
+  h1Amps[12][2][2][16]=NULL;
+  h1time[12][2][2][16]=NULL;
 };
 
 Det_CsI::~Det_CsI(){
@@ -73,7 +80,7 @@ Long_t Det_CsI::startup(){
 Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
   if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
-    for(int i=0;i<treeRaw->nChannel;i++){
+    for(UInt_t i=0;i<treeRaw->nChannel;i++){
       char* p=(char*)&(treeRaw->nameModule[i]);
       int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
       //std::cout<< " Index clock: "<<indexClock<<endl;
