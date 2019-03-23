@@ -34,13 +34,13 @@ class Det_CsI:public Plugin{
   char* pName;
   TSpectrum *s;
   Int_t nfound;
-  TH1D* h1Mnft[12][2][2][16]={{{{0}}}};
-  TH1D* h1Diff[12][2][2][16]={{{{0}}}};
-  TH1D* h1rate[12][2][2][16]={{{{0}}}}; // normalized diff b/n fit and histogram
-  TH2D* h2Fits[12][2][2][16]={{{{0}}}};
-  TH1D* h1Fits[12][2][2][16]={{{{0}}}};
-  TH1D* h1Amps[12][2][2][16]={{{{0}}}};
-  TH1D* h1time[12][2][2][16]={{{{0}}}};
+  TH1D* h1Mnft[12][2][2][16];
+  TH1D* h1Diff[12][2][2][16];
+  TH1D* h1rate[12][2][2][16]; // normalized diff b/n fit and histogram
+  TH2D* h2Fits[12][2][2][16];
+  TH1D* h1Fits[12][2][2][16];
+  TH1D* h1Amps[12][2][2][16];
+  TH1D* h1time[12][2][2][16];
   TH1D* h1Pamp, *h1ped;
   TH1D* h1kmu2;
   TH1D* h1cali;
@@ -55,7 +55,10 @@ class Det_CsI:public Plugin{
   Int_t ud, event, module, multip;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
   Double_t clusE, thClus, phiClus;
-  std::vector<double> xpos, val;
+  std::vector<double> xpos, val, csThet, csPhi;
+  std::vector<int> idCrys, ncrys, nclus;
+  std::vector<int> crysID, typeAB, gud, gno, gfb;
+  bool clus_csi;
   Long_t histos();
   Long_t startup();
   Long_t process();
