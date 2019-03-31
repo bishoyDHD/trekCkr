@@ -11,8 +11,6 @@ FIND_PACKAGE(ROOT REQUIRED)
 FIND_PACKAGE(CLHEP REQUIRED)
 FIND_PACKAGE(GSL REQUIRED)
 
-#FIND_PACKAGE(GENFIT) #Can uncomment for later use of GenFit or Tongtong's Kalman Filter
-
 #FIND_PACKAGE(FTGL REQUIRED)
 #FIND_PACKAGE(Geant4 REQUIRED COMPONENTS qt ui_tcsh)
 
@@ -97,7 +95,3 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -pipe -fPIC -DPIC")
 
 add_subdirectory(external)
 add_subdirectory(src)
-
-
-
-

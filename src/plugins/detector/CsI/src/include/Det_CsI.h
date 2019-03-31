@@ -19,6 +19,11 @@
 #include <iostream>
 #include <utility>
 #include <map>
+#include <algorithm>
+#include <numeric>
+#include <boost/functional/hash.hpp>
+#include <boost/unordered_map.hpp>
+
 typedef std::pair<UInt_t,UInt_t> IdCsI;
 class Det_CsI:public Plugin{
  private:
@@ -31,6 +36,26 @@ class Det_CsI:public Plugin{
   virtual ~Det_CsI();
   // add funtions with return value Long_t here:
   
+  int clusCrys;
+  boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiph;
+  boost::unordered_map<std::pair<double,double>,bool, boost::hash<std::pair<double,double>>> csiClus;
+  //arranged theta[fb][crystalNo. 0-15]: f=0,b=1
+  double theta[2][16]={86.25, 78.75, 71.25, 63.75, 56.25, 48.75, 41.25, 33.75, 26.25,
+                                            63.75, 56.25, 48.75, 41.25, 33.75, 26.25, 18.75,
+                       93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,
+                                            116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
+  double phi[12][2][2]={{{3.75, 11.25},{18.75, 26.25}},
+                        {{33.75,41.25},{48.75, 56.25}},
+                      {{63.75,71.25},{78.75, 86.25}},
+                      {{93.75,101.25},{108.75,116.25}},
+                      {{123.75,131.25},{138.75,146.25}},
+                      {{153.75,161.25},{168.75,176.25}},
+                      {{183.75,191.25},{198.75,206.25}},
+                      {{213.75,221.25},{228.75,236.25}},
+                      {{243.75,251.25},{258.75,266.25}},
+                      {{273.75,281.25},{288.75,296.25}},
+                      {{303.75,311.25},{318.75,326.25}},
+                      {{333.75,341.25},{348.75,356.25}}};
   char* pName;
   TSpectrum *s;
   Int_t nfound;

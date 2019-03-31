@@ -1,7 +1,24 @@
 #include <Det_CsI.h>
+#include <mn2CsIfn.h>
 #include <clus_var.h>
 #include<iostream>
 #include<cmath>
+mn2CsIfn minu2;
+typedef vector<double> ve;
+  extern ve indexph;
+  ve indexph;
+  std::vector<double> *phval, *clusth, *clusphi;
+  std::size_t get_nthIndex(ve, std::size_t k){
+    std::vector<std::size_t> indexes(indexph.size());
+    std::iota(indexes.begin(), indexes.end(), 0);
+
+    std::nth_element(indexes.begin(), indexes.begin() + k, indexes.end(),
+      [&](int lhs, int rhs){
+        return indexph[lhs] > indexph[rhs];
+      }
+    );
+    return indexes[k];
+  }
 
 Long_t Det_CsI::histos_clus(){
   for(int iClock=0;iClock<12;iClock++){
@@ -183,11 +200,11 @@ Long_t Det_CsI::process_clus(){
               }
             }
 	    std::cout<< " Okay this thing is smart x =" << x << endl;
-            TF1* f1=new TF1("wave1",overr.c_str(), 0.5, x1);
+            TF1* f1=new TF1("wave1",(minu2.overrangemodel()).c_str(), 0.5, x1);
             // fill parameters for the fit function(s)
             for(int i = 1; i < 10; i+=1){
-              f1->SetParameter(i, par(i));
-              f1->SetParLimits(i,parmin(i),parlim(i));
+              f1->SetParameter(i,minu2.par(i));
+              f1->SetParLimits(i,minu2.parmin(i),minu2.parlim(i));
             }
             double rtime=(xx1+xx2)/2;
             f1->SetParameter(0,y1+1023*2);
@@ -205,7 +222,7 @@ Long_t Det_CsI::process_clus(){
             par.clear(); err.clear();
 	    std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
             for(int n=0; n<10;n+=1){
-              upar2.Add(nameL(n).c_str(), f1->GetParameter(n), 0.1);
+              upar2.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n), 0.1);
             }
             // create Migrad minimizer
             MnMigrad migrad(ffcn, upar2);
@@ -224,13 +241,13 @@ Long_t Det_CsI::process_clus(){
             std::vector<double> param;
             param.clear();
             for(int i=0; i<10; i+=1){
-              param.push_back(migrad.Value(nameL(i).c_str()));
+              param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
               //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
             }
             for(int i=1; i<+h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
               double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
               double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
-              double mnfit=overR(x, param);
+              double mnfit=minu2.overR(x, param);
               double res=100*(yv-mnfit)/yv;
               h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
               if(i>=xx1 && i<=xx2){
@@ -332,10 +349,10 @@ Long_t Det_CsI::process_clus(){
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
             if(nfound==2){
-              TF1* f1=new TF1("f1",doublemodel().c_str(),1.0,250);
+              TF1* f1=new TF1("f1",(minu2.doublemodel()).c_str(),1.0,250);
               for(int n=0; n<15; n+=1){
-                f1->SetParameter(n,par(n));
-                f1->SetParLimits(n,parmin(n),parlim(n));
+                f1->SetParameter(n,minu2.par(n));
+                f1->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
               }
               double *xpeaks=s->GetPositionX();
               double posX[2];
@@ -367,11 +384,11 @@ Long_t Det_CsI::process_clus(){
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
               for(int n=0; n<15;n+=1){
-                upar.Add(nameL(n).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
+                upar.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
                 //upar.Add(nameL(n).c_str(), f1->GetParameter(n), parmin(n), parlim(n), 1e-3);
               }
               for(int n=0; n<15;n+=1){
-                upar.Add(nameL(n).c_str(), par(n), 1e-3);
+                upar.Add((minu2.nameL(n)).c_str(), minu2.par(n), 1e-3);
               }
               // create Migrad minimizer
               MnMigrad migrad(ffcn1, upar);
@@ -387,7 +404,7 @@ Long_t Det_CsI::process_clus(){
               }*/
               //MnHesse hesse;
               for(int i=0; i<15; i+=1){
-                param.push_back(migrad.Value(nameL(i).c_str()));
+                param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
               //hesse(ffcn1, min1);
@@ -397,7 +414,7 @@ Long_t Det_CsI::process_clus(){
               for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
-                double mnfit=model2(x, param);
+                double mnfit=minu2.model2(x, param);
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
                 double res=100*(yv-mnfit)/yv;
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
@@ -487,10 +504,10 @@ Long_t Det_CsI::process_clus(){
               } //<-- Use to get rid of 2 peaks functions here * /
             }
             if(nfound==1){
-              TF1* f1=new TF1("f1",singlemodel().c_str(),1.0,250);
+              TF1* f1=new TF1("f1",(minu2.singlemodel()).c_str(),1.0,250);
               for(int n=0; n<9; n+=1){
-                f1->SetParameter(n,par(n));
-                f1->SetParLimits(n,parmin(n),parlim(n));
+                f1->SetParameter(n,minu2.par(n));
+                f1->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
               }
               f1->SetParameter(0,y1);
               f1->SetParLimits(0,y1-61.7,y1+971.7);
@@ -508,7 +525,7 @@ Long_t Det_CsI::process_clus(){
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
               for(int n=0; n<9;n+=1){
-                upar.Add(nameL(n).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
+                upar.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
                 //upar.Add(nameL(n).c_str(), f1->GetParameter(n),parmin(n), parlim(n), 1e-3);
                 //upar.SetLimits(n,parmin(n), parlim(n));
                 //parm.push_back(f1->GetParameter(n)); err.push_back(0);
@@ -531,7 +548,7 @@ Long_t Det_CsI::process_clus(){
               //MnHesse hesse;
               //FunctionMinimum min1 = migrad(3000,1e-9);
               for(int i=0; i<9; i+=1){
-                param.push_back(migrad.Value(nameL(i).c_str()));
+                param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
               //hesse(ffcn1, min1);
@@ -542,7 +559,7 @@ Long_t Det_CsI::process_clus(){
               for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
-                double mnfit=model(x, param);
+                double mnfit=minu2.model(x, param);
                 double res=100*(yv-mnfit)/yv;
                 /*if(x>=70){
                   if(abs(res)>5){
@@ -637,10 +654,10 @@ Long_t Det_CsI::process_clus(){
               dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
                 if(dpval){
 		  std::cout<<" *** Checking to make sure this is called at the right time. \n";
-                  TF1* f2=new TF1("f2",doublemodel().c_str(),1.0,250);
+                  TF1* f2=new TF1("f2",(minu2.doublemodel()).c_str(),1.0,250);
                   for(int n=0; n<13; n+=1){
-                    f2->SetParameter(n,par(n));
-                    f2->SetParLimits(n,parmin(n),parlim(n));
+                    f2->SetParameter(n,minu2.par(n));
+                    f2->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
                   }
                   f2->SetParameter(0,y1);
                   f2->SetParLimits(0,y1-61.7,y1+971.7);
@@ -661,23 +678,23 @@ Long_t Det_CsI::process_clus(){
                   param.clear(); parm.clear(); err.clear();
                   MnUserParameters upar;
                   for(int n=0; n<13;n+=1){
-                    upar.Add(nameL(n).c_str(), f2->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
+                    upar.Add((minu2.nameL(n)).c_str(), f2->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
                   }
                   for(int n=0; n<13;n+=1){
-                    upar.Add(nameL(n).c_str(), par(n), 1e-3);
+                    upar.Add((minu2.nameL(n)).c_str(), minu2.par(n), 1e-3);
                   }
                   // create Migrad minimizer
                   MnMigrad migrad(ffcn1, upar);
                   std::cout<<"minimum: "<<min<<std::endl;
                   //MnHesse hesse;
                   for(int i=0; i<13; i+=1){
-                    param.push_back(migrad.Value(nameL(i).c_str()));
+                    param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
                     //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
                   }
                   for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
                     double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
                     double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
-                    double mnfit=model2(x, param);
+                    double mnfit=minu2.model2(x, param);
                     h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
                     double res=100*(yv-mnfit)/yv;
                     h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
@@ -910,7 +927,7 @@ Long_t Det_CsI::process_clus(){
         int gNo=gno[id], gUD=gud[id], tyAB=typeAB[id];
         cout<<"    phi[gNo][UD][type] "<<phi[gNo][gUD][tyAB]<<endl;
       }*/
-      //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second*/<<endl;
+      //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second* /<<endl;
       std::cout<<" ***************************************************************************\n";
     }//<--- end cluster if loop
   } // <--- End of No. CsI crystals that fired
