@@ -40,6 +40,34 @@ class CRTRawCsI:public CRTBase{
   virtual ~CRTRawCsI();
   ClassDef(CRTRawCsI,1);
 };
+class CRTSingleCsI:public CRTBase{
+ public:
+  Int_t ud, fb;
+  Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref;
+  Double_t thSing, phiSing;
+  int crysID, typeAB;
+  int indexCsI, clock;
+  int csiArrange[2];
+  CRTSingleCsI();
+  virtual ~CRTSingleCsI();
+  ClassDef(CRTSingleCsI,1);
+};
+class CRTClusterCsI:public CRTBase{
+ public:
+  Int_t clock;
+  Int_t fb;
+  Int_t ud, event, module, multip;
+  Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref;
+  Double_t clusE, thClus, phiClus;
+  std::vector<double> xpos, val;
+  std::vector<double> csThet, csPhi;
+  std::vector<std::pair<double,double>> pos;
+  std::vector<int> idCrys, ncrys, nclus;
+  std::vector<int> crysID, typeAB, gud, gno, gfb;
+  CRTClusterCsI();
+  virtual ~CRTClusterCsI();
+  ClassDef(CRTClusterCsI,1);
+};
 
 #endif
 

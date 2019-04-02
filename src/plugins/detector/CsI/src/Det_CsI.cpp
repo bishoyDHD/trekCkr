@@ -1,9 +1,10 @@
 #include <Det_CsI.h>
 #include <mn2CsIfn.h>
+#include "TMath.h"
+#include "TF1.h"
 #include<iostream>
 #include<cmath>
 mn2CsIfn mn2;
-double gaanKak=800815;
 Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):Plugin(in,out,inf_,outf_,p){
   // Set defaults for various options
   treeCali=0;
@@ -19,6 +20,22 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
 
 Det_CsI::~Det_CsI(){
   delete s;
+  delete treeSing;
+  cout<<"  Exiting fitting program \n";
+  for(int iClock=0;iClock<12;iClock++){
+    for(int iFB=0;iFB<2;iFB++){
+      for(int iUD=0;iUD<2;iUD++){
+        for(int iModule=0;iModule<16;iModule++){
+          //delete h2Fits[iClock][iFB][iUD][iModule];
+          delete h1time[iClock][iFB][iUD][iModule];
+          delete h1Fits[iClock][iFB][iUD][iModule];
+          delete h1Amps[iClock][iFB][iUD][iModule];
+          delete h1Mnft[iClock][iFB][iUD][iModule];
+          delete h1Diff[iClock][iFB][iUD][iModule];
+        }
+      }
+    }
+  }
 };
 
 
@@ -45,11 +62,11 @@ Long_t Det_CsI::histos(){
           name5<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          h1time[iClock][iFB][iUD][iModule]=dH1(tname.str().c_str(),"stat",250,0,250);
-          h1Fits[iClock][iFB][iUD][iModule]=dH1(name.str().c_str(),"stat",250,0,250);
-          h1Amps[iClock][iFB][iUD][iModule]=dH1(name5.str().c_str(),"stat",250,0,250);
-          h1Mnft[iClock][iFB][iUD][iModule]=dH1(name2.str().c_str(),"stat",250,0,250);
-          h1Diff[iClock][iFB][iUD][iModule]=dH1(name6.str().c_str(),"stat",250,0,250);
+          h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
+          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
+          h1Amps[iClock][iFB][iUD][iModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
+          h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
+          h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
         }
       }
     }
@@ -66,12 +83,15 @@ Long_t Det_CsI::histos(){
   h1Intg=dH1("Integr","Integrated pulse height distribution", 250, 0, 100000);
   h1cali=dH1("Calibr","Integrated pulse height distribution", 250, 0, 1000);
   h1ped=dH1("Ped","Pedestals for the waveform ", 250, 0, 1000);
+
   return 0;
 }
 
 Long_t Det_CsI::startup(){
   getBranchObject("vf48",(TObject **) &treeRaw);
   getBranchObject("RawBeamInfo",(TObject **) &treeBeam);
+  treeSing=new CRTSingleCsI();
+  makeBranch("treeSing",(TObject **) &treeSing);
   gStyle->SetOptStat(0);
 
   return 0;
@@ -79,88 +99,87 @@ Long_t Det_CsI::startup(){
 
 Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
-  if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
-    for(UInt_t i=0;i<treeRaw->nChannel;i++){
-      char* p=(char*)&(treeRaw->nameModule[i]);
-      int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
-      //std::cout<< " Index clock: "<<indexClock<<endl;
-      std::string nameModule;
-      nameModule+=(*p);
-      p++;
-      nameModule+=*p;
-      p++;
-      nameModule+=*p;
-      p++;
-      nameModule+=*p;
-      std::string nameCsI;
-      p=(char*)&(treeRaw->nameCsI[i]);
-      int indexClock=(p[3]-'0')*10+(p[2]-'0')-1;
-      p+=3;
-      nameCsI+=(*p);
-      p--;
-      nameCsI+=*p;
-      p--;
-      nameCsI+=*p;
-      p--;
-      nameCsI+=*p;
+  for(UInt_t i=0;i<treeRaw->nChannel;i++){
+    char* p=(char*)&(treeRaw->nameModule[i]);
+    int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
+    //std::cout<< " Index clock: "<<indexClock<<endl;
+    std::string nameModule;
+    nameModule+=(*p);
+    p++;
+    nameModule+=*p;
+    p++;
+    nameModule+=*p;
+    p++;
+    nameModule+=*p;
+    std::string nameCsI;
+    p=(char*)&(treeRaw->nameCsI[i]);
+    int indexClock=(p[3]-'0')*10+(p[2]-'0')-1;
+    p+=3;
+    nameCsI+=(*p);
+    p--;
+    nameCsI+=*p;
+    p--;
+    nameCsI+=*p;
+    p--;
+    nameCsI+=*p;
 
-      //std::cout<< "  ***** THIS IS A TEST! TESTING! TESTING! "<<nameCsI<<"\t"<<nameModule<<endl;
-      int indexModule=treeRaw->indexCsI[i]-1;
-      int indexFB=0;
-      if(p[1]=='b' || p[1]=='B') indexFB=1;
-      int indexUD=0;
-      if(p[0]=='d' || p[0]=='D') indexUD=1;
+    //std::cout<< "  ***** THIS IS A TEST! TESTING! TESTING! "<<nameCsI<<"\t"<<nameModule<<endl;
+    int indexModule=treeRaw->indexCsI[i]-1;
+    int indexFB=0;
+    if(p[1]=='b' || p[1]=='B') indexFB=1;
+    int indexUD=0;
+    if(p[0]=='d' || p[0]=='D') indexUD=1;
 
-      if(treeRaw->indexCsI[i]==16){
-        //std::cout<< " CHAN 16:  Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " CHAN 16:  Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " CHAN 16:  Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " CHAN 16:  size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-        //std::cout<< " CHAN 16:  size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<< " CHAN 16:  Chan No.: "<<treeRaw->nChannel<<std::endl;
-	/*
-        if((indexClock==0 || indexClock==4) && indexFB==0 && indexUD==0){
-          for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
-            h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
-          }
-          x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-              GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-          tref=x1;
-          clock=indexClock;
-          //std::cout<< "   ********************************************************* \n";
-          //std::cout<< "            this is gap 16, ref time= "<<x1<<endl;
-          //std::cout<< "   ********************************************************* \n";
-        }*/
-      }
-      if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
-        //std::cout<< " Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+    if(treeRaw->indexCsI[i]==16){
+      //std::cout<< " CHAN 16:  Index clock: "<<indexClock<<std::endl;
+      //std::cout<< " CHAN 16:  Gap config FB is  : " <<p[1]<<std::endl;
+      //std::cout<< " CHAN 16:  Gap config UD is  : " <<p[0]<<std::endl;
+      //std::cout<< " CHAN 16:  size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+      //std::cout<< " CHAN 16:  size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+      //std::cout<< " CHAN 16:  Chan No.: "<<treeRaw->nChannel<<std::endl;
+      if((indexClock==0 || indexClock==4) && indexFB==0 && indexUD==0){
         for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
           h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
         }
-        #pragma omp parallel num_threads(8)
-        xpos.clear();
-        val.clear();
-        // Utilize fitting method
         x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-        double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-        y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
-        double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
-	std::cout<<" The baseline is: "<<bl<<std::endl;
-        for(int i=1; i<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); i+=1){
-          xpos.push_back(i);
-          val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i));
-        }
-        //std::cout<< " iHist: "<<iHist<<endl;
-        if(x1>=50 && x1<=70){
+            GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+        treeSing->tref=x1;
+        //clock=indexClock;
+        //std::cout<< "   ********************************************************* \n";
+        //std::cout<< "            this is gap 16, ref time= "<<x1<<endl;
+        //std::cout<< "   ********************************************************* \n";
+      }
+    }
+    if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
+      //std::cout<< " Index clock: "<<indexClock<<std::endl;
+      //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+      //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+      //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+      //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+      //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+      for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
+      }
+      #pragma omp parallel num_threads(8)
+      xpos.clear();
+      val.clear();
+      // Utilize fitting method
+      x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+      y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
+      double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
+      for(int i=1; i<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); i+=1){
+        xpos.push_back(i);
+        val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i));
+      }
+      //std::cout<< " iHist: "<<iHist<<endl;
+      if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
+        if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
+          std::cout<<" The baseline is: "<<bl<<std::endl;
           if(y1 == 1023){
             double x;
             for(int i = h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); i < 250; i += 1){
@@ -257,16 +276,30 @@ Long_t Det_CsI::process(){
         		GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
               double area=integral-(mny*250);
               h1Intg->Fill(area);
-              calInt=area;
               std::cout<<" =====> Value for integral1 is:" <<area<<endl;
+	      int tAB=0;
+              if((p[0]=='u' || p[0]=='U') && (indexModule>=9)) tAB=1;
+              std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
+              if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
+              double csitheta=theta[indexFB][indexModule];
+	      double csiphi=phi[indexClock][ud][tAB];
+              csThet.push_back(csitheta), csPhi.push_back(csiphi);
+	      treeSing->thSing=csitheta;
+	      treeSing->phiSing=csiphi;
               double diff=may-mny; int imod=0, igap=4*indexClock+2;
               int csimod=(-1*treeRaw->indexCsI[i])+1;
               if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
               if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
               h1Pamp->Fill(diff); h1ped->Fill(mny);      tpeak=max;
               h2clus->Fill(csimod,igap,diff);
-              phei=diff;          ped=mny;
-              kmu2=diff;          h1kmu2->Fill(diff);
+              h1kmu2->Fill(diff);
+              treeSing->indexCsI=treeRaw->indexCsI[i];
+              treeSing->tpeak=max;
+              treeSing->calInt=area;
+              treeSing->csiArrange[0]=p[0];
+              treeSing->csiArrange[1]=p[1];
+              treeSing->clock=indexClock+1;
+              treeSing->phei=diff;          treeSing->ped=mny;
             }else{
               phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
             } // <--- Use this to get rid of double and single fitting functions * /
@@ -369,6 +402,7 @@ Long_t Det_CsI::process(){
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
                 double diff=may-mny;
+		//double area=integral-mny*250;
         	clock=indexClock;
         	fb=indexFB;
         	ud=indexUD;
@@ -379,8 +413,24 @@ Long_t Det_CsI::process(){
                 if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
                 h2clus->Fill(csimod,igap,diff);
                 h1kmu2->Fill(diff); h1ped->Fill(mny);
-        	kmu2=diff;          ped=mny;
-        	dubPed=mny;         tpeak=max;
+		int tAB=0;
+                if((p[0]=='u' || p[0]=='U') && (indexModule>=9)) tAB=1;
+                std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
+                if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
+                double csitheta=theta[indexFB][indexModule];
+                double csiphi=phi[indexClock][ud][tAB];
+                csThet.push_back(csitheta), csPhi.push_back(csiphi);
+                treeSing->indexCsI=treeRaw->indexCsI[i];
+                treeSing->tpeak=max;
+                treeSing->kmu2=diff;          
+                treeSing->dubPed=mny;         
+                //treeSing->calInt=area;
+                treeSing->csiArrange[0]=p[0];
+                treeSing->csiArrange[1]=p[1];
+                treeSing->clock=indexClock+1;
+                treeSing->phei=diff;          treeSing->ped=mny;
+                treeSing->thSing=csitheta;
+                treeSing->phiSing=csiphi;
         	if(indexClock==0 && indexFB==1 && indexUD==0){
         	  h1cali->Fill(diff);
         	  TSpectrum *sp = new TSpectrum(4);
@@ -398,7 +448,7 @@ Long_t Det_CsI::process(){
         	dubPed=-100;
               } //<-- Use to get rid of 2 peaks functions here * /
             }else if(nfound==1){
-              TF1* f1=new TF1("f1",singleFit.c_str(),1.0,250);
+              TF1* f1=new TF1("f1",singleFit.c_str(),1,250);
               for(int n=0; n<9; n+=1){
                 f1->SetParameter(n,mn2.par(n));
                 f1->SetParLimits(n,mn2.parmin(n),mn2.parlim(n));
@@ -409,7 +459,7 @@ Long_t Det_CsI::process(){
               f1->SetParLimits(1,x1-261.7,x1+571.7);
               f1->SetParameter(8,bl);
               f1->SetParLimits(8,bl-161.7,bl+171.7);
-              h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"0");
+              h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1);//,"0");
       	      f1chi2=f1->GetChisquare();
               Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
@@ -491,8 +541,16 @@ Long_t Det_CsI::process(){
                       GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
                 double area=integral-mny*250;
                 std::cout<<" =====> Value for integral1 is:" <<area<<endl;
-                h1Intg->Fill(area);  tpeak=max;
-                calInt=area;
+                h1Intg->Fill(area);  
+		int tAB=0;
+                if((p[0]=='u' || p[0]=='U') && (indexModule>=9)) tAB=1;
+                std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
+                if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
+                double csitheta=theta[indexFB][indexModule];
+                double csiphi=phi[indexClock][ud][tAB];
+                csThet.push_back(csitheta), csPhi.push_back(csiphi);
+                treeSing->thSing=csitheta;
+                treeSing->phiSing=csiphi;
                 double diff=may-mny;
                 int imod=0, igap=4*indexClock+2;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;
@@ -500,7 +558,13 @@ Long_t Det_CsI::process(){
                 if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
                 h2clus->Fill(csimod,igap,diff);
                 h1Pamp->Fill(diff); h1ped->Fill(mny);
-                phei=diff;          ped=mny;
+                treeSing->indexCsI=treeRaw->indexCsI[i];
+                treeSing->tpeak=max;
+                treeSing->calInt=area;
+                treeSing->csiArrange[0]=p[0];
+                treeSing->csiArrange[1]=p[1];
+                treeSing->clock=indexClock+1;
+                treeSing->phei=diff;          treeSing->ped=mny;
               }else{
                 phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
               } // <--- Use this to get rid of double and single fitting functions * /
@@ -597,14 +661,14 @@ Long_t Det_CsI::process(){
               kmu2=-100; phei=-100; calInt=-100; module=-100;
             }
           }
-        }else{
-          kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
-        }
-        //pCali->Fill();
-        //if(iHist>=17) return;
-      } // <--- End of if loop
-    } // <--- End of nChannel loop
-  } // <--- End of No. CsI crystals that fired
+        } // <--- End of No. CsI crystals that fired
+      }else{
+        kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
+      } // <--- End of timing cut if loop
+      //pCali->Fill();
+      //if(iHist>=17) return;
+    } // <--- End of if loop
+  } // <--- End of nChannel for loop
 
   return 0;
 }

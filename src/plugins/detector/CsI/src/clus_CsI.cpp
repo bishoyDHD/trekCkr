@@ -116,77 +116,77 @@ Long_t Det_CsI::process_clus(){
   csThet.clear(),  csPhi.clear();
   csiph.clear();   phval->clear();   csiClus.clear();
   clusth->clear(); clusphi->clear();
-  if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
-    for(UInt_t i=0;i<treeRaw->nChannel;i++){
-      char* p=(char*)&(treeRaw->nameModule[i]);
-      int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
-      //cout<< " Index clock: "<<indexClock<<endl;
-      string nameModule;
-      nameModule+=(*p);
-      p++;
-      nameModule+=*p;
-      p++;
-      nameModule+=*p;
-      p++;
-      nameModule+=*p;
-      string nameCsI;
-      p=(char*)&(treeRaw->nameCsI[i]);
-      int indexClock=(p[3]-'0')*10+(p[2]-'0')-1;
-      p+=3;
-      nameCsI+=(*p);
-      p--;
-      nameCsI+=*p;
-      p--;
-      nameCsI+=*p;
-      p--;
-      nameCsI+=*p;
+  for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
+    char* p=(char*)&(treeRaw->nameModule[i]);
+    int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
+    //cout<< " Index clock: "<<indexClock<<endl;
+    string nameModule;
+    nameModule+=(*p);
+    p++;
+    nameModule+=*p;
+    p++;
+    nameModule+=*p;
+    p++;
+    nameModule+=*p;
+    string nameCsI;
+    p=(char*)&(treeRaw->nameCsI[i]);
+    int indexClock=(p[3]-'0')*10+(p[2]-'0')-1;
+    p+=3;
+    nameCsI+=(*p);
+    p--;
+    nameCsI+=*p;
+    p--;
+    nameCsI+=*p;
+    p--;
+    nameCsI+=*p;
+  
+    //cout<< "  ***** THIS IS A TEST! TESTING! TESTING! "<<nameCsI<<"\t"<<nameModule<<endl;
+    int indexModule=treeRaw->indexCsI[i]-1;
+    int indexFB=0;
+    if(p[1]=='b' || p[1]=='B') indexFB=1;
+    int indexUD=0;
+    ud=1;
+    if(p[0]=='d' || p[0]=='D'){
+      ud=0;
+      indexUD=1;
+    }
     
-      //cout<< "  ***** THIS IS A TEST! TESTING! TESTING! "<<nameCsI<<"\t"<<nameModule<<endl;
-      int indexModule=treeRaw->indexCsI[i]-1;
-      int indexFB=0;
-      if(p[1]=='b' || p[1]=='B') indexFB=1;
-      int indexUD=0;
-      ud=1;
-      if(p[0]=='d' || p[0]=='D'){
-        ud=0;
-        indexUD=1;
-      }
-      
-      if(treeRaw->indexCsI[i]==16){
-        //if(indexClock==0 && indexFB==0 && indexUD==0){
-          for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
-            h1time[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
-          }
-        //}
-      }
-      if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
-        //std::cout<< " Index clock: "<<indexClock<<endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
-        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
-        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<endl;
+    if(treeRaw->indexCsI[i]==16){
+      //if(indexClock==0 && indexFB==0 && indexUD==0){
         for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
-          h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
+          h1time[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
         }
-        #pragma omp parallel num_threads(8)
-        xpos.clear();
-        val.clear();
-        // Utilize fitting method
-        x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-        double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-        y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
-        double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-        	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
-        //cout<<" The baseline is: "<<bl<<endl;
-        for(int i=1; i<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); i+=1){
-          xpos.push_back(i);
-          val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i));
-        }
-        if(x1>=57 && x1<=68){
+      //}
+    }
+    if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
+      //std::cout<< " Index clock: "<<indexClock<<endl;
+      //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
+      //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
+      //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+      //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
+      //std::cout<< " Chan No.: "<<treeRaw->nChannel<<endl;
+      for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
+      }
+      #pragma omp parallel num_threads(8)
+      xpos.clear();
+      val.clear();
+      // Utilize fitting method
+      x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+      y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
+      double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
+      //cout<<" The baseline is: "<<bl<<endl;
+      for(int i=1; i<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); i+=1){
+        xpos.push_back(i);
+        val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i));
+      }
+      if(x1>=57 && x1<=68){
+        if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
           //cout<< " evtNo: "<<ev<<endl;
           //cluster finding algorithm: Finding neighbours!
           //gud=0, typeAB=0,gno=indexClock, fb=indexFB; crysID=indexModule;
@@ -260,7 +260,8 @@ Long_t Det_CsI::process_clus(){
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
-              clus_csi=true;
+	      if(!clus_csi)
+                clus_csi=true;
               clock=indexClock;
               fb=indexFB;
               module=indexModule;
@@ -424,7 +425,8 @@ Long_t Det_CsI::process_clus(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
-                clus_csi=true;
+	        if(!clus_csi)
+                  clus_csi=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -574,7 +576,8 @@ Long_t Det_CsI::process_clus(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
-                clus_csi=true;
+	        if(!clus_csi)
+                  clus_csi=true;
                 clock=indexClock;
                 fb=indexFB;
                 module=indexModule;
@@ -771,169 +774,166 @@ Long_t Det_CsI::process_clus(){
               kmu2=-100; phei=-100; calInt=-100; module=-100;
             }*/
           }
-        }else{
-          kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
+        } // <--- End of No. CsI crystals that fired
+      }else{
+        kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
+      }  // <--- End of prelim. timing cut if loop
+      //pCali->Fill();
+    } // <--- End of if loop
+  } // <--- End of number of crystals that fired loop
+  //treeRaw->Clear();
+  if(clus_csi){
+    std::cout<<"\n ***************************************************************************\n";
+    for(UInt_t cr=0;cr<phval->size();cr++){
+      //int idFB=gfb[cr]; int idCryst=idCrys[cr];
+      //int gNo=gno[cr], gUD=gud[cr], tyAB=typeAB[cr];
+      //cout<<" pulse height order is hcrys["<<cr<<"] = "<<theta[idFB][idCryst]<<" "<<phi[gNo][gUD][tyAB]<<" "<<hcrys[cr]<<": Gap No."<<gno[cr]<<endl;
+      std::cout<<" angles of corr. pulse heigh["<<cr<<"] = "<<(*phval)[cr]<<endl;
+    }
+    //std::map<std::pair<double,double>,bool>::iterator itrr;
+    for(auto itrr=csiClus.begin();itrr!=csiClus.end();itrr ++){
+      std::cout<<"  cluster bool has the following: "<<itrr->second<<std::endl;
+    }
+    double ntheta, nphi;
+    int ii=0;
+    for(std::size_t mm=0; mm !=indexph.size(); mm++){
+      const auto index=get_nthIndex(indexph, mm);
+      std::cout<<"  the greater index --> "<<index
+              << " with value "<<indexph[index]<<std::endl;
+      //std::nth_element(begin(hcrys), begin(hcrys)+ii, end(hcrys));
+      //cout<<"   checking value of nth element finder :"<<hcrys[ii]<<endl;
+      //auto phval=std::find(begin(refpulse), end(refpulse),hcrys[ii]);
+      //double loci=std::distance(begin(refpulse),phval);
+      //cout<<" ****  checking the heck out of this| "<<itr->first[ii].first<<"\t"<<itr->first[ii].second<<"\t"<<itr->second<<endl;
+      ntheta=csThet[index], nphi=csPhi[index];
+      //erpair.clear();
+      auto tppair=std::make_pair(ntheta,nphi);
+      std::cout<<"   ==>  theta and phi "<<ntheta<<"  "<<nphi<<endl;
+      //cout<<"  Pulse-height for given theta phi pair: "<< csiph[tpair]<<endl;
+      auto angP1=std::make_pair(ntheta+7.5,nphi);      auto angP2=std::make_pair(ntheta-7.5,nphi);
+      auto angP3=std::make_pair(ntheta,nphi+7.5);      auto angP4=std::make_pair(ntheta,nphi-7.5);
+      auto angP5=std::make_pair(ntheta+7.5,nphi+7.5);  auto angP6=std::make_pair(ntheta-7.5,nphi-7.5);
+      auto angP7=std::make_pair(ntheta-7.5,nphi+7.5);  auto angP8=std::make_pair(ntheta+7.5,nphi-7.5);
+      clusCrys=0;
+      if(csiph[angP1] > 0 &&  csiph[angP2] > 0 &&  csiph[angP3] > 0 && csiph[angP4] > 0 &&
+        csiph[angP5] > 0 && csiph[angP6] > 0 && csiph[angP7] > 0 &&
+        csiph[angP8] > 0){
+        std::cout<<"  Total number of cluster crystals is 8 \n";
+      }else if(csiph[angP1] > 0 || csiph[angP2] > 0 || csiph[angP3] > 0 || csiph[angP4] > 0 || 
+        csiph[angP5] > 0 || csiph[angP6] > 0 || csiph[angP7] > 0 || 
+        csiph[angP8] > 0){
+        //clusCrys=clusCrys+1;
+        if(csiph[angP1]>0){
+          std::cout<<" This crystal Cluster pulse-height P1: "<<csiClus[angP1]<<std::endl;
+          if(csiClus[angP1]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP1]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+          //csiph.erase(erpair); //csiph.erase(itr);
+          //erpair.clear();
         }
-        //pCali->Fill();
-      } // <--- End of if loop
-    } // <--- End of nChannel loop
-    //treeRaw->Clear();
-    if(clus_csi){
-      std::cout<<"\n ***************************************************************************\n";
-      for(UInt_t cr=0;cr<phval->size();cr++){
-        //int idFB=gfb[cr]; int idCryst=idCrys[cr];
-        //int gNo=gno[cr], gUD=gud[cr], tyAB=typeAB[cr];
-        //cout<<" pulse height order is hcrys["<<cr<<"] = "<<theta[idFB][idCryst]<<" "<<phi[gNo][gUD][tyAB]<<" "<<hcrys[cr]<<": Gap No."<<gno[cr]<<endl;
-        std::cout<<" angles of corr. pulse heigh["<<cr<<"] = "<<(*phval)[cr]<<endl;
-      }
-      //std::map<std::pair<double,double>,bool>::iterator itrr;
-      for(auto itrr=csiClus.begin();itrr!=csiClus.end();itrr ++){
-        std::cout<<"  cluster bool has the following: "<<itrr->second<<std::endl;
-      }
-      double ntheta, nphi;
-      int ii=0;
-      for(std::size_t mm=0; mm !=indexph.size(); mm++){
-        const auto index=get_nthIndex(indexph, mm);
-        std::cout<<"  the greater index --> "<<index
-                << " with value "<<indexph[index]<<std::endl;
-        //std::nth_element(begin(hcrys), begin(hcrys)+ii, end(hcrys));
-        //cout<<"   checking value of nth element finder :"<<hcrys[ii]<<endl;
-        //auto phval=std::find(begin(refpulse), end(refpulse),hcrys[ii]);
-        //double loci=std::distance(begin(refpulse),phval);
-        //cout<<" ****  checking the heck out of this| "<<itr->first[ii].first<<"\t"<<itr->first[ii].second<<"\t"<<itr->second<<endl;
-        ntheta=csThet[index], nphi=csPhi[index];
-        //erpair.clear();
-        auto tppair=std::make_pair(ntheta,nphi);
-	std::cout<<"   ==>  theta and phi "<<ntheta<<"  "<<nphi<<endl;
-        //cout<<"  Pulse-height for given theta phi pair: "<< csiph[tpair]<<endl;
-        auto angP1=std::make_pair(ntheta+7.5,nphi);      auto angP2=std::make_pair(ntheta-7.5,nphi);
-        auto angP3=std::make_pair(ntheta,nphi+7.5);      auto angP4=std::make_pair(ntheta,nphi-7.5);
-        auto angP5=std::make_pair(ntheta+7.5,nphi+7.5);  auto angP6=std::make_pair(ntheta-7.5,nphi-7.5);
-        auto angP7=std::make_pair(ntheta-7.5,nphi+7.5);  auto angP8=std::make_pair(ntheta+7.5,nphi-7.5);
-        clusCrys=0;
-        if(csiph[angP1] > 0 &&  csiph[angP2] > 0 &&  csiph[angP3] > 0 && csiph[angP4] > 0 &&
-          csiph[angP5] > 0 && csiph[angP6] > 0 && csiph[angP7] > 0 &&
-          csiph[angP8] > 0){
-          std::cout<<"  Total number of cluster crystals is 8 \n";
-        }else if(csiph[angP1] > 0 || csiph[angP2] > 0 || csiph[angP3] > 0 || csiph[angP4] > 0 || 
-          csiph[angP5] > 0 || csiph[angP6] > 0 || csiph[angP7] > 0 || 
-          csiph[angP8] > 0){
-          //clusCrys=clusCrys+1;
-          if(csiph[angP1]>0){
-            std::cout<<" This crystal Cluster pulse-height P1: "<<csiClus[angP1]<<std::endl;
-            if(csiClus[angP1]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP1]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-            //csiph.erase(erpair); //csiph.erase(itr);
-            //erpair.clear();
+        if(csiph[angP2]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P2: "<<csiClus[angP2]<<std::endl;
+          if(csiClus[angP2]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP2]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
           }
-          if(csiph[angP2]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P2: "<<csiClus[angP2]<<std::endl;
-            if(csiClus[angP2]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP2]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          if(csiph[angP3]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P3: "<<csiClus[angP3]<<std::endl;
-            if(csiClus[angP3]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP3]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-            //csiph.erase(erpair); //csiph.erase(itr);
-          }
-          if(csiph[angP4]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P4: "<<csiClus[angP4]<<std::endl;
-            if(csiClus[angP4]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP4]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          if(csiph[angP5]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P5: "<<csiClus[angP5]<<std::endl;
-            if(csiClus[angP5]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP5]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          if(csiph[angP6]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P6: "<<csiClus[angP6]<<std::endl;
-            if(csiClus[angP6]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP6]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          if(csiph[angP7]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P7: "<<csiClus[angP7]<<std::endl;
-            if(csiClus[angP7]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP7]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          if(csiph[angP8]>0){
-            std::cout<<" This crystal Cluster finder in pair loop P8: "<<csiClus[angP8]<<std::endl;
-            if(csiClus[angP8]){
-              clusCrys=clusCrys+1;
-              std::cout<<" This crystal is now removed from the list: "<<std::endl;
-              csiClus[angP8]=false;
-            }else{
-              std::cout<<" Already checked this crystal \n";
-            }
-          }
-          std::cout<<" some crystals actually have hits "<<clusCrys<<std::endl;
-        }else{
-          clusCrys=clusCrys+1;
-          std::cout<<" number of single cluster crystals is "<<clusCrys<<std::endl;
-          /*if(std::find(thetaPhi.begin(), thetaPhi.end(), angP2) != thetaPhi.end()){
-            std::cout<<"  Checking DeMorgan's laws in C++ \n";
-          }*/
         }
-        if(csiClus[tppair]){
+        if(csiph[angP3]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P3: "<<csiClus[angP3]<<std::endl;
+          if(csiClus[angP3]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP3]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+          //csiph.erase(erpair); //csiph.erase(itr);
         }
-        csiClus[tppair]=false; // mute central crystal
-        /*
-        cout<<"  Number of crystals is:  "<<clusCrys<<endl;
-        ii++;
-        //itr++, ii++;*/
+        if(csiph[angP4]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P4: "<<csiClus[angP4]<<std::endl;
+          if(csiClus[angP4]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP4]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angP5]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P5: "<<csiClus[angP5]<<std::endl;
+          if(csiClus[angP5]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP5]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angP6]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P6: "<<csiClus[angP6]<<std::endl;
+          if(csiClus[angP6]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP6]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angP7]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P7: "<<csiClus[angP7]<<std::endl;
+          if(csiClus[angP7]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP7]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angP8]>0){
+          std::cout<<" This crystal Cluster finder in pair loop P8: "<<csiClus[angP8]<<std::endl;
+          if(csiClus[angP8]){
+            clusCrys=clusCrys+1;
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angP8]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        std::cout<<" some crystals actually have hits "<<clusCrys<<std::endl;
+      }else{
+        clusCrys=clusCrys+1;
+        std::cout<<" number of single cluster crystals is "<<clusCrys<<std::endl;
+        /*if(std::find(thetaPhi.begin(), thetaPhi.end(), angP2) != thetaPhi.end()){
+          std::cout<<"  Checking DeMorgan's laws in C++ \n";
+        }*/
       }
-      for(UInt_t idc=0;idc<csThet.size();idc++){
-        std::cout<<"    theta[m][n] "<<csThet[idc]<<endl;
-        //cout<<"    pairs pHeig "<<csiph.find(thetaPhi)->second<<endl;
+      if(csiClus[tppair]){
       }
+      csiClus[tppair]=false; // mute central crystal
       /*
-      for(UInt_t id=0;id<idCrys.size();id++){
-        int gNo=gno[id], gUD=gud[id], tyAB=typeAB[id];
-        cout<<"    phi[gNo][UD][type] "<<phi[gNo][gUD][tyAB]<<endl;
-      }*/
-      //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second* /<<endl;
-      std::cout<<" ***************************************************************************\n";
-    }//<--- end cluster if loop
-  } // <--- End of No. CsI crystals that fired
-  else{
-    //continue;
-  } // <--- else to No. CsI crystals that fired if loop
+      cout<<"  Number of crystals is:  "<<clusCrys<<endl;
+      ii++;
+      //itr++, ii++;*/
+    }
+    for(UInt_t idc=0;idc<csThet.size();idc++){
+      std::cout<<"    theta[m][n] "<<csThet[idc]<<endl;
+      //cout<<"    pairs pHeig "<<csiph.find(thetaPhi)->second<<endl;
+    }
+    /*
+    for(UInt_t id=0;id<idCrys.size();id++){
+      int gNo=gno[id], gUD=gud[id], tyAB=typeAB[id];
+      cout<<"    phi[gNo][UD][type] "<<phi[gNo][gUD][tyAB]<<endl;
+    }*/
+    //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second* /<<endl;
+    std::cout<<" ***************************************************************************\n";
+  }//<--- end cluster if loop
   //clus_csi=false;
   delete phval;
   delete clusth;

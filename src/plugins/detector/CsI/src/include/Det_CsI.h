@@ -7,7 +7,6 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
-#include "TF1.h"
 #include "TSpectrum.h"
 #include <TStyle.h>
 #include "TAxis.h"
@@ -27,9 +26,11 @@
 typedef std::pair<UInt_t,UInt_t> IdCsI;
 class Det_CsI:public Plugin{
  private:
-  CRTCaliCsI *treeCali;                 /// Output tree for CSI data
-  CRTRawCsI *treeRaw;                   /// Input tree with CSI raw data
+  CRTCaliCsI *treeCali; // Output branch for CSI data
+  CRTRawCsI *treeRaw;   // Input tree with CSI raw data
   BeamInfo* treeBeam;
+  CRTClusterCsI *treeClus; // Output branch for CSI cluster var
+  CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
  public:
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
   Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
@@ -96,6 +97,7 @@ class Det_CsI:public Plugin{
   Long_t setIdCsI(std::map<IdCsI,UInt_t>& mapCsI);
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
+  void initVector();
 
   virtual Long_t cmdline(char * cmd);
 

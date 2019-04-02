@@ -17,6 +17,8 @@
 
 #pragma link C++ class CRTRawCsI+;
 #pragma link C++ class CRTCaliCsI+;
+#pragma link C++ class CRTClusterCsI+;
+#pragma link C++ class CRTSingleCsI+;
 
 #pragma link C++ class std::map<std::string, double>+;
 
