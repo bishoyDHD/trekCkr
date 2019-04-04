@@ -45,6 +45,7 @@ class CRTSingleCsI:public CRTBase{
   Int_t ud, fb;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref;
   Double_t thSing, phiSing;
+  Double_t ovrpH, ovrpLoc, pHloc, ovrped;
   int crysID, typeAB;
   int indexCsI, clock;
   int csiArrange[2];
