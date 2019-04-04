@@ -1,26 +1,59 @@
-#include <Det_CsI.h>
+#include <Det_ClusterCsI.h>
 #include <mn2CsIfn.h>
-#include <clus_var.h>
+//#include <clus_var.h>
 #include<iostream>
 #include<cmath>
 mn2CsIfn minu2;
-typedef vector<double> ve;
-  extern ve indexph;
-  ve indexph;
-  std::vector<double> *phval, *clusth, *clusphi;
-  std::size_t get_nthIndex(ve, std::size_t k){
-    std::vector<std::size_t> indexes(indexph.size());
-    std::iota(indexes.begin(), indexes.end(), 0);
+Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):Plugin(in,out,inf_,outf_,p){
+  // Set defaults for various options
+  treeCali=0;
+  h1Mnft[12][2][2][16]=NULL;
+  h1Diff[12][2][2][16]=NULL;
+  h1rate[12][2][2][16]=NULL; // normalized diff b/n fit and histogram
+  h2Fits[12][2][2][16]=NULL;
+  h1Fits[12][2][2][16]=NULL;
+  h1Amps[12][2][2][16]=NULL;
+  h1time[12][2][2][16]=NULL;
+  std::cout<<" checking this shit \n";
+};
 
-    std::nth_element(indexes.begin(), indexes.begin() + k, indexes.end(),
-      [&](int lhs, int rhs){
-        return indexph[lhs] > indexph[rhs];
+Det_ClusterCsI::~Det_ClusterCsI(){
+  delete s;
+  delete treeSing;
+  cout<<"  Exiting fitting program \n";
+  for(int iClock=0;iClock<12;iClock++){
+    for(int iFB=0;iFB<2;iFB++){
+      for(int iUD=0;iUD<2;iUD++){
+        for(int iModule=0;iModule<16;iModule++){
+          //delete h2Fits[iClock][iFB][iUD][iModule];
+          delete h1time[iClock][iFB][iUD][iModule];
+          delete h1Fits[iClock][iFB][iUD][iModule];
+          delete h1Amps[iClock][iFB][iUD][iModule];
+          delete h1Mnft[iClock][iFB][iUD][iModule];
+          delete h1Diff[iClock][iFB][iUD][iModule];
+        }
       }
-    );
-    return indexes[k];
+    }
   }
+};
 
-Long_t Det_CsI::histos_clus(){
+typedef vector<double> ve;
+extern ve indexph;
+ve indexph;
+std::vector<double> *phval, *clusth, *clusphi;
+std::size_t get_nthIndex(ve, std::size_t k){
+  std::vector<std::size_t> indexes(indexph.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
+
+  std::nth_element(indexes.begin(), indexes.begin() + k, indexes.end(),
+    [&](int lhs, int rhs){
+      return indexph[lhs] > indexph[rhs];
+    }
+  );
+  return indexes[k];
+}
+
+Long_t Det_ClusterCsI::histos(){
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -35,11 +68,11 @@ Long_t Det_CsI::histos_clus(){
           name5<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          h1time[iClock][iFB][iUD][iModule]=dH1(tname.str().c_str(),"stat",250,0,250);
-          h1Fits[iClock][iFB][iUD][iModule]=dH1(name.str().c_str(),"stat",250,0,250);
-          h1Amps[iClock][iFB][iUD][iModule]=dH1(name5.str().c_str(),"stat",250,0,250);
-          h1Mnft[iClock][iFB][iUD][iModule]=dH1(name2.str().c_str(),"stat",250,0,250);
-          h1Diff[iClock][iFB][iUD][iModule]=dH1(name6.str().c_str(),"stat",250,0,250);
+          h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
+          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
+          h1Amps[iClock][iFB][iUD][iModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
+          h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
+          h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
         }
       }
     }
@@ -97,7 +130,7 @@ Long_t Det_CsI::histos_clus(){
   return 0;
 }
 
-Long_t Det_CsI::startup_clus(){
+Long_t Det_ClusterCsI::startup(){
   getBranchObject("vf48",(TObject **) &treeRaw);
   getBranchObject("RawBeamInfo",(TObject **) &treeBeam);
   gStyle->SetOptStat(0);
@@ -105,7 +138,7 @@ Long_t Det_CsI::startup_clus(){
   return 0;
 }
 
-Long_t Det_CsI::process_clus(){
+Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
   clusth=new vector<double>();
   clusphi=new vector<double>();
@@ -154,17 +187,17 @@ Long_t Det_CsI::process_clus(){
     if(treeRaw->indexCsI[i]==16){
       //if(indexClock==0 && indexFB==0 && indexUD==0){
         for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
-          h1time[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
+          //h1time[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
         }
       //}
     }
     if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
-      //std::cout<< " Index clock: "<<indexClock<<endl;
-      //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-      //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-      //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
-      //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
-      //std::cout<< " Chan No.: "<<treeRaw->nChannel<<endl;
+      std::cout<< " Index clock: "<<indexClock<<endl;
+      std::cout<< " Gap config FB is  : " <<p[1]<<endl;
+      std::cout<< " Gap config UD is  : " <<p[0]<<endl;
+      std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+      std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
+      std::cout<< " Chan No.: "<<treeRaw->nChannel<<endl;
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -181,9 +214,9 @@ Long_t Det_CsI::process_clus(){
       double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
       //cout<<" The baseline is: "<<bl<<endl;
-      for(int i=1; i<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); i+=1){
-        xpos.push_back(i);
-        val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i));
+      for(int ivar=1; ivar<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); ivar+=1){
+        xpos.push_back(ivar);
+        val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
       }
       if(x1>=57 && x1<=68){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
@@ -192,9 +225,9 @@ Long_t Det_CsI::process_clus(){
           //gud=0, typeAB=0,gno=indexClock, fb=indexFB; crysID=indexModule;
           if(y1 == 1023){
             double x;
-            for(int i = h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); i < 250; i += 1){
+            for(int ovr = h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); ovr < 250; ovr += 1){
               while(y1 == 1023){
-                x = i++;
+                x = ovr++;
                 y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	      GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x));
               }
@@ -202,9 +235,9 @@ Long_t Det_CsI::process_clus(){
 	    std::cout<< " Okay this thing is smart x =" << x << endl;
             TF1* f1=new TF1("wave1",(minu2.overrangemodel()).c_str(), 0.5, x1);
             // fill parameters for the fit function(s)
-            for(int i = 1; i < 10; i+=1){
-              f1->SetParameter(i,minu2.par(i));
-              f1->SetParLimits(i,minu2.parmin(i),minu2.parlim(i));
+            for(int imn2par = 1; imn2par < 10; imn2par+=1){
+              f1->SetParameter(imn2par,minu2.par(imn2par));
+              f1->SetParLimits(imn2par,minu2.parmin(imn2par),minu2.parlim(imn2par));
             }
             double rtime=(xx1+xx2)/2;
             f1->SetParameter(0,y1+1023*2);
@@ -240,27 +273,27 @@ Long_t Det_CsI::process_clus(){
             MnHesse hesse;
             std::vector<double> param;
             param.clear();
-            for(int i=0; i<10; i+=1){
-              param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
+            for(int imn2=0; imn2<10; imn2+=1){
+              param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
               //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
             }
-            for(int i=1; i<+h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
-              double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
-              double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
+            for(int imn2=1; imn2<+h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
+              double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
+              double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
               double mnfit=minu2.overR(x, param);
               double res=100*(yv-mnfit)/yv;
-              h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
-              if(i>=xx1 && i<=xx2){
-                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, 0);
+              h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
+              if(imn2>=xx1 && imn2<=xx2){
+                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, 0);
               }else{
-                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, res);
+                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
               }
             }
             double mnx,mny,max,may;
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
-	      if(!clus_csi)
+	      //if(!clus_csi)
                 clus_csi=true;
               clock=indexClock;
               fb=indexFB;
@@ -357,10 +390,10 @@ Long_t Det_CsI::process_clus(){
               }
               double *xpeaks=s->GetPositionX();
               double posX[2];
-              for(int i=0; i<nfound; i++){
-                double a=xpeaks[i];
+              for(int ipks=0; ipks<nfound; ipks++){
+                double a=xpeaks[ipks];
                 int bin=1+Int_t(a+.5);
-                posX[i]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
+                posX[ipks]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
               }
               sort(xpeaks,xpeaks+nfound);
 	      std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1]<<endl;
@@ -404,28 +437,28 @@ Long_t Det_CsI::process_clus(){
                 std::cerr<<" Found assertion error \n";
               }*/
               //MnHesse hesse;
-              for(int i=0; i<15; i+=1){
-                param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
+              for(int imn2=0; imn2<15; imn2+=1){
+                param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
               //hesse(ffcn1, min1);
               //std::cout<<"minimum after hesse: "<<min<<std::endl;
               //FunctionMinimum min1 = migrad();
               //std::cout<<"minimum1: "<<min1<<std::endl;
-              for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
-                double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
-                double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
+              for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
+                double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
+                double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
                 double mnfit=minu2.model2(x, param);
-                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
+                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
                 double res=100*(yv-mnfit)/yv;
-                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
-                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, res);
+                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
+                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
               }
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
-	        if(!clus_csi)
+	        //if(!clus_csi)
                   clus_csi=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
@@ -549,8 +582,8 @@ Long_t Det_CsI::process_clus(){
               }*/
               //MnHesse hesse;
               //FunctionMinimum min1 = migrad(3000,1e-9);
-              for(int i=0; i<9; i+=1){
-                param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
+              for(int imn2=0; imn2<9; imn2+=1){
+                param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
               //hesse(ffcn1, min1);
@@ -558,9 +591,9 @@ Long_t Det_CsI::process_clus(){
               //FunctionMinimum min1 = migrad();
               //std::cout<<"minimum1: "<<min1<<std::endl;
               bool dpval=false;
-              for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
-                double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
-                double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
+              for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
+                double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
+                double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
                 double mnfit=minu2.model(x, param);
                 double res=100*(yv-mnfit)/yv;
                 /*if(x>=70){
@@ -569,14 +602,14 @@ Long_t Det_CsI::process_clus(){
                     goto dpulse;
                   }
                 }*/
-                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
-                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, res);
+                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
+                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
               }
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
-	        if(!clus_csi)
+	        //if(!clus_csi)
                   clus_csi=true;
                 clock=indexClock;
                 fb=indexFB;
@@ -690,18 +723,18 @@ Long_t Det_CsI::process_clus(){
                   MnMigrad migrad(ffcn1, upar);
                   std::cout<<"minimum: "<<min<<std::endl;
                   //MnHesse hesse;
-                  for(int i=0; i<13; i+=1){
-                    param.push_back(migrad.Value((minu2.nameL(i)).c_str()));
+                  for(int imn2=0; imn2<13; imn2+=1){
+                    param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                     //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
                   }
-                  for(int i=0; i<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; i+=1){
-                    double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(i);
-                    double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(i);
+                  for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
+                    double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
+                    double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
                     double mnfit=minu2.model2(x, param);
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
+                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
                     double res=100*(yv-mnfit)/yv;
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, mnfit);
-                    h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(i, res);
+                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
+                    h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
                   }
                   double mnx,mny,max,may;
                   max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -774,7 +807,7 @@ Long_t Det_CsI::process_clus(){
               kmu2=-100; phei=-100; calInt=-100; module=-100;
             }*/
           }
-        } // <--- End of No. CsI crystals that fired
+        } // <--- End of No. CsI crystals that fired* /
       }else{
         kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
       }  // <--- End of prelim. timing cut if loop
@@ -782,6 +815,7 @@ Long_t Det_CsI::process_clus(){
     } // <--- End of if loop
   } // <--- End of number of crystals that fired loop
   //treeRaw->Clear();
+
   if(clus_csi){
     std::cout<<"\n ***************************************************************************\n";
     for(UInt_t cr=0;cr<phval->size();cr++){
@@ -798,8 +832,8 @@ Long_t Det_CsI::process_clus(){
     int ii=0;
     for(std::size_t mm=0; mm !=indexph.size(); mm++){
       const auto index=get_nthIndex(indexph, mm);
-      std::cout<<"  the greater index --> "<<index
-              << " with value "<<indexph[index]<<std::endl;
+      std::cout<<"  the greater index --> "<<index <<std::endl;
+              //<< " with value "<<indexph[index]<<std::endl;
       //std::nth_element(begin(hcrys), begin(hcrys)+ii, end(hcrys));
       //cout<<"   checking value of nth element finder :"<<hcrys[ii]<<endl;
       //auto phval=std::find(begin(refpulse), end(refpulse),hcrys[ii]);
@@ -933,14 +967,14 @@ Long_t Det_CsI::process_clus(){
     }*/
     //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second* /<<endl;
     std::cout<<" ***************************************************************************\n";
-  }//<--- end cluster if loop
-  //clus_csi=false;
+  }//<--- end cluster if loop* /
   delete phval;
   delete clusth;
   delete clusphi;
+  return 0;
 }
 
-Long_t Det_CsI::finalize_clus(){
+Long_t Det_ClusterCsI::finalize(){
   for(int i=0;i<23;i++) delete hline1[i];
   for(int i=0;i<26;i++) delete hline2[i];
   for(int i=0;i<4;i++) delete vbox2[i];
@@ -954,3 +988,16 @@ Long_t Det_CsI::finalize_clus(){
   }
   return 0;
 }
+
+Long_t Det_ClusterCsI::cmdline(char *cmd){
+  //add cmdline hanling here
+
+  return 0; // 0 = all ok
+};
+
+extern "C"{
+  Plugin *factory(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p){
+    return (Plugin *) new Det_ClusterCsI(in,out,inf_,outf_,p);
+  }
+}
+ClassImp(Det_ClusterCsI);

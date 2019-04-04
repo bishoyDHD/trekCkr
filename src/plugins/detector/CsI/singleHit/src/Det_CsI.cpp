@@ -151,12 +151,12 @@ Long_t Det_CsI::process(){
       }
     }
     if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
-      //std::cout<< " Index clock: "<<indexClock<<std::endl;
-      //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-      //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-      //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-      //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-      //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+      std::cout<< " Index clock: "<<indexClock<<std::endl;
+      std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+      std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+      std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+      std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+      std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }

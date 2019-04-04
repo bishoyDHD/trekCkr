@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cooker xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation='recipe.xsd'>
+
+<init>/${HOME}/.cooker/shared/init/ClusterCsI.xml</init>
+
+<source>vf48_hdw</source> <!-- the source tree name-->
+<destination>csi_cali</destination> <!-- the destination tree name-->
+
+<plugins>
+  <plugin>
+     <name>ClusterCsI</name>
+     <file>libClusterCsI</file>
+  </plugin>
+
+
+</plugins>
+
+
+<defineHistograms>
+ <ClusterCsI>histos</ClusterCsI>
+</defineHistograms>
+
+<!-- These functions will be called at the beginning -->
+<startup>
+ <ClusterCsI>startup</ClusterCsI>
+</startup>
+
+<!-- These functions will be executed for every event, in order of appearance -->
+<execute>
+ <ClusterCsI>process</ClusterCsI>
+</execute>
+
+<!-- These functions will be called at the end of the file -->
+<finalize>
+ <ClusterCsI>finalize</ClusterCsI>
+</finalize>
+
+</cooker>
+

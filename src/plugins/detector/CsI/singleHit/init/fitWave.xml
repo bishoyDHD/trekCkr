@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ToF>
+  <config>
+    <goodevent>set_goodEvents</goodevent>
+  </config>
+
+  <!-- Default values -->
+  <date time="2015-01-01T00:00:00">
+    <goodevent run="1800">0</goodevent>
+    <goodevent run="1800">5</goodevent>
+  </date>
+
+
+</ToF>

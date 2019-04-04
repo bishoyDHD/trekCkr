@@ -1,87 +1,63 @@
-#ifndef clus_var_h
-#define clus_var_h 1
-#include <stdio.h>
-#include <algorithm>
-#include <numeric>
-#include <vector>
-#include <stdexcept>
-#include <string>
-#include <execinfo.h>
+#ifndef __DET_CSI__
+#define __DET_CSI__
+
 #include "csitree.h"
 #include "TObject.h"
 #include "Plugin.h"
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
-#include "TF1.h"
 #include "TSpectrum.h"
 #include <TStyle.h>
+#include "TAxis.h"
 #include "TAxis.h"
 #include "TLine.h"
 #include <stdio.h>
 #include <vector>
+#include <string>
+#include <iostream>
+#include <utility>
 #include <map>
-#include <unordered_map>
+#include <algorithm>
+#include <numeric>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
-using namespace std;/*
-  typedef vector<double> ve;
-  extern ve indexph;
-  ve indexph;*/
-class csiDef:public Plugin{
- private:
-  CRTCaliCsI *treeCali;                 /// Output tree for CSI data
-  CRTRawCsI *treeRaw;                   /// Input tree with CSI raw data
-  BeamInfo* treeBeam;
 
+typedef std::pair<UInt_t,UInt_t> IdCsI;
+class Det_CsI:public Plugin{
+ private:
+  CRTCaliCsI *treeCali; // Output branch for CSI data
+  CRTRawCsI *treeRaw;   // Input tree with CSI raw data
+  CRTRawCsI *treeClus;   // Input tree with CSI raw data
+  BeamInfo* treeBeam;
+  //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
+  CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
  public:
-  csiDef(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
-  int clusCrys;
-  virtual ~csiDef();
-  string NameFilelist;
-  UInt_t RunNo=0;
-  UInt_t MaxEvent=0;
-  string NameRoot="vf48_dump.root";
-  vector<string> ListNameFile;
-  boost::unordered_map<std::pair<double,double>,double, boost::hash<pair<double,double>>> csiph;
-  boost::unordered_map<std::pair<double,double>,bool, boost::hash<pair<double,double>>> csiClus;
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
+  Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
+  virtual ~Det_CsI();
   // add funtions with return value Long_t here:
-/*
-  vector<double> *phval, *clusth, *clusphi;
-  std::size_t get_nthIndex(ve, std::size_t k){
-    std::vector<std::size_t> indexes(indexph.size());
-    std::iota(indexes.begin(), indexes.end(), 0);
   
-    std::nth_element(indexes.begin(), indexes.begin() + k, indexes.end(),
-      [&](int lhs, int rhs){
-        return indexph[lhs] > indexph[rhs];
-      }
-    );
-    return indexes[k];
-  }*/
-  Long_t histos();
-  Long_t startup();
-  Long_t process();
-  Long_t finalize();
+  int clusCrys;
+  boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiph;
+  boost::unordered_map<std::pair<double,double>,bool, boost::hash<std::pair<double,double>>> csiClus;
   //arranged theta[fb][crystalNo. 0-15]: f=0,b=1
   double theta[2][16]={86.25, 78.75, 71.25, 63.75, 56.25, 48.75, 41.25, 33.75, 26.25,
                                             63.75, 56.25, 48.75, 41.25, 33.75, 26.25, 18.75,
                        93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,
-  		                            116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
+                                            116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
   double phi[12][2][2]={{{3.75, 11.25},{18.75, 26.25}},
                         {{33.75,41.25},{48.75, 56.25}},
-  		      {{63.75,71.25},{78.75, 86.25}},
-  		      {{93.75,101.25},{108.75,116.25}},
-  		      {{123.75,131.25},{138.75,146.25}},
-  		      {{153.75,161.25},{168.75,176.25}},
-  		      {{183.75,191.25},{198.75,206.25}},
-  		      {{213.75,221.25},{228.75,236.25}},
-  		      {{243.75,251.25},{258.75,266.25}},
-  		      {{273.75,281.25},{288.75,296.25}},
-  		      {{303.75,311.25},{318.75,326.25}},
-  		      {{333.75,341.25},{348.75,356.25}}};
-  
+                      {{63.75,71.25},{78.75, 86.25}},
+                      {{93.75,101.25},{108.75,116.25}},
+                      {{123.75,131.25},{138.75,146.25}},
+                      {{153.75,161.25},{168.75,176.25}},
+                      {{183.75,191.25},{198.75,206.25}},
+                      {{213.75,221.25},{228.75,236.25}},
+                      {{243.75,251.25},{258.75,266.25}},
+                      {{273.75,281.25},{288.75,296.25}},
+                      {{303.75,311.25},{318.75,326.25}},
+                      {{333.75,341.25},{348.75,356.25}}};
   char* pName;
   TSpectrum *s;
   Int_t nfound;
@@ -110,12 +86,22 @@ class csiDef:public Plugin{
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;
   bool clus_csi;
+  Long_t histos();
+  Long_t startup();
+  Long_t process();
+  Long_t finalize();
   // clustering methods
   Long_t histos_clus();
   Long_t startup_clus();
   Long_t process_clus();
   Long_t finalize_clus();
+  Long_t setIdCsI(std::map<IdCsI,UInt_t>& mapCsI);
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
+  void initVector();
+
+  virtual Long_t cmdline(char * cmd);
+
+  ClassDef(Det_CsI,1);
 };
 #endif

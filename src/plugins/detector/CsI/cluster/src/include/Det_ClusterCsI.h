@@ -1,5 +1,5 @@
-#ifndef __DET_CSI__
-#define __DET_CSI__
+#ifndef __Det_ClusterCsI__
+#define __Det_ClusterCsI__
 
 #include "csitree.h"
 #include "TObject.h"
@@ -7,6 +7,7 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TF1.h"
 #include "TSpectrum.h"
 #include <TStyle.h>
 #include "TAxis.h"
@@ -24,17 +25,17 @@
 #include <boost/unordered_map.hpp>
 
 typedef std::pair<UInt_t,UInt_t> IdCsI;
-class Det_CsI:public Plugin{
+class Det_ClusterCsI:public Plugin{
  private:
   CRTCaliCsI *treeCali; // Output branch for CSI data
   CRTRawCsI *treeRaw;   // Input tree with CSI raw data
   BeamInfo* treeBeam;
-  CRTClusterCsI *treeClus; // Output branch for CSI cluster var
+  //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
  public:
+  Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
+  virtual ~Det_ClusterCsI();
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
-  Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
-  virtual ~Det_CsI();
   // add funtions with return value Long_t here:
   
   int clusCrys;
@@ -101,6 +102,6 @@ class Det_CsI:public Plugin{
 
   virtual Long_t cmdline(char * cmd);
 
-  ClassDef(Det_CsI,1);
+  ClassDef(Det_ClusterCsI,1);
 };
 #endif
