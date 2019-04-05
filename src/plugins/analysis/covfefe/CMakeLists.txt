@@ -4,13 +4,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4.3 FATAL_ERROR)
 IF(COMMAND cmake_policy)
 	cmake_policy(SET CMP0003 NEW)
 ENDIF(COMMAND cmake_policy)
-
+###################################
+# POI:
 # Set project name
 PROJECT(covfefe)
 
-
-
-
+###################################
+# POI:
 # Set the library version
 SET(COVFEFE_MAJOR_VERSION 1)
 SET(COVFEFE_MINOR_VERSION 1)
@@ -18,13 +18,13 @@ SET(COVFEFE_PATCH_VERSION 0)
 SET(COVFEFE_VERSION "${COVFEFE_MAJOR_VERSION}.${COVFEFE_MINOR_VERSION}.${COVFEFE_PATCH_VERSION}")
 LIST(APPEND COVFEFE_LIBRARY_PROPERTIES VERSION "${COVFEFE_VERSION}" SOVERSION "${COVFEFE_MAJOR_VERSION}")
 
-
+###################################
+# POI:
 # find source and header files, set paths, includes...
 SET(LIBNAME "covfefe")
 
-
 FILE(GLOB SRCS src/*.cpp)
-FILE(GLOB HEADERS src/include/*.h ${CMAKE_SOURCE_DIR}/include.cookerrawtree.h)
+FILE(GLOB HEADERS src/include/*.h ${CMAKE_SOURCE_DIR}/include/cookerrawtree.h)
 
 SET(INCLUDES ${ROOT_INCLUDE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/include" "${CMAKE_SOURCE_DIR}/include")
 INCLUDE_DIRECTORIES(${INCLUDES})
@@ -35,6 +35,8 @@ SET(DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}Dict.cpp)
 ROOT_GENERATE_DICTIONARY("${HEADERS}" "${LINKDEF}" "${DICTIONARY}" "${INCLUDES}")
 LIST(APPEND SRCS ${DICTIONARY})
 
+###################################
+# POI:
 # build the library
 ADD_LIBRARY(${LIBNAME} SHARED ${SRCS})
 TARGET_LINK_LIBRARIES(${LIBNAME}  cookerrawtree Plugin "-L${ROOT_LIBRARY_DIR}" ${ROOT_LIBRARIES})

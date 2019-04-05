@@ -1,6 +1,7 @@
 #ifndef __COVFEFE__
 #define __COVFEFE__
 
+#include <marinateCsI.h>
 #include "TObject.h"
 #include "Plugin.h"
 #include "TTree.h"
@@ -8,21 +9,10 @@
 #include <map>
 #include <iterator>
 
-class StrawTubeHits;
-class TrackHits;
-
-class TH2D;
-class covfefe:public Plugin
-{
+class covfefe:public Plugin{
  private:
-  StrawTubeHits *STT;
-  TrackHits *Tracks;
-
-  TH2D *hough,*circ,*straws,*line,*both,*lineprime,*chiVangle,*chiVangleprime;
-  TH1D *hitresidual,*strawresidual,*hitchisq,*strawchisq,*Angle;
-
-
-
+  CATSingleCsI* csimar;
+  CATCaliCsI* calibcsi;
 
  public:
   covfefe(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
@@ -39,6 +29,6 @@ class covfefe:public Plugin
   virtual Long_t cmdline(char * cmd);
 
   ClassDef(covfefe,1);
-    };
+};
 
 #endif

@@ -8,3 +8,11 @@ CRTCaliCsI::CRTCaliCsI(){};
 CRTCaliCsI::~CRTCaliCsI(){};
 ClassImp(CRTCaliCsI);
 
+CRTSingleCsI::CRTSingleCsI(){};
+CRTSingleCsI::~CRTSingleCsI(){};
+ClassImp(CRTSingleCsI);
+
+CRTClusterCsI::CRTClusterCsI(){};
+CRTClusterCsI::~CRTClusterCsI(){};
+ClassImp(CRTClusterCsI);
+

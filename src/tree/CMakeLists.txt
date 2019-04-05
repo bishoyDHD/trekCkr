@@ -28,6 +28,7 @@ FILE(GLOB SRCS src/*.cpp)
 FILE(GLOB HEADERS src/include/*.h
 ${CMAKE_SOURCE_DIR}/include/cookerrawtree.h
 ${CMAKE_SOURCE_DIR}/include/csitree.h
+${CMAKE_SOURCE_DIR}/include/marinateCsI.h
 )
 
 SET(INCLUDES ${ROOT_INCLUDE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/include" "${CMAKE_CURRENT_SOURCE_DIR}/../../include")
