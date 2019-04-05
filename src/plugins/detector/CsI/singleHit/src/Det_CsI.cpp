@@ -310,6 +310,7 @@ Long_t Det_CsI::process(){
               treeSing->clock=indexClock+1;
               treeSing->ovrped=mny;
               treeSing->ovrpH=diff;
+              treeSing->ud=indexUD;            treeSing->fb=indexFB;
 	      if(xpeaks[1]>0)
                 treeSing->ovrpLoc=xpeaks[1];
               treeSing->phei=diff;          treeSing->ped=mny;
@@ -441,6 +442,7 @@ Long_t Det_CsI::process(){
                 treeSing->thSing=csitheta;
                 treeSing->phiSing=csiphi;
                 treeSing->pHloc=xpeaks[1];
+                treeSing->ud=indexUD;         treeSing->fb=indexFB;
         	if(indexClock==0 && indexFB==1 && indexUD==0){
         	  h1cali->Fill(diff);
         	  TSpectrum *sp = new TSpectrum(4);
@@ -576,6 +578,7 @@ Long_t Det_CsI::process(){
                 treeSing->csiArrange[1]=p[1];
                 treeSing->clock=indexClock+1;
                 treeSing->phei=diff;          treeSing->ped=mny;
+                treeSing->ud=indexUD;         treeSing->fb=indexFB;
               }else{
                 phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
               } // <--- Use this to get rid of double and single fitting functions * /

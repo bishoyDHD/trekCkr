@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cooker xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation='recipe.xsd'>
+
+<init>/${HOME}/.cooker/shared/init/covfefe.xml</init>
+
+<source>csi_cali</source> <!-- the source tree name-->
+<destination>marinated</destination> <!-- the destination tree name-->
+
+<plugins>
+  <plugin>
+     <name>covfefe</name>
+     <file>libcovfefe</file>
+  </plugin>
+
+
+</plugins>
+
+
+<defineHistograms>
+ <covfefe>histos</covfefe>
+</defineHistograms>
+
+<!-- These functions will be called at the beginning -->
+<startup>
+ <covfefe>startup</covfefe>
+</startup>
+
+<!-- These functions will be executed for every event, in order of appearance -->
+<execute>
+ <covfefe>process</covfefe>
+</execute>
+
+<!-- These functions will be called at the end of the file -->
+<finalize>
+ <covfefe>finalize</covfefe>
+</finalize>
+
+</cooker>
+

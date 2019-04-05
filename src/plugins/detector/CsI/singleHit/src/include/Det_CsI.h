@@ -10,7 +10,6 @@
 #include "TSpectrum.h"
 #include <TStyle.h>
 #include "TAxis.h"
-#include "TAxis.h"
 #include "TLine.h"
 #include <stdio.h>
 #include <vector>
