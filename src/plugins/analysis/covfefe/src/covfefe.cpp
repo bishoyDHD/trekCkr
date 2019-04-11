@@ -1,5 +1,4 @@
 #include <covfefe.h>
-
 #include <iostream>
 #include <cmath>
 #include "TVector2.h"
@@ -13,24 +12,48 @@
 
 covfefe::covfefe(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):Plugin(in,out,inf_,outf_,p){
   calibcsi=0;
+  h1time[12][2][2][16]=NULL;
+  h1cali[12][2][2][16]=NULL;
+  calibHist=NULL;
+  Ecorr=NULL;
+  std::cout<<" checking this shit \n";
 };
 
 covfefe::~covfefe(){
-  for(int i=0; i<20; i++)
-    delete calibHist[i];
+  for(int iClock=0;iClock<12;iClock++){
+    for(int iFB=0;iFB<2;iFB++){
+      for(int iUD=0;iUD<2;iUD++){
+        for(int iModule=0;iModule<15;iModule++){
+          delete h1time[iClock][iFB][iUD][iModule];
+          //delete h1cali[iClock][iFB][iUD][iModule];
+        }
+      }
+    }
+  }
+  delete calibHist;
 };
 
 Long_t covfefe::histos(){
-  for(int iname=0; iname<20; iname++){
-    std::ostringstream name;
-    name<<"calibH";
-    name<<"crysID"<<"_"<<"ang_";
-    name<<theta[iname];
-    name<<"_3.75";
-    calibHist[iname]=new TH1D(name.str().c_str(),"stat",250,0,1250);
+  std::ostringstream nameCal, ename;
+  nameCal<<"CalibCsI";
+  ename<<"E_corr";
+  calibHist=new TH1D(nameCal.str().c_str(),"stat",62.0,0,250);
+  Ecorr=new TH1D(ename.str().c_str(),"stat",63.0,0,250);
+  for(int iClock=0;iClock<12;iClock++){
+    for(int iFB=0;iFB<2;iFB++){
+      for(int iUD=0;iUD<2;iUD++){
+        for(int iModule=0;iModule<15;iModule++){
+          std::ostringstream name, name2, name3, name4, name5, name6, tname;
+          name<<"stat_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
+          tname<<"time";
+          name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
+          tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
+          h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",86.5,0,1300);
+          //h1cali[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",86.5,0,1300);
+        }
+      }
+    }
   }
-  tpeak=new TH1D("tpeak","stat",250,0,250);
-  tref=new TH1D("tref","stat",250,0,250);
   return 0;
 }
 
@@ -44,35 +67,17 @@ Long_t covfefe::startup(){
 };
 
 Long_t covfefe::process(){
-  if(csimar->thSing!=18.75 && csimar->phiSing==3.75){
-    if(csimar->thSing==26.25)
-      calibHist[1]->Fill(csimar->kmu2);
-    if(csimar->thSing==33.75)
-      calibHist[2]->Fill(csimar->kmu2);
-    if(csimar->thSing==41.25)
-      calibHist[3]->Fill(csimar->kmu2);
-    if(csimar->thSing==48.75)
-      calibHist[4]->Fill(csimar->kmu2);
-    if(csimar->thSing==56.25)
-      calibHist[5]->Fill(csimar->kmu2);
-    if(csimar->thSing==63.25)
-      calibHist[6]->Fill(csimar->kmu2);
-  }
-  tpeak->Fill(csimar->tpeak);
-  tref->Fill(csimar->tref);
-  if(csimar->thSing!=18.75 && csimar->phiSing==26.25){
-    if(csimar->thSing==26.25)
-      calibHist[7]->Fill(csimar->kmu2);
-    if(csimar->thSing==33.75)
-      calibHist[8]->Fill(csimar->kmu2);
-    if(csimar->thSing==41.25)
-      calibHist[9]->Fill(csimar->kmu2);
-    if(csimar->thSing==48.75)
-      calibHist[10]->Fill(csimar->kmu2);
-    if(csimar->thSing==56.25)
-      calibHist[11]->Fill(csimar->kmu2);
-    if(csimar->thSing==63.25)
-      calibHist[12]->Fill(csimar->kmu2);
+  iclock=csimar->clock-1;
+  iModule=csimar->indexCsI-1;
+  iUD=csimar->ud; iFB=csimar->fb;
+  adcVal=csimar->kmu2;
+  if(adcVal > 10){
+    //std::cout<<" value of clock:  "<<iclock<<std::endl;
+    //std::cout<<" value of Module: "<<iModule<<std::endl;
+    //std::cout<<" value of iUD:    "<<iUD<<std::endl;
+    //std::cout<<" value of iFB:    "<<iFB<<std::endl;
+    //std::cout<<" value of adcVal: "<<adcVal<<std::endl;
+    h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
   }
 
   return 0; // 0 = all ok
@@ -80,28 +85,66 @@ Long_t covfefe::process(){
 
 Long_t covfefe::finalize(){
   TSpectrum *s;
-  for(int i=1; i<12; i++){
-    s=new TSpectrum(4);
-    TF1* f1=calibHist[i]->GetFunction("gaus");
-    Int_t nfound = s->Search(calibHist[i],2,"",0.10);
-    Double_t *xpeaks = s->GetPositionX();
-    std::sort(xpeaks,xpeaks+nfound);
-    lowRange=xpeaks[0]/1.5;
-    upRange=xpeaks[0]*3.0/2.0;
-    calibHist[i]->Fit("gaus","Q","",lowRange,upRange);
+  gStyle->SetOptStat(0);
+  double xmax, xx, calpar;
+  for(int iClock=0;iClock<12;iClock++){
+    for(int iFB=0;iFB<2;iFB++){
+      for(int iUD=0;iUD<2;iUD++){
+        for(int iModule=0;iModule<15;iModule++){
+          xmax=h1time[iClock][iFB][iUD][iModule]->GetMaximumBin();
+	  xx=h1time[iClock][iFB][iUD][iModule]->GetXaxis()->GetBinCenter(xmax);
+	  nbins=h1time[iClock][iFB][iUD][iModule]->GetXaxis()->GetNbins();
+	  lowRange=xx-110;
+          upRange=xx+100;
+	  TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+	  //f1->SetParLimits(0,lowRange,upRange);
+	  h1time[iClock][iFB][iUD][iModule]->Fit(f1,"QR");
+	  apcsi=f1->GetMaximumX();
+	  calpar=dE/apcsi;
+	  for(int n=0; n<nbins;n++){
+	    double yy=h1time[iClock][iFB][iUD][iModule]->GetBinContent(n);
+	    double x=h1time[iClock][iFB][iUD][iModule]->GetBinCenter(n);
+	    double xnew=calpar*x;
+	    calibHist->Fill(xnew,yy);
+	    Ecorr->Fill(xnew+8.9,yy);
+	  }
+	  delete f1;
+	  //if(apcsi>0)
+	    //std::cout<<"\n \n**** Gotta check this max val:  "<<apcsi<<std::endl;
+        }
+      }
+    }
   }
   TCanvas* c1=new TCanvas("MarinateCsI","Marinate",3508,2480);
   TCanvas* c2=new TCanvas("MarinateCsI2","Marinate 2",3508,2480);
-  c1->Divide(3,2);
-  c2->Divide(3,2);
-  for(int i=1;i<6;i++){
-    c1->cd(i);
-    calibHist[i]->Draw();
-    c2->cd(i);
-    calibHist[i+6]->Draw();
+  TCanvas* c3=new TCanvas("E_CsI","Energy CsI",808,700);
+  c1->Divide(3,4);
+  c2->Divide(3,4);
+  for(int iClock=0;iClock<1;iClock++){
+    for(int iFB=0;iFB<1;iFB++){
+      for(int iUD=0;iUD<1;iUD++){
+        for(int iModule=0;iModule<12;iModule++){
+          c1->cd(iModule+1);
+          h1time[iClock][iFB][iUD][iModule]->Draw();
+          c2->cd(iModule+1);
+          h1time[iClock][iFB][iUD+1][iModule]->Draw();
+	}
+      }
+    }
   }
   c1->Write();
   c2->Write();
+  c3->cd();
+  Ecorr->SetTitle("CsI Energy for K_{#mu2} ");
+  Ecorr->GetXaxis()->SetTitle("T_{#mu} [MeV]");
+  Ecorr->SetLineColor(kCyan);
+  Ecorr->SetLineWidth(2);
+  //double lower=153.4-20, upper=153.4+20;
+  //TF1* f2=new TF1("f2","gaus",lower,upper);
+  //Ecorr->Fit("f2","QR");
+  Ecorr->Draw("hist");
+  calibHist->Draw("hist same");
+  c3->Write();
   return 0; // 0 = all ok
 };
 

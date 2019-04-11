@@ -291,10 +291,10 @@ Long_t Det_CsI::process(){
               std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
               if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
               double csitheta=theta[indexFB][indexModule];
-	      double csiphi=phi[indexClock][ud][tAB];
+              double csiphi=phi[indexClock][ud][tAB];
               csThet.push_back(csitheta), csPhi.push_back(csiphi);
-	      treeSing->thSing=csitheta;
-	      treeSing->phiSing=csiphi;
+              treeSing->thSing=csitheta;
+              treeSing->phiSing=csiphi;
               double diff=may-mny; int imod=0, igap=4*indexClock+2;
               int csimod=(-1*treeRaw->indexCsI[i])+1;
               if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
@@ -304,6 +304,8 @@ Long_t Det_CsI::process(){
               h1kmu2->Fill(diff);
               treeSing->indexCsI=treeRaw->indexCsI[i];
               treeSing->tpeak=max;
+              treeSing->trise=param[1];
+              //std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
               treeSing->calInt=area;
               treeSing->csiArrange[0]=p[0];
               treeSing->csiArrange[1]=p[1];
@@ -432,6 +434,8 @@ Long_t Det_CsI::process(){
                 csThet.push_back(csitheta), csPhi.push_back(csiphi);
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
+                treeSing->trise=param[1];
+		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
                 treeSing->kmu2=diff;          
                 treeSing->dubPed=mny;         
                 //treeSing->calInt=area;
@@ -573,6 +577,8 @@ Long_t Det_CsI::process(){
                 h1Pamp->Fill(diff); h1ped->Fill(mny);
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
+                treeSing->trise=param[1];
+		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
                 treeSing->calInt=area;
                 treeSing->csiArrange[0]=p[0];
                 treeSing->csiArrange[1]=p[1];
@@ -679,9 +685,8 @@ Long_t Det_CsI::process(){
       }else{
         kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
       } // <--- End of timing cut if loop
-      //pCali->Fill();
-      //if(iHist>=17) return;
     } // <--- End of if loop
+    break;
   } // <--- End of nChannel for loop
 
   return 0;
