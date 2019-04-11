@@ -16,6 +16,8 @@ covfefe::covfefe(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   h1cali[12][2][2][16]=NULL;
   calibHist=NULL;
   Ecorr=NULL;
+  integHist=NULL;
+  intEn=NULL;
   std::cout<<" checking this shit \n";
 };
 
@@ -25,31 +27,38 @@ covfefe::~covfefe(){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<15;iModule++){
           delete h1time[iClock][iFB][iUD][iModule];
-          //delete h1cali[iClock][iFB][iUD][iModule];
+          delete h1cali[iClock][iFB][iUD][iModule];
         }
       }
     }
   }
   delete calibHist;
+  delete Ecorr;
+  delete integHist;
+  delete intEn;
 };
 
 Long_t covfefe::histos(){
-  std::ostringstream nameCal, ename;
+  std::ostringstream nameCal, ename, nameInt, inEne;
   nameCal<<"CalibCsI";
   ename<<"E_corr";
+  nameInt<<"integCsI";
+  inEne<<"IntEnergy";
   calibHist=new TH1D(nameCal.str().c_str(),"stat",62.0,0,250);
   Ecorr=new TH1D(ename.str().c_str(),"stat",63.0,0,250);
+  integHist=new TH1D(nameInt.str().c_str(),"stat",1875,0,75000);
+  intEn=new TH1D(inEne.str().c_str(),"stat",63.0,0,250);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<15;iModule++){
           std::ostringstream name, name2, name3, name4, name5, name6, tname;
-          name<<"stat_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
+          name<<"IntEne_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
           tname<<"time";
           name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",86.5,0,1300);
-          //h1cali[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",86.5,0,1300);
+          h1cali[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",1875,0,75000);
         }
       }
     }
@@ -71,6 +80,7 @@ Long_t covfefe::process(){
   iModule=csimar->indexCsI-1;
   iUD=csimar->ud; iFB=csimar->fb;
   adcVal=csimar->kmu2;
+  intVal=csimar->calInt;
   if(adcVal > 10){
     //std::cout<<" value of clock:  "<<iclock<<std::endl;
     //std::cout<<" value of Module: "<<iModule<<std::endl;
@@ -78,6 +88,9 @@ Long_t covfefe::process(){
     //std::cout<<" value of iFB:    "<<iFB<<std::endl;
     //std::cout<<" value of adcVal: "<<adcVal<<std::endl;
     h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
+    std::cout<< "  value for integral as seen: "<<intVal<<std::endl;
+    if(intVal < 75001)
+      h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
   }
 
   return 0; // 0 = all ok
@@ -108,9 +121,25 @@ Long_t covfefe::finalize(){
 	    calibHist->Fill(xnew,yy);
 	    Ecorr->Fill(xnew+8.9,yy);
 	  }
+          xmax=h1cali[iClock][iFB][iUD][iModule]->GetMaximumBin();
+	  xx=h1cali[iClock][iFB][iUD][iModule]->GetXaxis()->GetBinCenter(xmax);
+	  nbins=h1cali[iClock][iFB][iUD][iModule]->GetXaxis()->GetNbins();
+	  lowRange=xx-110;
+          upRange=xx+100;
+	  TF1* f2=new TF1("f2","gaus",lowRange,upRange);
+	  //f1->SetParLimits(0,lowRange,upRange);
+	  h1cali[iClock][iFB][iUD][iModule]->Fit(f2,"QR");
+	  apcsi=f2->GetMaximumX();
+	  calpar=dE/apcsi;
+	  for(int n=0; n<h1cali[iClock][iFB][iUD][iModule]->GetXaxis()->GetNbins();n++){
+	    double yy=h1cali[iClock][iFB][iUD][iModule]->GetBinContent(n);
+	    double x=h1cali[iClock][iFB][iUD][iModule]->GetBinCenter(n);
+	    double xnew=calpar*x;
+	    integHist->Fill(xnew,yy);
+	    intEn->Fill(xnew+8.9,yy);
+	  }
 	  delete f1;
-	  //if(apcsi>0)
-	    //std::cout<<"\n \n**** Gotta check this max val:  "<<apcsi<<std::endl;
+	  //delete f2;
         }
       }
     }

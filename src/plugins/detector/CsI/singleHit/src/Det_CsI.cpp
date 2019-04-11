@@ -413,8 +413,17 @@ Long_t Det_CsI::process(){
                       GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
+                TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
+                int xmin=0, xmax=250;
+                int bmin=axis->FindBin(xmin);
+                int bmax=axis->FindBin(xmax);
+                int integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
+                integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
+                      GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
+                integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
+                      GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
                 double diff=may-mny;
-		//double area=integral-mny*250;
+		double area=integral-mny*250;
         	clock=indexClock;
         	fb=indexFB;
         	ud=indexUD;
@@ -438,7 +447,8 @@ Long_t Det_CsI::process(){
 		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
                 treeSing->kmu2=diff;          
                 treeSing->dubPed=mny;         
-                //treeSing->calInt=area;
+                treeSing->calInt=area;
+                treeSing->intKmu2=area;
                 treeSing->csiArrange[0]=p[0];
                 treeSing->csiArrange[1]=p[1];
                 treeSing->clock=indexClock+1;

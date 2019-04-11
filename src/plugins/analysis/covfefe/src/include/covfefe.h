@@ -39,10 +39,12 @@ class covfefe:public Plugin{
 
   int iclock, iModule;
   Int_t iUD, iFB, nbins;
-  Double_t adcVal;
+  Double_t adcVal, intVal;
   TH1D* calibHist;
+  TH1D* integHist;
   TH1D* tpeak;
   TH1D* Ecorr;
+  TH1D* intEn;
   TH1D* h1time[12][2][2][16];
   TH1D* h1cali[12][2][2][16];
   // add funtions with return value Long_t here:
