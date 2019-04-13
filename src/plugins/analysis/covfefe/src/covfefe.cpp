@@ -46,7 +46,7 @@ Long_t covfefe::histos(){
   inEne<<"IntEnergy";
   calibHist=new TH1D(nameCal.str().c_str(),"stat",62.0,0,250);
   Ecorr=new TH1D(ename.str().c_str(),"stat",63.0,0,250);
-  integHist=new TH1D(nameInt.str().c_str(),"stat",1875,0,75000);
+  integHist=new TH1D(nameInt.str().c_str(),"stat",63.0,0,250);
   intEn=new TH1D(inEne.str().c_str(),"stat",63.0,0,250);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
@@ -58,7 +58,7 @@ Long_t covfefe::histos(){
           name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",86.5,0,1300);
-          h1cali[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",1875,0,75000);
+          h1cali[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",87.5,0,70000);
         }
       }
     }
@@ -80,7 +80,7 @@ Long_t covfefe::process(){
   iModule=csimar->indexCsI-1;
   iUD=csimar->ud; iFB=csimar->fb;
   adcVal=csimar->kmu2;
-  intVal=csimar->calInt;
+  intVal=csimar->intKmu2;
   if(adcVal > 10){
     //std::cout<<" value of clock:  "<<iclock<<std::endl;
     //std::cout<<" value of Module: "<<iModule<<std::endl;
@@ -88,9 +88,7 @@ Long_t covfefe::process(){
     //std::cout<<" value of iFB:    "<<iFB<<std::endl;
     //std::cout<<" value of adcVal: "<<adcVal<<std::endl;
     h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
-    std::cout<< "  value for integral as seen: "<<intVal<<std::endl;
-    if(intVal < 75001)
-      h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
+    h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
   }
 
   return 0; // 0 = all ok
@@ -124,8 +122,8 @@ Long_t covfefe::finalize(){
           xmax=h1cali[iClock][iFB][iUD][iModule]->GetMaximumBin();
 	  xx=h1cali[iClock][iFB][iUD][iModule]->GetXaxis()->GetBinCenter(xmax);
 	  nbins=h1cali[iClock][iFB][iUD][iModule]->GetXaxis()->GetNbins();
-	  lowRange=xx-110;
-          upRange=xx+100;
+	  lowRange=xx-11000;
+          upRange=xx+10000;
 	  TF1* f2=new TF1("f2","gaus",lowRange,upRange);
 	  //f1->SetParLimits(0,lowRange,upRange);
 	  h1cali[iClock][iFB][iUD][iModule]->Fit(f2,"QR");
@@ -139,14 +137,16 @@ Long_t covfefe::finalize(){
 	    intEn->Fill(xnew+8.9,yy);
 	  }
 	  delete f1;
-	  //delete f2;
+	  delete f2;
         }
       }
     }
   }
-  TCanvas* c1=new TCanvas("MarinateCsI","Marinate",3508,2480);
-  TCanvas* c2=new TCanvas("MarinateCsI2","Marinate 2",3508,2480);
+  gStyle->SetOptStat(0);
+  TCanvas* c1=new TCanvas("MarinateCsI","Pulse-height distribution",3508,2480);
+  TCanvas* c2=new TCanvas("MarinateCsI2","Integrated pulse-height distribution",3508,2480);
   TCanvas* c3=new TCanvas("E_CsI","Energy CsI",808,700);
+  TCanvas* c4=new TCanvas("ECsI","Energy CsI comparison",808,700);
   c1->Divide(3,4);
   c2->Divide(3,4);
   for(int iClock=0;iClock<1;iClock++){
@@ -156,7 +156,7 @@ Long_t covfefe::finalize(){
           c1->cd(iModule+1);
           h1time[iClock][iFB][iUD][iModule]->Draw();
           c2->cd(iModule+1);
-          h1time[iClock][iFB][iUD+1][iModule]->Draw();
+          h1cali[iClock][iFB][iUD][iModule]->Draw();
 	}
       }
     }
@@ -174,6 +174,20 @@ Long_t covfefe::finalize(){
   Ecorr->Draw("hist");
   calibHist->Draw("hist same");
   c3->Write();
+  c4->cd();
+  Ecorr->SetTitle("Comparing CsI Energy for K_{#mu2} for 2 methods ");
+  Ecorr->GetXaxis()->SetTitle("T_{#mu} [MeV]");
+  Ecorr->SetLineWidth(2);
+  Ecorr->Draw("hist");
+  intEn->SetLineColor(kRed);
+  intEn->SetLineWidth(2);
+  intEn->Draw("hist same");
+  auto leg=new TLegend(0.1,0.7,0.48,0.9);
+  leg->SetHeader("Key:","C");
+  leg->AddEntry(Ecorr, "Pulse-height: E_{loss} applied (#mu=155.3, #sigma=11.7)");
+  leg->AddEntry(intEn, "Integrated waveform: E_{loss} applied (#mu=153.3, #sigma=19.5)");
+  leg->Draw();
+  c4->Write();
   return 0; // 0 = all ok
 };
 

@@ -179,7 +179,7 @@ Long_t Det_CsI::process(){
       //std::cout<< " iHist: "<<iHist<<endl;
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
-          std::cout<<" The baseline is: "<<bl<<std::endl;
+          //std::cout<<" The baseline is: "<<bl<<std::endl;
           if(y1 == 1023){
             double x;
             for(int ivar=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); ivar< 250; ivar+= 1){
@@ -189,13 +189,14 @@ Long_t Det_CsI::process(){
           	      GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x));
               }
             }
-            std::cout<< " Okay this thing is smart x =" << x << endl;
+            std::cout<< "\n Okay this thing is smart x =" << x << endl;
             TF1* f1=new TF1("wave1",overr.c_str(), 0.5, x1);
             // fill parameters for the fit function(s)
-            for(int ivar=1; ivar<10; ivar+=1){
+            for(int ivar=0; ivar<10; ivar+=1){
               f1->SetParameter(ivar, mn2.par(ivar));
               f1->SetParLimits(ivar,mn2.parmin(ivar),mn2.parlim(ivar));
             }
+	    nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
             double *xpeaks=NULL;
 	    xpeaks=s->GetPositionX();
             double posX[2];
@@ -205,6 +206,7 @@ Long_t Det_CsI::process(){
               posX[ivar]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
             }
             sort(xpeaks,xpeaks+nfound);
+	    //std::cout<<"\n ---->  Gotta check the hell outta this shit \n";
             double rtime=(xx1+xx2)/2;
             f1->SetParameter(0,y1+1023*2);
             f1->SetParLimits(0,y1-61.7,y1+1723.7);
@@ -220,7 +222,7 @@ Long_t Det_CsI::process(){
             MnUserParameters upar2;
             std::vector<double> par(10), err(10);
             par.clear(); err.clear();
-            std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
+            //std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
             for(int n=0; n<10;n+=1){
               upar2.Add(mn2.nameL(n).c_str(), f1->GetParameter(n), 0.1);
             }
@@ -285,7 +287,7 @@ Long_t Det_CsI::process(){
         		GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
               double area=integral-(mny*250);
               h1Intg->Fill(area);
-              std::cout<<" =====> Value for integral1 is:" <<area<<endl;
+              std::cout<<" =====> Value for integral1 is:" <<area<<"  "<<xpeaks[1]<<std::endl;
 	      int tAB=0;
               if((p[0]=='u' || p[0]=='U') && (indexModule>=9)) tAB=1;
               std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
@@ -313,10 +315,10 @@ Long_t Det_CsI::process(){
               treeSing->ovrped=mny;
               treeSing->ovrpH=diff;
               treeSing->ud=indexUD;            treeSing->fb=indexFB;
-	      if(xpeaks[1]>0)
+	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
               treeSing->phei=diff;          treeSing->ped=mny;
-	      //delete xpeaks;
+	      delete f1;
             }else{
               phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
             } // <--- Use this to get rid of double and single fitting functions * /
@@ -339,7 +341,7 @@ Long_t Det_CsI::process(){
                 posX[ivar]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
               }
               sort(xpeaks,xpeaks+nfound);
-              std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1]<<endl;
+              //std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1]<<endl;
               double yp2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(xpeaks[1]));
               f1->SetParameter(0,y1);
@@ -378,22 +380,11 @@ Long_t Det_CsI::process(){
               //FunctionMinimum min = migrad();  //6000,1e-9);
               FunctionMinimum min = migrad(180,1e-6);
               std::cout<<"minimum: "<<min<<std::endl;
-              /*
-              try{
-                throw logic_error("Assertion `s0.IsValid()' failed.");
-              }
-              catch(const std::logic_error & e){
-                std::cerr<<" Found assertion error \n";
-              }*/
               //MnHesse hesse;
               for(int ivar=0; ivar<15; ivar+=1){
                 param.push_back(migrad.Value(mn2.nameL(ivar).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
               }
-              //hesse(ffcn1, min1);
-              //std::cout<<"minimum after hesse: "<<min<<std::endl;
-              //FunctionMinimum min1 = migrad();
-              //std::cout<<"minimum1: "<<min1<<std::endl;
               for(int ivar=0; ivar<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; ivar+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
@@ -455,7 +446,7 @@ Long_t Det_CsI::process(){
                 treeSing->phei=diff;          treeSing->ped=mny;
                 treeSing->thSing=csitheta;
                 treeSing->phiSing=csiphi;
-                treeSing->pHloc=xpeaks[1];
+                treeSing->dubphei=xpeaks[1];
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
         	if(indexClock==0 && indexFB==1 && indexUD==0){
         	  h1cali->Fill(diff);
@@ -467,8 +458,9 @@ Long_t Det_CsI::process(){
                   lowRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()-xps[0]/2.0);
                   upRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()+xps[0]*3.0/2.0);
                   h1cali->Fit("gaus","Q","",lowRange,upRange);
+		  delete sp;
                 }
-		//delete xpeaks;
+		delete f1;
               }else{
                 kmu2=-100; calInt=-100;
         	module=-100;   tpeak=-100;
@@ -490,7 +482,6 @@ Long_t Det_CsI::process(){
       	      f1chi2=f1->GetChisquare();
               Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
-              //TMinuit* gmin = new TMinuit(8);
               fitfn ffcn1(xpos, xx1, xx2, val, ymax);
               std::vector<double> param;
               std::vector<double> parm(15), err(15);
@@ -505,28 +496,14 @@ Long_t Det_CsI::process(){
               }
               std::cout<<"  Okay we have cleared the loop!"<<endl;
               // create Migrad minimizer
-              //MnStrategy mnstra = MnStrategy(2);
               MnMigrad migrad(ffcn1, upar);
-              //MnMigrad migrad(ffcn1, parm, err);
-              //FunctionMinimum min = migrad();  //6000,1e-9);
-              //try{
               FunctionMinimum min = migrad(40,1e-4);
-                //throw logic_error("Assertion `s0.IsValid()' failed.");
               std::cout<<"minimum: "<<min<<std::endl;
-              /*}
-              catch(const std::logic_error & e){
-                std::cerr<<" Found assertion error \n";
-              }*/
-              //MnHesse hesse;
               //FunctionMinimum min1 = migrad(3000,1e-9);
               for(int ivar=0; ivar<9; ivar+=1){
                 param.push_back(migrad.Value(mn2.nameL(ivar).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
               }
-              //hesse(ffcn1, min1);
-              //std::cout<<"minimum after hesse: "<<min<<std::endl;
-              //FunctionMinimum min1 = migrad();
-              //std::cout<<"minimum1: "<<min1<<std::endl;
       	      bool dpval=false;
               for(int ivar=0; ivar<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; ivar+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
@@ -594,6 +571,7 @@ Long_t Det_CsI::process(){
                 treeSing->csiArrange[1]=p[1];
                 treeSing->clock=indexClock+1;
                 treeSing->phei=diff;          treeSing->ped=mny;
+		treeSing->sphei=diff;         treeSing->sptime=max;
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
               }else{
                 phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
@@ -687,6 +665,7 @@ Long_t Det_CsI::process(){
         	    dubPed=-100;
                   } //<-- Use to get rid of 2 peaks functions here * /
       	        } // <--- End dpulse block
+		delete f1;
             }else{
               kmu2=-100; phei=-100; calInt=-100; module=-100;
             }

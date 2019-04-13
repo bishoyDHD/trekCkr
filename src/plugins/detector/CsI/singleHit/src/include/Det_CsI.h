@@ -31,6 +31,7 @@ class Det_CsI:public Plugin{
   BeamInfo* treeBeam;
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
+  bool ovrr=false;
  public:
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
   Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);

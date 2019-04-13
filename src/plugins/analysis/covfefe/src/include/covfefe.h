@@ -6,6 +6,7 @@
 #include "Plugin.h"
 #include "TTree.h"
 #include "TSpectrum.h"
+#include "TLegend.h"
 #include <TStyle.h>
 #include <TH1D.h>
 #include <iostream>
