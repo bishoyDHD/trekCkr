@@ -31,7 +31,7 @@ class Det_CsI:public Plugin{
   BeamInfo* treeBeam;
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
-  bool ovrr=false;
+  bool loopX;
  public:
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
   Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
@@ -85,11 +85,14 @@ class Det_CsI:public Plugin{
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;
+  //analysis methods and classes
   bool clus_csi;
   Long_t histos();
   Long_t startup();
   Long_t process();
   Long_t finalize();
+  //additional methods for an easy life
+  void initVar(); //initialize storage variables
   // clustering methods
   Long_t histos_clus();
   Long_t startup_clus();

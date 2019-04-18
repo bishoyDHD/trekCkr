@@ -16,6 +16,7 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   h1Amps[12][2][2][16]=NULL;
   h1time[12][2][2][16]=NULL;
   std::cout<<" checking this shit \n";
+  loopX=false;
 };
 
 Det_CsI::~Det_CsI(){
@@ -97,8 +98,29 @@ Long_t Det_CsI::startup(){
   return 0;
 }
 
+//Initialize storage variables here
+void Det_CsI::initVar(){
+  int dummy=-1000;               treeSing->thSing=dummy;
+  treeSing->indexCsI=dummy;      treeSing->phiSing=dummy;
+  treeSing->tpeak=dummy;         treeSing->tref=dummy;
+  treeSing->trise=dummy;         treeSing->typeAB=dummy;
+  treeSing->calInt=dummy;        treeSing->crysID=dummy;
+  treeSing->csiArrange[0]=dummy; treeSing->fb=dummy;
+  treeSing->csiArrange[1]=dummy; treeSing->ped=dummy;
+  treeSing->clock=dummy;
+  treeSing->ovrped=dummy;
+  treeSing->ovrpH=dummy;
+  treeSing->ud=dummy;           
+  treeSing->phei=dummy;         
+  //Single pulse                   //double pulse
+  treeSing->sphei=dummy;           treeSing->kmu2=dummy;
+  treeSing->sptime=dummy;          treeSing->dubPed=dummy;
+  treeSing->sped=dummy;            treeSing->dubphei=dummy;
+}
+
 Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
+  initVar(); //initialize storage variables
   for(UInt_t i=0;i<treeRaw->nChannel;i++){
     char* p=(char*)&(treeRaw->nameModule[i]);
     int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
@@ -131,12 +153,6 @@ Long_t Det_CsI::process(){
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
     if(treeRaw->indexCsI[i]==16){
-      //std::cout<< " CHAN 16:  Index clock: "<<indexClock<<std::endl;
-      //std::cout<< " CHAN 16:  Gap config FB is  : " <<p[1]<<std::endl;
-      //std::cout<< " CHAN 16:  Gap config UD is  : " <<p[0]<<std::endl;
-      //std::cout<< " CHAN 16:  size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-      //std::cout<< " CHAN 16:  size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-      //std::cout<< " CHAN 16:  Chan No.: "<<treeRaw->nChannel<<std::endl;
       if((indexClock==0 || indexClock==4) && indexFB==0 && indexUD==0){
         for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
           h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
@@ -265,6 +281,7 @@ Long_t Det_CsI::process(){
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
+	      loopX=true;
               clock=indexClock;
               fb=indexFB;
               ud=indexUD;
@@ -315,14 +332,14 @@ Long_t Det_CsI::process(){
               treeSing->ovrped=mny;
               treeSing->ovrpH=diff;
               treeSing->ud=indexUD;            treeSing->fb=indexFB;
+              treeSing->phei=diff;          treeSing->ped=mny;
 	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
-              treeSing->phei=diff;          treeSing->ped=mny;
 	      delete f1;
-            }else{
-              phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
-            } // <--- Use this to get rid of double and single fitting functions * /
-          }
+	      if(loopX)
+	        goto exitLoop;
+            } // <---  End of K+ decay time if loop
+          }// <--- Use this to get rid of double and single fitting functions * /
 	  if(y1<1023){ // forgo if else for more efficient less nested code
             //std::cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
@@ -360,7 +377,7 @@ Long_t Det_CsI::process(){
       	      p10->Fill(f1->GetParameter(10));
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"0");
       	      f1chi2=f1->GetChisquare();
-      	      //std::cout<<" *******************************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
+      	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
               Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
               fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
@@ -398,6 +415,7 @@ Long_t Det_CsI::process(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
+		loopX=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -432,18 +450,19 @@ Long_t Det_CsI::process(){
                 double csitheta=theta[indexFB][indexModule];
                 double csiphi=phi[indexClock][ud][tAB];
                 csThet.push_back(csitheta), csPhi.push_back(csiphi);
+		//Filling the TTree here:
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
                 treeSing->kmu2=diff;          
+                treeSing->phei=diff;          treeSing->ped=mny;
                 treeSing->dubPed=mny;         
                 treeSing->calInt=area;
                 treeSing->intKmu2=area;
                 treeSing->csiArrange[0]=p[0];
                 treeSing->csiArrange[1]=p[1];
                 treeSing->clock=indexClock+1;
-                treeSing->phei=diff;          treeSing->ped=mny;
                 treeSing->thSing=csitheta;
                 treeSing->phiSing=csiphi;
                 treeSing->dubphei=xpeaks[1];
@@ -461,12 +480,11 @@ Long_t Det_CsI::process(){
 		  delete sp;
                 }
 		delete f1;
-              }else{
-                kmu2=-100; calInt=-100;
-        	module=-100;   tpeak=-100;
-        	dubPed=-100;
-              } //<-- Use to get rid of 2 peaks functions here * /
-            }else if(nfound==1){
+	        if(loopX)
+	          goto exitLoop;
+              } // <-- End of K+ decay time if loop
+            } //<-- Use to get rid of 2 peaks functions here * /
+	    if(nfound==1){
               TF1* f1=new TF1("f1",singleFit.c_str(),1,250);
               for(int n=0; n<9; n+=1){
                 f1->SetParameter(n,mn2.par(n));
@@ -524,6 +542,7 @@ Long_t Det_CsI::process(){
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
                 clock=indexClock;
+		loopX=true;
                 fb=indexFB;
                 ud=indexUD;
                 module=indexModule;
@@ -553,8 +572,6 @@ Long_t Det_CsI::process(){
                 double csitheta=theta[indexFB][indexModule];
                 double csiphi=phi[indexClock][ud][tAB];
                 csThet.push_back(csitheta), csPhi.push_back(csiphi);
-                treeSing->thSing=csitheta;
-                treeSing->phiSing=csiphi;
                 double diff=may-mny;
                 int imod=0, igap=4*indexClock+2;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;
@@ -562,6 +579,9 @@ Long_t Det_CsI::process(){
                 if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
                 h2clus->Fill(csimod,igap,diff);
                 h1Pamp->Fill(diff); h1ped->Fill(mny);
+		// fill TTree here:
+                treeSing->thSing=csitheta;
+                treeSing->phiSing=csiphi;
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
@@ -573,8 +593,9 @@ Long_t Det_CsI::process(){
                 treeSing->phei=diff;          treeSing->ped=mny;
 		treeSing->sphei=diff;         treeSing->sptime=max;
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
-              }else{
-                phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
+		delete f1;
+	        if(loopX)
+	          goto exitLoop;
               } // <--- Use this to get rid of double and single fitting functions * /
       	      dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
       	        if(dpval){
@@ -659,24 +680,18 @@ Long_t Det_CsI::process(){
                       upRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()+xps[0]*3.0/2.0);
                       h1cali->Fit("gaus","Q","",lowRange,upRange);
         	    }
-                  }else{
-                    kmu2=-100; calInt=-100;
-        	    module=-100;   tpeak=-100;
-        	    dubPed=-100;
                   } //<-- Use to get rid of 2 peaks functions here * /
       	        } // <--- End dpulse block
 		delete f1;
-            }else{
-              kmu2=-100; phei=-100; calInt=-100; module=-100;
-            }
+            } // <-- End of nfound==1, single peak
           }
         } // <--- End of No. CsI crystals that fired
-      }else{
-        kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
       } // <--- End of timing cut if loop
     } // <--- End of if loop
-    break;
+    //break;
   } // <--- End of nChannel for loop
+  exitLoop:
+    loopX=false;
 
   return 0;
 }

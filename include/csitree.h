@@ -52,6 +52,7 @@ class CRTSingleCsI:public CRTBase{
   //single peak
   Double_t sphei; // single peak pulse-height distribution
   Double_t sptime; //timing of single peak
+  Double_t sped; // pedestal for single pulse
   //Double peak var
   Double_t kmu2, dubPed, intKmu2;
   Double_t dubphei; //location of second peak
