@@ -43,6 +43,9 @@ class ControlWindow: public TGMainFrame,public FrameworkCallbacks{
   int debug;
   Chef *chef;
   int eventnr,eventcount;
+  std::vector<int> eventlist;
+  int eventlistposition;
+  TGTextButton* elfwdBtn, *elbwdBtn;
   ControlWindow(const TGWindow *p, UInt_t w, UInt_t h);
   ~ControlWindow();
   // make it die at the end
@@ -53,6 +56,8 @@ class ControlWindow: public TGMainFrame,public FrameworkCallbacks{
   void doFromHere();
   void skip(int num);
   void goTo();
+  void eventlistForward();
+  void eventlistBackward();
   void clear();
   void processRange(int from, int to);
   void flipBtns(bool val);

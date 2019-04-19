@@ -31,6 +31,7 @@ int main(int argc, char **argv)
     ("output_tree,O",po::value<std::string>(),"output root tree")
     ("verbose,v",po::value<int>()->implicit_value(1),"Verbose mode (optionally specify level)")
     ("call,c",po::value<std::vector<std::string> >(),"Call a plugin's function. Needs argument with format: <plugin>:<function>:<arguments>") 
+    ("eventlist,e",po::value<std::string> (),"process only events from file with event list")
     ;
   po::positional_options_description pod;
   pod.add("recipe",1).add("input_tree",1).add("output_tree",1);
@@ -106,6 +107,35 @@ int main(int argc, char **argv)
 	      exit(-20);
 	    }
 	}	   
+    }
+
+  // read file with list of eventnumbers if specified by user:
+  if (vm.count("eventlist"))
+    {
+      std::string elfilename = vm["eventlist"].as<std::string>();
+      std::cout << " ===== eventlist file " << elfilename << " specified! =====\n";
+      FILE *elfile = fopen(elfilename.c_str(), "r");
+      if (elfile)
+        {
+          int eventnumber, dummy;
+          while (!feof(elfile))
+            {
+              dummy=fscanf(elfile, "%d\n", &eventnumber);
+              mainWindow->eventlist.push_back(eventnumber);
+            };
+          fclose(elfile);
+          printf(" >>> %d eventnumbers read from eventlist file!\n", int(mainWindow->eventlist.size()));
+        }
+      else
+        {
+          perror("Cannot open eventlist file");
+        };
+    }
+  // if something failed or no list was specified, disable buttons:
+  if (mainWindow->eventlist.size()==0)
+    {
+      mainWindow->elfwdBtn->SetEnabled(false);
+      mainWindow->elbwdBtn->SetEnabled(false);
     }
 
   mainWindow->chef->processInit(mainWindow->debug,pluginoptions);
