@@ -149,6 +149,24 @@ void ControlWindow::goTo()
   doEvents(1);
 }
 
+void ControlWindow::eventlistBackward()
+{
+  if(eventlistposition<=0)
+    return;
+  eventlistposition--;
+  gotoNumber->SetIntNumber(eventlist[eventlistposition]);
+  goTo();
+}
+
+void ControlWindow::eventlistForward()
+{
+  if(eventlistposition>=int(eventlist.size())-1) // typecast is needed because position is -1 upon start!
+    return;
+  eventlistposition++;
+  gotoNumber->SetIntNumber(eventlist[eventlistposition]);
+  goTo();
+}
+
 void ControlWindow::clear()
 {
   for (unsigned int i=0; i<histograms.size();i++)
@@ -222,7 +240,17 @@ ControlWindow::ControlWindow(const TGWindow *p, UInt_t w, UInt_t h):TGMainFrame(
   gotoBtn->Connect("Clicked()","ControlWindow",this,"goTo()");
   hframe->AddFrame(gotoBtn,btnhint);
   
-  
+  // create forward and backward button for eventlist
+  // in case this has specified on the commandline:
+  elbwdBtn=new TGTextButton(hframe, "<");
+  elbwdBtn->Connect("Clicked()","ControlWindow",this,"eventlistBackward()");
+  elbwdBtn->SetToolTipText("browse eventlist backwards, \nspecify eventlist file on commandline with option -e",750);
+  hframe->AddFrame(elbwdBtn,btnhint);
+  elfwdBtn=new TGTextButton(hframe, ">");
+  elfwdBtn->Connect("Clicked()","ControlWindow",this,"eventlistForward()");
+  elfwdBtn->SetToolTipText("browse eventlist forwards, \nspecify eventlist file on commandline with option -e",750);
+  hframe->AddFrame(elfwdBtn,btnhint);
+  eventlistposition=-1; // start at begin of eventlist
 
   clearBtn=new TGTextButton(hframe,"Clear");
   clearBtn->Connect("Clicked()","ControlWindow",this,"clear()");
