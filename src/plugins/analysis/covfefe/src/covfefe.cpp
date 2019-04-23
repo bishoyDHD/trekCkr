@@ -18,6 +18,8 @@ covfefe::covfefe(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   Ecorr=NULL;
   integHist=NULL;
   intEn=NULL;
+  phdis=NULL;
+  hkmu2=NULL;
   std::cout<<" checking this shit \n";
 };
 
@@ -36,6 +38,8 @@ covfefe::~covfefe(){
   delete Ecorr;
   delete integHist;
   delete intEn;
+  delete phdis;
+  delete hkmu2;
 };
 
 Long_t covfefe::histos(){
@@ -48,6 +52,8 @@ Long_t covfefe::histos(){
   Ecorr=new TH1D(ename.str().c_str(),"stat",63.0,0,250);
   integHist=new TH1D(nameInt.str().c_str(),"stat",63.0,0,250);
   intEn=new TH1D(inEne.str().c_str(),"stat",63.0,0,250);
+  phdis=new TH1D("pheight","stat",150.,0,1000);
+  hkmu2=new TH1D("kmu2Ds","stat",150.,0,1000);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -81,6 +87,8 @@ Long_t covfefe::process(){
   iUD=csimar->ud; iFB=csimar->fb;
   adcVal=csimar->kmu2;
   intVal=csimar->intKmu2;
+  phdis->Fill(csimar->phei);
+  hkmu2->Fill(adcVal);
   if(adcVal > 10){
     //std::cout<<" value of clock:  "<<iclock<<std::endl;
     //std::cout<<" value of Module: "<<iModule<<std::endl;
@@ -147,6 +155,7 @@ Long_t covfefe::finalize(){
   TCanvas* c2=new TCanvas("MarinateCsI2","Integrated pulse-height distribution",3508,2480);
   TCanvas* c3=new TCanvas("E_CsI","Energy CsI",808,700);
   TCanvas* c4=new TCanvas("ECsI","Energy CsI comparison",808,700);
+  TCanvas* c5=new TCanvas("Phei","Pulse height Distribution",808,700);
   c1->Divide(3,4);
   c2->Divide(3,4);
   for(int iClock=0;iClock<1;iClock++){
@@ -164,23 +173,28 @@ Long_t covfefe::finalize(){
   c1->Write();
   c2->Write();
   c3->cd();
-  Ecorr->SetTitle("CsI Energy for K_{#mu2} ");
-  Ecorr->GetXaxis()->SetTitle("T_{#mu} [MeV]");
+  Ecorr->SetTitle("CsI: reconstructed energy for K_{#mu2} ");
+  Ecorr->GetXaxis()->SetTitle("Energy (T_{#mu}) [MeV]");
+  Ecorr->GetYaxis()->SetTitle("counts/bin");
+  Ecorr->GetYaxis()->SetRangeUser(0,1050e3);
   Ecorr->SetLineColor(kCyan);
   Ecorr->SetLineWidth(2);
-  //double lower=153.4-20, upper=153.4+20;
-  //TF1* f2=new TF1("f2","gaus",lower,upper);
-  //Ecorr->Fit("f2","QR");
   Ecorr->Draw("hist");
   calibHist->Draw("hist same");
+  auto leg0=new TLegend(0.1,0.7,0.48,0.9);
+  leg0->SetHeader("Key:","C");
+  leg0->AddEntry(Ecorr, "CD E_{loss} correction (#mu=153.67, #sigma=9.78)");
+  leg0->AddEntry(intEn, "dE (#mu=145.8, #sigma=12.9)");
+  leg0->Draw();
   c3->Write();
   c4->cd();
   Ecorr->SetTitle("Comparing CsI Energy for K_{#mu2} for 2 methods ");
-  Ecorr->GetXaxis()->SetTitle("T_{#mu} [MeV]");
+  Ecorr->GetXaxis()->SetTitle("Deposited energy (T_{#mu}) [MeV]");
+  Ecorr->GetYaxis()->SetTitle("counts");
   Ecorr->SetLineWidth(2);
   Ecorr->Draw("hist");
-  intEn->SetLineColor(kRed);
-  intEn->SetLineWidth(2);
+  intEn->SetLineColor(kCyan+3);
+  intEn->SetLineWidth(3);
   intEn->Draw("hist same");
   auto leg=new TLegend(0.1,0.7,0.48,0.9);
   leg->SetHeader("Key:","C");
@@ -188,6 +202,22 @@ Long_t covfefe::finalize(){
   leg->AddEntry(intEn, "Integrated waveform: E_{loss} applied (#mu=153.3, #sigma=19.5)");
   leg->Draw();
   c4->Write();
+  c5->cd();
+  phdis->SetTitle("Pulse-height distribution");
+  phdis->GetXaxis()->SetTitle("pulse-height");
+  phdis->GetYaxis()->SetTitle("counts/bin");
+  phdis->SetLineWidth(2);
+  phdis->Draw("hist");
+  hkmu2->SetFillColor(kMagenta);
+  hkmu2->SetFillStyle(3244);
+  hkmu2->SetLineWidth(2);
+  hkmu2->Draw("hist same");
+  auto leg2=new TLegend(0.1,0.7,0.48,0.9);
+  leg2->SetHeader("Key:","C");
+  leg2->AddEntry(phdis, "Pulse-height distribution");
+  leg2->AddEntry(hkmu2, "K_{#mu2} pulse-height distribtion");
+  leg2->Draw();
+  c5->Write();
   return 0; // 0 = all ok
 };
 

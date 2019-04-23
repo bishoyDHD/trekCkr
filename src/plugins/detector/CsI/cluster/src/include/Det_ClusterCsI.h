@@ -9,6 +9,7 @@
 #include "TH2D.h"
 #include "TF1.h"
 #include "TSpectrum.h"
+#include "TCanvas.h"
 #include <TStyle.h>
 #include "TAxis.h"
 #include "TAxis.h"
@@ -32,6 +33,7 @@ class Det_ClusterCsI:public Plugin{
   BeamInfo* treeBeam;
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
+  TCanvas* c1;
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
   virtual ~Det_ClusterCsI();
@@ -90,6 +92,7 @@ class Det_ClusterCsI:public Plugin{
   Long_t startup();
   Long_t process();
   Long_t finalize();
+  void empty();
   // clustering methods
   Long_t histos_clus();
   Long_t startup_clus();

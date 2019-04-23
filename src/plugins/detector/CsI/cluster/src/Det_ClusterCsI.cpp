@@ -83,50 +83,18 @@ Long_t Det_ClusterCsI::histos(){
   p1=dH1("p1","Parameter p1", 250, 0, 250);
   p9=dH1("p9","Parameter p9", 250, 0, 300);
   p10=dH1("p10","Parameter p10", 200, 0, 800);
-  h2clus=dH2("hclust","Clusters in the CsI(Tl)  ", 50,-25,25,27,0,54);
+  std::ostringstream title;
+  title<<"CsI(Tl) clusters";
+  h2clus=dH2("hclust",title.str()c_str(), 30,-15,15,27,0,54);
   h1Pamp=dH1("hpulse","Pulse height distribution", 250, 0, 1000);
   h1kmu2=dH1("kmu2DP","Pulse height distribution", 250, 0, 1000);
   h1Intg=dH1("Integr","Integrated pulse height distribution", 250, 0, 100000);
   h1cali=dH1("Calibr","Integrated pulse height distribution", 250, 0, 1000);
   h1ped=dH1("Ped","Pedestals for the waveform ", 250, 0, 1000);
-  for(int i=0;i<11;i++){
-    hbox1[i]=new TLine(-2.0,4*(i+1),4.00,4*(i+1));
-    vbox1[i]=new TLine(-2.0,4*(i+1),-2.0,4*(i+1)+2);
-    hbox1[i+11]=new TLine(-2.0,4*(i+1)+2,4.00,4*(i+1)+2);
-    vbox1[i+11]=new TLine(4.0,4*(i+1),4.00,4*(i+1)+2);
-    hline1[i]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
-    hline1[i+11]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
-    hline2[i]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
-    hline2[i+11]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
-    hline3[i]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
-    hline3[i+11]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
-  }
-  hline2[22]=new TLine(-9.0,1,-2.0,1);
-  hline2[23]=new TLine(4.00,1,11.0,1);
-  hline2[24]=new TLine(-9.0,49,-2.0,49);
-  hline2[25]=new TLine(4.00,49,11.0,49);
-  hbox2[0]=new TLine(-2.0,2.0,4,2.0);
-  hbox2[1]=new TLine(-2.0,48.,4,48.);
-  vbox2[0]=new TLine(-2.0,1.0,-2,2.0);
-  vbox2[1]=new TLine(4.00,1.0,4.,2.0);
-  vbox2[2]=new TLine(-2.0,48.,-2,49.);
-  vbox2[3]=new TLine(4.00,48.,4.,49.);
-  hline1[22]=new TLine(-9.0,47,11.0,47);
-  for(int n=0;n<22;n++){
-    hbox1[n]->Draw("l");
-    vbox1[n]->Draw("l");
-    hline1[n]->Draw("l");
-    hline2[n]->Draw("l");
-    hline3[n]->Draw("l");
-  }
-  for(int n=0;n<2;n++){
-    hbox2[n]->Draw("l");
-  }
-  for(int n=0;n<4;n++){
-    vbox2[n]->Draw("l");
-    hline2[n+22]->Draw("l");
-  }
-  hline1[22]->Draw("l");
+  c1= new TCanvas("c1","",900,800);
+  c1->cd();
+  //h2clus->Draw("colz");
+  c1->Update();
   return 0;
 }
 
@@ -149,6 +117,8 @@ Long_t Det_ClusterCsI::process(){
   csThet.clear(),  csPhi.clear();
   csiph.clear();   phval->clear();   csiClus.clear();
   clusth->clear(); clusphi->clear();
+  std::cout<<"\n\n event number is:"<<treeRaw->eventNo<<"\n\n";
+  h2clus->Reset(); //need to reset stats in cluster event viewer
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
     int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
@@ -218,7 +188,7 @@ Long_t Det_ClusterCsI::process(){
         xpos.push_back(ivar);
         val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
       }
-      if(x1>=57 && x1<=68){
+      if(x1>=50 && x1<=78){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
           //cout<< " evtNo: "<<ev<<endl;
           //cluster finding algorithm: Finding neighbours!
@@ -292,7 +262,7 @@ Long_t Det_ClusterCsI::process(){
             double mnx,mny,max,may;
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-            if(max>=60 && max<=65){
+            if(max>=55 && max<=75){
 	      //if(!clus_csi)
                 clus_csi=true;
               clock=indexClock;
@@ -457,7 +427,7 @@ Long_t Det_ClusterCsI::process(){
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-              if(max>=60 && max<=65){
+              if(max>=55 && max<=75){
 	        //if(!clus_csi)
                   clus_csi=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -608,7 +578,7 @@ Long_t Det_ClusterCsI::process(){
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-              if(max>=60 && max<=65){
+              if(max>=55 && max<=75){
 	        //if(!clus_csi)
                   clus_csi=true;
                 clock=indexClock;
@@ -739,7 +709,7 @@ Long_t Det_ClusterCsI::process(){
                   double mnx,mny,max,may;
                   max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	        GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-                  if(max>=60 && max<=65){
+                  if(max>=55 && max<=75){
                     mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                           GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                     may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -812,6 +782,49 @@ Long_t Det_ClusterCsI::process(){
         kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
       }  // <--- End of prelim. timing cut if loop
       //pCali->Fill();
+      c1->cd();
+      h2clus->Draw("colz");
+      for(int i=0;i<11;i++){
+        hbox1[i]=new TLine(-2.0,4*(i+1),4.00,4*(i+1));
+        vbox1[i]=new TLine(-2.0,4*(i+1),-2.0,4*(i+1)+2);
+        hbox1[i+11]=new TLine(-2.0,4*(i+1)+2,4.00,4*(i+1)+2);
+        vbox1[i+11]=new TLine(4.0,4*(i+1),4.00,4*(i+1)+2);
+        hline1[i]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
+        hline1[i+11]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
+        hline2[i]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
+        hline2[i+11]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
+        hline3[i]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
+        hline3[i+11]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
+      }
+      hline2[22]=new TLine(-9.0,1,-2.0,1);
+      hline2[23]=new TLine(4.00,1,11.0,1);
+      hline2[24]=new TLine(-9.0,49,-2.0,49);
+      hline2[25]=new TLine(4.00,49,11.0,49);
+      hbox2[0]=new TLine(-2.0,2.0,4,2.0);
+      hbox2[1]=new TLine(-2.0,48.,4,48.);
+      vbox2[0]=new TLine(-2.0,1.0,-2,2.0);
+      vbox2[1]=new TLine(4.00,1.0,4.,2.0);
+      vbox2[2]=new TLine(-2.0,48.,-2,49.);
+      vbox2[3]=new TLine(4.00,48.,4.,49.);
+      hline1[22]=new TLine(-9.0,47,11.0,47);
+      for(int n=0;n<22;n++){
+        hbox1[n]->Draw("l");
+        vbox1[n]->Draw("l");
+        hline1[n]->Draw("l");
+        hline2[n]->Draw("l");
+        hline3[n]->Draw("l");
+      }
+      for(int n=0;n<2;n++){
+        hbox2[n]->Draw("l");
+      }
+      for(int n=0;n<4;n++){
+        vbox2[n]->Draw("l");
+        hline2[n+22]->Draw("l");
+      }
+      hline1[22]->Draw("l");
+      c1->Modified();
+      c1->Update();
+      empty();
     } // <--- End of if loop
   } // <--- End of number of crystals that fired loop
   //treeRaw->Clear();
@@ -974,7 +987,7 @@ Long_t Det_ClusterCsI::process(){
   return 0;
 }
 
-Long_t Det_ClusterCsI::finalize(){
+void Det_ClusterCsI::empty(){
   for(int i=0;i<23;i++) delete hline1[i];
   for(int i=0;i<26;i++) delete hline2[i];
   for(int i=0;i<4;i++) delete vbox2[i];
@@ -986,6 +999,9 @@ Long_t Det_ClusterCsI::finalize(){
     delete vbox1[i];
     delete hline3[i];
   }
+}
+
+Long_t Det_ClusterCsI::finalize(){
   return 0;
 }
 
