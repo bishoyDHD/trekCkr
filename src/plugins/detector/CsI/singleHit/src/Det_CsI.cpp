@@ -120,6 +120,7 @@ void Det_CsI::initVar(){
 
 Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
+  //std::cout<<"\n\n Event number is: "<<treeRaw->eventNo<<" \n\n";
   initVar(); //initialize storage variables
   for(UInt_t i=0;i<treeRaw->nChannel;i++){
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -153,13 +154,24 @@ Long_t Det_CsI::process(){
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
     if(treeRaw->indexCsI[i]==16){
-      if((indexClock==0 || indexClock==4) && indexFB==0 && indexUD==0){
+      if(indexClock==0 && indexFB==0 && indexUD==0){
         for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
           h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
         }
         x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
             GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-        treeSing->tref=x1;
+        minx=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+            GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+        double may=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+              GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
+        double mny=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+              GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(minx));
+	valx1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+		FindFirstBinAbove((may-mny)/2+mny);
+	valx2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+		FindLastBinAbove((may-mny)/2+mny);
+        treeSing->tref=(valx1-valx2);
+	//std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
         //clock=indexClock;
         //std::cout<< "   ********************************************************* \n";
         //std::cout<< "            this is gap 16, ref time= "<<x1<<endl;

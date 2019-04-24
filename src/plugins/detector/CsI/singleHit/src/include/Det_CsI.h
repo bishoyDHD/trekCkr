@@ -33,7 +33,8 @@ class Det_CsI:public Plugin{
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
   bool loopX;
  public:
-  double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
+  double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2, minx;
+  double valx1, valx2;
   Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
   virtual ~Det_CsI();
   // add funtions with return value Long_t here:
