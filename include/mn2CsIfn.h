@@ -193,12 +193,12 @@ class mn2CsIfn{
     return param[i];
   }
   double parlim(int i){
-    double param[] = {1e5, 270.1, 60, 45, 20, 1.07, 4, 90, 350,
+    double param[] = {1e5, 70.1, 60, 45, 20, 1.07, 4, 90, 350,
                       250, 1e5, 80, 70, 50, 1.07, 1000, 250};
     return param[i];
   }
   double parmin(int i){
-    double param[] = {80.0, -900.1, 1, 5, 0., 1e-4, 0., 10,
+    double param[] = {80.0, 15.1, 1, 5, 0., 1e-4, 0., 10,
                       70.1, 15, 10, 10, 10, 1e-4, 10, 20};
     return param[i];
   }
