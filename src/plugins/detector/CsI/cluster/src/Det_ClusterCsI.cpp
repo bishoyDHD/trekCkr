@@ -85,7 +85,7 @@ Long_t Det_ClusterCsI::histos(){
   p10=dH1("p10","Parameter p10", 200, 0, 800);
   std::ostringstream title;
   title<<"CsI(Tl) clusters";
-  h2clus=dH2("hclust",title.str()c_str(), 30,-15,15,27,0,54);
+  h2clus=dH2("hclust",title.str().c_str(), 30,-15,15,27,0,54);
   h1Pamp=dH1("hpulse","Pulse height distribution", 250, 0, 1000);
   h1kmu2=dH1("kmu2DP","Pulse height distribution", 250, 0, 1000);
   h1Intg=dH1("Integr","Integrated pulse height distribution", 250, 0, 100000);
