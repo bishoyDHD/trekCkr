@@ -153,30 +153,25 @@ Long_t Det_CsI::process(){
     int indexUD=0;
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
-    if(treeRaw->indexCsI[i]==16){
-      if(indexClock==0 && indexFB==0 && indexUD==0){
-        for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
-          h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
-        }
-        x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-            GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-        minx=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-            GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-        double may=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-              GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
-        double mny=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-              GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(minx));
-	valx1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-		FindFirstBinAbove((may-mny)/2+mny);
-	valx2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-		FindLastBinAbove((may-mny)/2+mny);
-        treeSing->tref=(valx1-valx2);
-	//std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        //clock=indexClock;
-        //std::cout<< "   ********************************************************* \n";
-        //std::cout<< "            this is gap 16, ref time= "<<x1<<endl;
-        //std::cout<< "   ********************************************************* \n";
+    if((treeRaw->indexCsI[i]==16) && (indexClock==0 && indexFB==0 && indexUD==0)){
+      for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
+      x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      minx=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+      double may=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+            GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
+      double mny=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+            GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(minx));
+      valx1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	FindFirstBinAbove((may-mny)/2+mny);
+      valx2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+      	FindLastBinAbove((may-mny)/2+mny);
+      treeSing->tref=(valx1-valx2);
+      break;
+      //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
     }
     if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
       //std::cout<< " Index clock: "<<indexClock<<std::endl;
