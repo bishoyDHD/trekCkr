@@ -49,6 +49,7 @@ class CRTSingleCsI:public CRTBase{
   int crysID, typeAB;
   int indexCsI, clock;
   int csiArrange[2];
+  double tcsi,phdstr;
   //single peak
   Double_t sphei; // single peak pulse-height distribution
   Double_t sptime; //timing of single peak

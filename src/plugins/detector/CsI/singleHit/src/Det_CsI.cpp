@@ -112,6 +112,8 @@ void Det_CsI::initVar(){
   treeSing->ovrpH=dummy;
   treeSing->ud=dummy;           
   treeSing->phei=dummy;         
+  treeSing->tcsi=dummy;
+  treeSing->phdstr=dummy;
   //Single pulse                   //double pulse
   treeSing->sphei=dummy;           treeSing->kmu2=dummy;
   treeSing->sptime=dummy;          treeSing->dubPed=dummy;
@@ -169,7 +171,6 @@ Long_t Det_CsI::process(){
       	FindFirstBinAbove((may-mny)/2+mny);
       valx2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	FindLastBinAbove((may-mny)/2+mny);
-      treeSing->tref=(valx1-valx2);
       break;
       //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
     }
@@ -199,6 +200,7 @@ Long_t Det_CsI::process(){
         xpos.push_back(ivar);
         val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
       }
+      treeSing->phdstr=x1;
       //std::cout<< " iHist: "<<iHist<<endl;
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
@@ -332,6 +334,7 @@ Long_t Det_CsI::process(){
               treeSing->tpeak=max;
               treeSing->trise=param[1];
               //std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
+              //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
               treeSing->calInt=area;
               treeSing->csiArrange[0]=p[0];
               treeSing->csiArrange[1]=p[1];
@@ -340,6 +343,8 @@ Long_t Det_CsI::process(){
               treeSing->ovrpH=diff;
               treeSing->ud=indexUD;            treeSing->fb=indexFB;
               treeSing->phei=diff;          treeSing->ped=mny;
+	      treeSing->tref=(valx2-valx1);
+              treeSing->tcsi=(param[1]-(valx2-valx1));
 	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
 	      delete f1;
@@ -462,6 +467,7 @@ Long_t Det_CsI::process(){
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
+                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->kmu2=diff;          
                 treeSing->phei=diff;          treeSing->ped=mny;
                 treeSing->dubPed=mny;         
@@ -474,6 +480,8 @@ Long_t Det_CsI::process(){
                 treeSing->phiSing=csiphi;
                 treeSing->dubphei=xpeaks[1];
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
+                treeSing->tref=(valx2-valx1);
+                treeSing->tcsi=(param[1]-(valx2-valx1));
         	if(indexClock==0 && indexFB==1 && indexUD==0){
         	  h1cali->Fill(diff);
         	  TSpectrum *sp = new TSpectrum(4);
@@ -593,6 +601,7 @@ Long_t Det_CsI::process(){
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
+                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->calInt=area;
                 treeSing->csiArrange[0]=p[0];
                 treeSing->csiArrange[1]=p[1];
@@ -600,6 +609,8 @@ Long_t Det_CsI::process(){
                 treeSing->phei=diff;          treeSing->ped=mny;
 		treeSing->sphei=diff;         treeSing->sptime=max;
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
+                treeSing->tref=(valx2-valx1);
+                treeSing->tcsi=(param[1]-(valx2-valx1));
 		delete f1;
 	        if(loopX)
 	          goto exitLoop;
