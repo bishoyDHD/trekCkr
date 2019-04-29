@@ -102,7 +102,7 @@ Long_t Det_CsI::startup(){
 void Det_CsI::initVar(){
   int dummy=-1000;               treeSing->thSing=dummy;
   treeSing->indexCsI=dummy;      treeSing->phiSing=dummy;
-  treeSing->tpeak=dummy;         treeSing->tref=dummy;
+  treeSing->tpeak=dummy;         
   treeSing->trise=dummy;         treeSing->typeAB=dummy;
   treeSing->calInt=dummy;        treeSing->crysID=dummy;
   treeSing->csiArrange[0]=dummy; treeSing->fb=dummy;
@@ -112,14 +112,27 @@ void Det_CsI::initVar(){
   treeSing->ovrpH=dummy;
   treeSing->ud=dummy;           
   treeSing->phei=dummy;         
-  treeSing->tcsi=dummy;
   treeSing->phdstr=dummy;
   //Single pulse                   //double pulse
   treeSing->sphei=dummy;           treeSing->kmu2=dummy;
   treeSing->sptime=dummy;          treeSing->dubPed=dummy;
   treeSing->sped=dummy;            treeSing->dubphei=dummy;
+                                   treeSing->intKmu2=dummy;
+  for(int i=0;i<3;i++){
+    treeSing->tref[i]=dummy;
+    treeSing->refpk[i]=dummy;
+    treeSing->tcorr[i]=dummy;
+    treeSing->refmn[i]=dummy;
+  }
 }
 
+//function to get timing from ref. module
+std::string refT(){
+  char reft[1000], timing[1000];
+  sprintf(reft,"1-exp(-(x-[1])/[2])");
+  sprintf(timing,"[0]*(x-[1])/(%s)+[3]",reft);
+  return timing;
+}
 Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
   //std::cout<<"\n\n Event number is: "<<treeRaw->eventNo<<" \n\n";
@@ -155,24 +168,61 @@ Long_t Det_CsI::process(){
     int indexUD=0;
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
-    if((treeRaw->indexCsI[i]==16) && (indexClock==0 && indexFB==0 && indexUD==0)){
+    //reference timing from 3 modules
+    if((treeRaw->indexCsI[i]==16) && indexFB==0 && indexUD==0 &&
+		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
           GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-      minx=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-      double may=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-            GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
-      double mny=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-            GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(minx));
-      valx1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-      	FindFirstBinAbove((may-mny)/2+mny);
-      valx2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-      	FindLastBinAbove((may-mny)/2+mny);
-      break;
-      //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+      if(indexClock==0){
+        lowRange=x1-6; upRange=x1+6;
+        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+        TF1* f2=new TF1("f2",refT().c_str(),0,50);
+        f2->SetParameters(21.3,29.6,1.85,120);
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+        maxfn[0]=f1->GetMaximum();
+        minfn[0]=f2->GetMinimum();
+        cf50[0]=.5*maxfn[0]+.5*minfn[0];
+        T_ref[0]=f2->GetX(cf50[0]);
+        //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
+        //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+        delete f1, f2;
+	//break;
+      }
+      if(indexClock==4){
+        lowRange=x1-6; upRange=x1+6;
+        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+        TF1* f2=new TF1("f2",refT().c_str(),0,50);
+        f2->SetParameters(21.3,29.6,1.85,120);
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+        maxfn[1]=f1->GetMaximum();
+        minfn[1]=f2->GetMinimum();
+        cf50[1]=.5*maxfn[1]+.5*minfn[1];
+        T_ref[1]=f2->GetX(cf50[1]);
+        //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
+        //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+        delete f1, f2;
+      }
+      if(indexClock==8){
+        lowRange=x1-6; upRange=x1+6;
+        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+        TF1* f2=new TF1("f2",refT().c_str(),0,50);
+        f2->SetParameters(21.3,29.6,1.85,120);
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+        maxfn[2]=f1->GetMaximum();
+        minfn[2]=f2->GetMinimum();
+        cf50[2]=.5*maxfn[2]+.5*minfn[2];
+        T_ref[2]=f2->GetX(cf50[2]);
+        //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
+        //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+        delete f1, f2;
+        break;
+      }
     }
     if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
       //std::cout<< " Index clock: "<<indexClock<<std::endl;
@@ -288,7 +338,7 @@ Long_t Det_CsI::process(){
             }
             double mnx,mny,max,may;
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                  GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+                  GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
 	      loopX=true;
               clock=indexClock;
@@ -296,11 +346,11 @@ Long_t Det_CsI::process(){
               ud=indexUD;
               module=indexModule;
               mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+                    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
               may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
+                    GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
               mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
+                    GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
               //Integrating fitting function for more accurate gain calibration
               TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
               int xmin=0, xmax=250;
@@ -324,6 +374,7 @@ Long_t Det_CsI::process(){
               treeSing->thSing=csitheta;
               treeSing->phiSing=csiphi;
               double diff=may-mny; int imod=0, igap=4*indexClock+2;
+	      //double tsigH=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
               int csimod=(-1*treeRaw->indexCsI[i])+1;
               if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
               if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
@@ -333,7 +384,9 @@ Long_t Det_CsI::process(){
               treeSing->indexCsI=treeRaw->indexCsI[i];
               treeSing->tpeak=max;
               treeSing->trise=param[1];
-              //std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
+	      tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
+              //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
+              //std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
               //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
               treeSing->calInt=area;
               treeSing->csiArrange[0]=p[0];
@@ -341,10 +394,14 @@ Long_t Det_CsI::process(){
               treeSing->clock=indexClock+1;
               treeSing->ovrped=mny;
               treeSing->ovrpH=diff;
-              treeSing->ud=indexUD;            treeSing->fb=indexFB;
-              treeSing->phei=diff;          treeSing->ped=mny;
-	      treeSing->tref=(valx2-valx1);
-              treeSing->tcsi=(param[1]-(valx2-valx1));
+              treeSing->ud=indexUD;                  treeSing->fb=indexFB;
+              treeSing->phei=diff;                   treeSing->ped=mny;
+	      treeSing->tref[0]=T_ref[0];            treeSing->refpk[0]=maxfn[0];
+	      treeSing->tref[1]=T_ref[1];            treeSing->refpk[1]=maxfn[1];
+	      treeSing->tref[2]=T_ref[2];            treeSing->refpk[2]=maxfn[2];
+              treeSing->tcorr[0]=(tsigL-T_ref[0]);   treeSing->refmn[0]=minfn[0];
+              treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
+              treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
 	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
 	      delete f1;
@@ -425,15 +482,15 @@ Long_t Det_CsI::process(){
               }
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-          	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+          	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
 		loopX=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+                      GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
+                      GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
+                      GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
                 TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
                 int xmin=0, xmax=250;
                 int bmin=axis->FindBin(xmin);
@@ -466,7 +523,10 @@ Long_t Det_CsI::process(){
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
-		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
+	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
+                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
+                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
+		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
                 //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->kmu2=diff;          
                 treeSing->phei=diff;          treeSing->ped=mny;
@@ -480,8 +540,12 @@ Long_t Det_CsI::process(){
                 treeSing->phiSing=csiphi;
                 treeSing->dubphei=xpeaks[1];
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
-                treeSing->tref=(valx2-valx1);
-                treeSing->tcsi=(param[1]-(valx2-valx1));
+	        treeSing->tref[0]=T_ref[0];            treeSing->refpk[0]=maxfn[0];
+	        treeSing->tref[1]=T_ref[1];            treeSing->refpk[1]=maxfn[1];
+	        treeSing->tref[2]=T_ref[2];            treeSing->refpk[2]=maxfn[2];
+                treeSing->tcorr[0]=(tsigL-T_ref[0]);   treeSing->refmn[0]=minfn[0];
+                treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
+                treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
         	if(indexClock==0 && indexFB==1 && indexUD==0){
         	  h1cali->Fill(diff);
         	  TSpectrum *sp = new TSpectrum(4);
@@ -554,7 +618,7 @@ Long_t Det_CsI::process(){
               }
               double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-          	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+          	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
                 clock=indexClock;
 		loopX=true;
@@ -562,11 +626,11 @@ Long_t Det_CsI::process(){
                 ud=indexUD;
                 module=indexModule;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+                    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
+                    GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
+                    GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
                 //Integrating fitting function for more accurate gain calibration
                 TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
                 int xmin=0, xmax=250;
@@ -600,6 +664,10 @@ Long_t Det_CsI::process(){
                 treeSing->indexCsI=treeRaw->indexCsI[i];
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
+	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
+                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
+                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
+		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
 		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
                 //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->calInt=area;
@@ -609,8 +677,12 @@ Long_t Det_CsI::process(){
                 treeSing->phei=diff;          treeSing->ped=mny;
 		treeSing->sphei=diff;         treeSing->sptime=max;
                 treeSing->ud=indexUD;         treeSing->fb=indexFB;
-                treeSing->tref=(valx2-valx1);
-                treeSing->tcsi=(param[1]-(valx2-valx1));
+	        treeSing->tref[0]=T_ref[0];            treeSing->refpk[0]=maxfn[0];
+	        treeSing->tref[1]=T_ref[1];            treeSing->refpk[1]=maxfn[1];
+	        treeSing->tref[2]=T_ref[2];            treeSing->refpk[2]=maxfn[2];
+                treeSing->tcorr[0]=(tsigL-T_ref[0]);   treeSing->refmn[0]=minfn[0];
+                treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
+                treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
 		delete f1;
 	        if(loopX)
 	          goto exitLoop;

@@ -44,12 +44,13 @@ class CRTSingleCsI:public CRTBase{
  public:
   //Var for all pulse types
   Int_t ud, fb;
-  Double_t ped, phei, calInt, tpeak, tref;
+  Double_t ped, phei, calInt, tpeak, tref[3];
+  Double_t refpk[3], tcorr[3], refmn[3];
   Double_t thSing, phiSing, trise;
   int crysID, typeAB;
   int indexCsI, clock;
   int csiArrange[2];
-  double tcsi,phdstr;
+  double phdstr;
   //single peak
   Double_t sphei; // single peak pulse-height distribution
   Double_t sptime; //timing of single peak
