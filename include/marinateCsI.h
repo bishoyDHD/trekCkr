@@ -30,6 +30,25 @@ class CATBase: public TObject
 class CATSingleCsI:public CATBase{
  public:
   //Var for all pulse types
+  //Var for all pulse types
+  Int_t ud, fb;
+  Double_t ped, phei, calInt, tpeak, tref[3];
+  Double_t refpk[3], tcorr[3], refmn[3];
+  Double_t thSing, phiSing, trise;
+  int crysID, typeAB;
+  int indexCsI, clock;
+  int csiArrange[2];
+  double phdstr;
+  //single peak
+  Double_t sphei; // single peak pulse-height distribution
+  Double_t sptime; //timing of single peak
+  Double_t sped; // pedestal for single pulse
+  //Double peak var
+  Double_t kmu2, dubPed, intKmu2;
+  Double_t dubphei; //location of second peak
+  //Overrange variables
+  Double_t ovrpH, ovrpLoc, ovrped;
+  /*
   Int_t ud, fb;
   Double_t ped, phei, calInt, tpeak, tref;
   Double_t thSing, phiSing, trise;
@@ -45,7 +64,7 @@ class CATSingleCsI:public CATBase{
   Double_t kmu2, dubPed, intKmu2;
   Double_t dubphei; //location of second peak
   //Overrange variables
-  Double_t ovrpH, ovrpLoc, ovrped;
+  Double_t ovrpH, ovrpLoc, ovrped;*/
   CATSingleCsI();
   virtual ~CATSingleCsI();
   ClassDef(CATSingleCsI,1);

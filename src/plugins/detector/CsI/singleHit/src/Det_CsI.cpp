@@ -137,10 +137,10 @@ Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
   //std::cout<<"\n\n Event number is: "<<treeRaw->eventNo<<" \n\n";
   initVar(); //initialize storage variables
+  firedCsI=false; csiT=false;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){
     char* p=(char*)&(treeRaw->nameModule[i]);
     int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
-    //std::cout<< " Index clock: "<<indexClock<<endl;
     std::string nameModule;
     nameModule+=(*p);
     p++;
@@ -152,6 +152,7 @@ Long_t Det_CsI::process(){
     std::string nameCsI;
     p=(char*)&(treeRaw->nameCsI[i]);
     int indexClock=(p[3]-'0')*10+(p[2]-'0')-1;
+    //std::cout<< "\n Index clock 11: "<<indexClock<<endl;
     p+=3;
     nameCsI+=(*p);
     p--;
@@ -169,7 +170,7 @@ Long_t Det_CsI::process(){
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
     //reference timing from 3 modules
-    if((treeRaw->indexCsI[i]==16) && indexFB==0 && indexUD==0 &&
+    if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
@@ -187,9 +188,17 @@ Long_t Det_CsI::process(){
         minfn[0]=f2->GetMinimum();
         cf50[0]=.5*maxfn[0]+.5*minfn[0];
         T_ref[0]=f2->GetX(cf50[0]);
+	//std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
+        //std::cout<< " Index clock: "<<indexClock<<std::endl;
+        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+        //std::cout<<"\n ---------------------------------------------------------\n";
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1, f2;
+        delete f1; delete f2;
 	//break;
       }
       if(indexClock==4){
@@ -203,11 +212,19 @@ Long_t Det_CsI::process(){
         minfn[1]=f2->GetMinimum();
         cf50[1]=.5*maxfn[1]+.5*minfn[1];
         T_ref[1]=f2->GetX(cf50[1]);
+        //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+        //std::cout<<"\n ---------------------------------------------------------\n";
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1, f2;
+        delete f1; delete f2;
       }
       if(indexClock==8){
+        csiT=true;
         lowRange=x1-6; upRange=x1+6;
         TF1* f1=new TF1("f1","gaus",lowRange,upRange);
         TF1* f2=new TF1("f2",refT().c_str(),0,50);
@@ -218,19 +235,38 @@ Long_t Det_CsI::process(){
         minfn[2]=f2->GetMinimum();
         cf50[2]=.5*maxfn[2]+.5*minfn[2];
         T_ref[2]=f2->GetX(cf50[2]);
+        //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+        //std::cout<<"\n ---------------------------------------------------------\n";
+	if(csiT && firedCsI) // condition to go to next event
+	  goto exitLoop;  
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1, f2;
-        break;
+        delete f1; delete f2;
+        //break;
+      //goto signalChan; //jail break after reaching this point
       }
     }
-    if((treeRaw->indexCsI[i]!=16) /*&& (indexClock==0 && indexFB==1 && indexUD==0)*/){
-      //std::cout<< " Index clock: "<<indexClock<<std::endl;
+//signalChan: 
+    // Painlessly remove the both event-tag and timing modules from 
+    // larger analysis --> hope for loss in performance
+    if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
+		    !(indexClock==0 || indexClock==2 || indexClock==4 ||
+			    indexClock==6 || indexClock==8 || indexClock==10)){
+      //if(treeRaw->indexCsI[i]-1==15){
+        //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
+      //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
       //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
       //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
       //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
       //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
       //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+      //std::cout<<"\n ---------------------------------------------------------\n";
+      //}
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -250,7 +286,14 @@ Long_t Det_CsI::process(){
         xpos.push_back(ivar);
         val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
       }
-      treeSing->phdstr=x1;
+      lowRange=x1-6; upRange=x1+6;
+      TF1* f22=new TF1("f22","gaus",lowRange,upRange);
+      h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f22,"Q");
+      treeSing->phdstr=f22->GetMaximumX();
+      //std::cout<<" \n ---->   || "<<f22->GetMaximumX()<<" ||   <---------\n";
+      delete f22;
+      //if(firedCsI) // go to next crystal if necessary
+        //goto nextCrys;
       //std::cout<< " iHist: "<<iHist<<endl;
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
@@ -405,8 +448,8 @@ Long_t Det_CsI::process(){
 	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
 	      delete f1;
-	      if(loopX)
-	        goto exitLoop;
+	      //if(loopX)
+	        //goto exitLoop;
             } // <---  End of K+ decay time if loop
           }// <--- Use this to get rid of double and single fitting functions * /
 	  if(y1<1023){ // forgo if else for more efficient less nested code
@@ -559,8 +602,8 @@ Long_t Det_CsI::process(){
 		  delete sp;
                 }
 		delete f1;
-	        if(loopX)
-	          goto exitLoop;
+	        //if(loopX)
+	          //goto exitLoop;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 2 peaks functions here * /
 	    if(nfound==1){
@@ -684,8 +727,8 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
 		delete f1;
-	        if(loopX)
-	          goto exitLoop;
+	        //if(loopX)
+	          //goto exitLoop;
               } // <--- Use this to get rid of double and single fitting functions * /
       	      dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
       	        if(dpval){
@@ -772,12 +815,14 @@ Long_t Det_CsI::process(){
         	    }
                   } //<-- Use to get rid of 2 peaks functions here * /
       	        } // <--- End dpulse block
-		delete f1;
+		//delete f1;
             } // <-- End of nfound==1, single peak
           }
         } // <--- End of No. CsI crystals that fired
       } // <--- End of timing cut if loop
     } // <--- End of if loop
+    //nextCrys:
+      //std::cout<<"\n";
     //break;
   } // <--- End of nChannel for loop
   exitLoop:
