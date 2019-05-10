@@ -16,7 +16,7 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   h1Amps[12][2][2][16]=NULL;
   h1time[12][2][2][16]=NULL;
   std::cout<<" checking this shit \n";
-  loopX=false;
+  loopX=false, notfire=false;
 };
 
 Det_CsI::~Det_CsI(){
@@ -170,8 +170,8 @@ Long_t Det_CsI::process(){
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
     //reference timing from 3 modules
-    if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
-		    (indexClock==0 || indexClock==4 || indexClock==8)){
+    if(notfire/*(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
+		    (indexClock==0 || indexClock==4 || indexClock==8)*/){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -188,14 +188,14 @@ Long_t Det_CsI::process(){
         minfn[0]=f2->GetMinimum();
         cf50[0]=.5*maxfn[0]+.5*minfn[0];
         T_ref[0]=f2->GetX(cf50[0]);
-	//std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
-        //std::cout<< " Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+	std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
+        std::cout<< " Index clock: "<<indexClock<<std::endl;
+        std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+        std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+        std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
         //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
         //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
-        //std::cout<<"\n ---------------------------------------------------------\n";
+        std::cout<<"\n ---------------------------------------------------------\n";
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
         delete f1; delete f2;
@@ -276,6 +276,18 @@ Long_t Det_CsI::process(){
       // Utilize fitting method
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      //lowRange=x1-6; upRange=x1+6;
+      //TF1* f22=new TF1("f22","gaus",lowRange,upRange);
+      //f22->SetParameter(0,x1);
+      //h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f22,"Q");
+      treeSing->phdstr=x1; //f22->GetMaximumX();
+      //std::cout<<" \n ---->   || "<<f22->GetMaximumX()<<" ||   <---------\n";
+      //delete f22;
+      //if(firedCsI) // go to next crystal if necessary
+        //goto nextCrys;
+      //std::cout<< " iHist: "<<iHist<<endl;
+      if(notfire/*x1>=50 && x1<=70*/){ // <-- prelim. timing cut if loop
+        if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
       double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
       y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -286,17 +298,6 @@ Long_t Det_CsI::process(){
         xpos.push_back(ivar);
         val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
       }
-      lowRange=x1-6; upRange=x1+6;
-      TF1* f22=new TF1("f22","gaus",lowRange,upRange);
-      h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f22,"Q");
-      treeSing->phdstr=f22->GetMaximumX();
-      //std::cout<<" \n ---->   || "<<f22->GetMaximumX()<<" ||   <---------\n";
-      delete f22;
-      //if(firedCsI) // go to next crystal if necessary
-        //goto nextCrys;
-      //std::cout<< " iHist: "<<iHist<<endl;
-      if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
-        if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
           //std::cout<<" The baseline is: "<<bl<<std::endl;
           if(y1 == 1023){
             double x;
