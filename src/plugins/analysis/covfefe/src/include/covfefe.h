@@ -48,6 +48,7 @@ class covfefe:public Plugin{
   TH1D* intEn;
   TH1D* phdis;
   TH1D* hkmu2;
+  TH1D* timing, *phdistr;
   TH1D* h1time[12][2][2][16];
   TH1D* h1cali[12][2][2][16];
   // add funtions with return value Long_t here:

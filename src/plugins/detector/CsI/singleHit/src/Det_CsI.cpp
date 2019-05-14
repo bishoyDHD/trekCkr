@@ -17,6 +17,7 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   h1time[12][2][2][16]=NULL;
   std::cout<<" checking this shit \n";
   loopX=false, notfire=false;
+  firedCsI=false; csiT=false;
 };
 
 Det_CsI::~Det_CsI(){
@@ -137,7 +138,6 @@ Long_t Det_CsI::process(){
   //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
   //std::cout<<"\n\n Event number is: "<<treeRaw->eventNo<<" \n\n";
   initVar(); //initialize storage variables
-  firedCsI=false; csiT=false;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){
     char* p=(char*)&(treeRaw->nameModule[i]);
     int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
@@ -170,8 +170,8 @@ Long_t Det_CsI::process(){
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
     //reference timing from 3 modules
-    if(notfire/*(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
-		    (indexClock==0 || indexClock==4 || indexClock==8)*/){
+    if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
+		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -188,14 +188,14 @@ Long_t Det_CsI::process(){
         minfn[0]=f2->GetMinimum();
         cf50[0]=.5*maxfn[0]+.5*minfn[0];
         T_ref[0]=f2->GetX(cf50[0]);
-	std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
-        std::cout<< " Index clock: "<<indexClock<<std::endl;
-        std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+	//std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
+        //std::cout<< " Index clock: "<<indexClock<<std::endl;
+        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
         //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
         //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
-        std::cout<<"\n ---------------------------------------------------------\n";
+        //std::cout<<"\n ---------------------------------------------------------\n";
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
         delete f1; delete f2;
@@ -240,18 +240,18 @@ Long_t Det_CsI::process(){
         //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
         //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
         //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
         //std::cout<<"\n ---------------------------------------------------------\n";
-	if(csiT && firedCsI) // condition to go to next event
-	  goto exitLoop;  
         //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
         //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
         delete f1; delete f2;
+	if(csiT && firedCsI) // condition to go to next event
+	  goto exitLoop;  
         //break;
       //goto signalChan; //jail break after reaching this point
       }
     }
-//signalChan: 
+    if(firedCsI)
+      goto jailbreak; 
     // Painlessly remove the both event-tag and timing modules from 
     // larger analysis --> hope for loss in performance
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
@@ -271,33 +271,35 @@ Long_t Det_CsI::process(){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
       #pragma omp parallel num_threads(8)
-      xpos.clear();
-      val.clear();
-      // Utilize fitting method
+      // Get x-bin corresponding to the max
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
       //lowRange=x1-6; upRange=x1+6;
+      //TF1 f22("f22","[0]*exp(-0.5*(x-[1]/[2])**2)",lowRange,upRange);
       //TF1* f22=new TF1("f22","gaus",lowRange,upRange);
-      //f22->SetParameter(0,x1);
+      //f22->SetParameter(1,x1);
       //h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f22,"Q");
-      treeSing->phdstr=x1; //f22->GetMaximumX();
+      //treeSing->phdstr=x1; //f22->GetMaximumX();
       //std::cout<<" \n ---->   || "<<f22->GetMaximumX()<<" ||   <---------\n";
       //delete f22;
       //if(firedCsI) // go to next crystal if necessary
         //goto nextCrys;
       //std::cout<< " iHist: "<<iHist<<endl;
-      if(notfire/*x1>=50 && x1<=70*/){ // <-- prelim. timing cut if loop
+      if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
+        //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
         if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
-      double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-      	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-      y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
-      double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
-      	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
-      for(int ivar=1; ivar<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); ivar+=1){
-        xpos.push_back(ivar);
-        val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
-      }
+          xpos.clear();
+          val.clear();
+          double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
+          y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
+          double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
+          for(int ivar=1; ivar<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); ivar+=1){
+            xpos.push_back(ivar);
+            val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
+          }
           //std::cout<<" The baseline is: "<<bl<<std::endl;
           if(y1 == 1023){
             double x;
@@ -384,7 +386,7 @@ Long_t Det_CsI::process(){
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
-	      loopX=true;
+	      loopX=true; firedCsI=true;
               clock=indexClock;
               fb=indexFB;
               ud=indexUD;
@@ -449,8 +451,8 @@ Long_t Det_CsI::process(){
 	      if(nfound==2)
                 treeSing->ovrpLoc=xpeaks[1];
 	      delete f1;
-	      //if(loopX)
-	        //goto exitLoop;
+	      if(loopX && csiT)
+	        goto exitLoop;
             } // <---  End of K+ decay time if loop
           }// <--- Use this to get rid of double and single fitting functions * /
 	  if(y1<1023){ // forgo if else for more efficient less nested code
@@ -528,7 +530,7 @@ Long_t Det_CsI::process(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
-		loopX=true;
+		loopX=true; firedCsI=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -603,8 +605,8 @@ Long_t Det_CsI::process(){
 		  delete sp;
                 }
 		delete f1;
-	        //if(loopX)
-	          //goto exitLoop;
+	        if(loopX && csiT)
+	          goto exitLoop;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 2 peaks functions here * /
 	    if(nfound==1){
@@ -664,8 +666,8 @@ Long_t Det_CsI::process(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
+		loopX=true; firedCsI=true;
                 clock=indexClock;
-		loopX=true;
                 fb=indexFB;
                 ud=indexUD;
                 module=indexModule;
@@ -728,8 +730,8 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
 		delete f1;
-	        //if(loopX)
-	          //goto exitLoop;
+	        if(loopX && csiT)
+	          goto exitLoop;
               } // <--- Use this to get rid of double and single fitting functions * /
       	      dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
       	        if(dpval){
@@ -821,6 +823,8 @@ Long_t Det_CsI::process(){
           }
         } // <--- End of No. CsI crystals that fired
       } // <--- End of timing cut if loop
+    jailbreak:
+      firedCsI=true;
     } // <--- End of if loop
     //nextCrys:
       //std::cout<<"\n";
@@ -828,6 +832,7 @@ Long_t Det_CsI::process(){
   } // <--- End of nChannel for loop
   exitLoop:
     loopX=false;
+    firedCsI=false; csiT=false;
 
   return 0;
 }

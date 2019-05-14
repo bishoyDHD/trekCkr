@@ -40,6 +40,7 @@ covfefe::~covfefe(){
   delete intEn;
   delete phdis;
   delete hkmu2;
+  delete timing;
 };
 
 Long_t covfefe::histos(){
@@ -53,6 +54,8 @@ Long_t covfefe::histos(){
   integHist=new TH1D(nameInt.str().c_str(),"stat",63.0,0,250);
   intEn=new TH1D(inEne.str().c_str(),"stat",63.0,0,250);
   phdis=new TH1D("pheight","stat",150.,0,1000);
+  timing=new TH1D("timing","stat",60.,-30,30);
+  phdistr=new TH1D("ptdist","stat",62.5,1,249);
   hkmu2=new TH1D("kmu2Ds","stat",150.,0,1000);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
@@ -89,15 +92,24 @@ Long_t covfefe::process(){
   intVal=csimar->intKmu2;
   phdis->Fill(csimar->phei);
   hkmu2->Fill(adcVal);
-  if(adcVal > 10){
-    //std::cout<<" value of clock:  "<<iclock<<std::endl;
-    //std::cout<<" value of Module: "<<iModule<<std::endl;
-    //std::cout<<" value of iUD:    "<<iUD<<std::endl;
-    //std::cout<<" value of iFB:    "<<iFB<<std::endl;
-    //std::cout<<" value of adcVal: "<<adcVal<<std::endl;
+  //double t_ref=csimar->tref;
+  if(adcVal > 0){
+    std::cout<<" value of clock:  "<<iclock<<std::endl;
+    std::cout<<" value of Module: "<<iModule<<std::endl;
+    std::cout<<" value of iUD:    "<<iUD<<std::endl;
+    std::cout<<" value of iFB:    "<<iFB<<std::endl;
+    std::cout<<" value of adcVal: "<<adcVal<<std::endl;
     h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
     h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
   }
+  //if(t_ref> -900){
+    //double t_rise=csimar->trise;
+    //std::cout<<"\n timing check ------> "<<t_rise<<std::endl;
+    //timing->Fill(csimar->tcsi);
+  //}
+  double pktime=csimar->phdstr;
+  if(pktime>0 && pktime<250)
+    phdistr->Fill(csimar->phdstr);
 
   return 0; // 0 = all ok
 };
@@ -156,6 +168,8 @@ Long_t covfefe::finalize(){
   TCanvas* c3=new TCanvas("E_CsI","Energy CsI",808,700);
   TCanvas* c4=new TCanvas("ECsI","Energy CsI comparison",808,700);
   TCanvas* c5=new TCanvas("Phei","Pulse height Distribution",808,700);
+  TCanvas* c6=new TCanvas("c6"," CsI timing",808,700);
+  TCanvas* c7=new TCanvas("c7"," Peak time ",808,700);
   c1->Divide(3,4);
   c2->Divide(3,4);
   for(int iClock=0;iClock<1;iClock++){
@@ -218,6 +232,20 @@ Long_t covfefe::finalize(){
   leg2->AddEntry(hkmu2, "K_{#mu2} pulse-height distribtion");
   leg2->Draw();
   c5->Write();
+  c6->cd();
+  timing->SetTitle("CsI timing");
+  timing->GetXaxis()->SetTitle("time");
+  timing->GetYaxis()->SetTitle("counts/bin");
+  timing->SetLineWidth(2);
+  timing->Draw("hist");
+  c6->Write();
+  c7->cd();
+  phdistr->SetTitle("Peak time distribution");
+  phdistr->GetXaxis()->SetTitle("time [ch]");
+  phdistr->GetYaxis()->SetTitle("counts/bin");
+  phdistr->SetLineWidth(2);
+  phdistr->Draw("hist");
+  c7->Write();
   return 0; // 0 = all ok
 };
 
