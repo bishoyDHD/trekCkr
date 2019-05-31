@@ -50,6 +50,7 @@ class CRTSingleCsI:public CRTBase{
   int crysID, typeAB;
   int indexCsI, clock;
   int csiArrange[2];
+  int waveID;  // distinguish between 3-different kinds of waves
   double phdstr;
   //single peak
   Double_t sphei; // single peak pulse-height distribution

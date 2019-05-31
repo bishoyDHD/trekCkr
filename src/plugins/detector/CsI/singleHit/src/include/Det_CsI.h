@@ -81,7 +81,7 @@ class Det_CsI:public Plugin{
   Int_t clock;
   Int_t fb;
   Int_t ud, event, module, multip;
-  Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
+  Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2, dummy;
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
   Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
   std::vector<double> xpos, val, csThet, csPhi;

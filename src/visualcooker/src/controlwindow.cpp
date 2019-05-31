@@ -140,7 +140,7 @@ void ControlWindow::skip(int num)
 void ControlWindow::goTo()
 {
   char eventcnt[100];
-  eventnr=gotoNumber->GetIntNumber();
+  eventnr=gotoNumber->GetIntNumber()-1;
 
   if (eventnr>=eventcount) eventnr=eventcount-1;
   if (eventnr<0) eventnr=0;
