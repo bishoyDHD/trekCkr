@@ -34,10 +34,12 @@ class Det_ClusterCsI:public Plugin{
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
   TCanvas* c1;
+  bool resetH;
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
   virtual ~Det_ClusterCsI();
-  double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2;
+  double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2, minx;
+  double valx1, valx2;
   // add funtions with return value Long_t here:
   
   int clusCrys;
@@ -83,7 +85,8 @@ class Det_ClusterCsI:public Plugin{
   Int_t fb;
   Int_t ud, event, module, multip;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
-  Double_t clusE, thClus, phiClus;
+  Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
+  Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;

@@ -1,5 +1,6 @@
 #include <covfefe.h>
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include "TVector2.h"
 #include "TH2.h"
@@ -94,6 +95,7 @@ Long_t covfefe::process(){
   hkmu2->Fill(adcVal);
   //double t_ref=csimar->tref;
   if(adcVal > 0){
+    std::cout<<" -----------------------------------" <<std::endl;
     std::cout<<" value of clock:  "<<iclock<<std::endl;
     std::cout<<" value of Module: "<<iModule<<std::endl;
     std::cout<<" value of iUD:    "<<iUD<<std::endl;
@@ -117,6 +119,8 @@ Long_t covfefe::process(){
 Long_t covfefe::finalize(){
   TSpectrum *s;
   gStyle->SetOptStat(0);
+  std::ofstream calib;
+  calib.open("calibPar.txt");
   double xmax, xx, calpar;
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
@@ -132,6 +136,7 @@ Long_t covfefe::finalize(){
 	  h1time[iClock][iFB][iUD][iModule]->Fit(f1,"QR");
 	  apcsi=f1->GetMaximumX();
 	  calpar=dE/apcsi;
+	  calib<<iClock<<"\t"<<iFB<<"\t"<<iUD<<"\t"<<iModule<<"\t"<<calpar<<"\n";
 	  for(int n=0; n<nbins;n++){
 	    double yy=h1time[iClock][iFB][iUD][iModule]->GetBinContent(n);
 	    double x=h1time[iClock][iFB][iUD][iModule]->GetBinCenter(n);
@@ -162,6 +167,7 @@ Long_t covfefe::finalize(){
       }
     }
   }
+  calib.close();
   gStyle->SetOptStat(0);
   TCanvas* c1=new TCanvas("MarinateCsI","Pulse-height distribution",3508,2480);
   TCanvas* c2=new TCanvas("MarinateCsI2","Integrated pulse-height distribution",3508,2480);
