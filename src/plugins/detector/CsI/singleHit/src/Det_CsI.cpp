@@ -136,8 +136,6 @@ std::string refT(){
   return timing;
 }
 Long_t Det_CsI::process(){
-  //std::cout<<" ---> Baisically the number of cluster: "<<treeRaw->nChannel<<std::endl;
-  //std::cout<<"\n\n Event number is: "<<treeRaw->eventNo<<" \n\n";
   initVar(); //initialize storage variables
   for(UInt_t i=0;i<treeRaw->nChannel;i++){
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -170,6 +168,7 @@ Long_t Det_CsI::process(){
     int indexUD=0;
     if(p[0]=='d' || p[0]=='D') indexUD=1;
 
+    /*
     //reference timing from 3 modules
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
@@ -281,6 +280,7 @@ Long_t Det_CsI::process(){
     }
     if(firedCsI)
       goto jailbreak; 
+    */
     // Painlessly remove the both event-tag and timing modules from 
     // larger analysis --> hope for loss in performance
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
@@ -387,11 +387,6 @@ Long_t Det_CsI::process(){
               std::cerr<<" Found assertion error \n";
             }
             std::cout<<"minimum: "<<min<<std::endl;
-            // Minos factory
-            //MnMinos minos(ffcn, min);
-            //FunctionMinimum min3 = migrad();
-            //MnMigrad migrad(ffcn, upar2);
-            //FunctionMinimum min2 = migrad(8000,1e-5);
             MnHesse hesse;
             std::vector<double> param;
             param.clear();
@@ -460,9 +455,6 @@ Long_t Det_CsI::process(){
               treeSing->tpeak=max;
               treeSing->trise=param[1];
 	      tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-              //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
-              //std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
-              //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
               treeSing->calInt=area;
               treeSing->csiArrange[0]=p[0];
               treeSing->csiArrange[1]=p[1];
@@ -475,10 +467,11 @@ Long_t Det_CsI::process(){
               treeSing->tcorr[0]=(tsigL-T_ref[0]);   
               treeSing->tcorr[1]=(tsigL-T_ref[1]);   
               treeSing->tcorr[2]=(tsigL-T_ref[2]);   
-	      if(nfound==2)
+	      if(nfound==2){
                 treeSing->ovrpLoc=xpeaks[1];
+	      }
 	      delete f1;
-	      if(loopX && csiT)
+	      //if(loopX && csiT)
 	        goto exitLoop;
             } // <---  End of K+ decay time if loop
           }// <--- Use this to get rid of double and single fitting functions * /
@@ -539,7 +532,6 @@ Long_t Det_CsI::process(){
               std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1];
 	      std::cout<<", "<<xpeaks[2]<<std::endl;
       	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
-              Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
               fitfn3 ffcn1(xpos, xx1, xx2, val, ymax);
               fitfn4 ffcn2(xpos, xx1, xx2, val, ymax);
@@ -617,10 +609,6 @@ Long_t Det_CsI::process(){
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
-                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
-		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
-                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
 		if(nfound==3 && xpeaks[2]-xpeaks[1]<=20){
                   treeSing->kmu2=diff;
                   treeSing->dubphei=xpeaks[1];
@@ -640,7 +628,7 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
 		delete f1;
-	        if(loopX && csiT)
+	        //if(loopX && csiT)
 	          goto exitLoop;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
@@ -678,7 +666,6 @@ Long_t Det_CsI::process(){
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"0");
       	      f1chi2=f1->GetChisquare();
       	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
-              Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
               fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
               std::vector<double> param;
@@ -755,10 +742,6 @@ Long_t Det_CsI::process(){
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
-                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
-		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
-                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->kmu2=diff;          
                 treeSing->phei=diff;          treeSing->ped=mny;
                 treeSing->dubPed=mny;         
@@ -776,7 +759,7 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
 		delete f1;
-	        if(loopX && csiT)
+	        //if(loopX && csiT)
 	          goto exitLoop;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 2 peaks functions here * /
@@ -794,7 +777,6 @@ Long_t Det_CsI::process(){
               f1->SetParLimits(8,bl-161.7,bl+171.7);
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1);//,"0");
       	      f1chi2=f1->GetChisquare();
-              Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
               fitfn ffcn1(xpos, xx1, xx2, val, ymax);
               std::vector<double> param;
@@ -803,10 +785,6 @@ Long_t Det_CsI::process(){
               MnUserParameters upar;
               for(int n=0; n<9;n+=1){
                 upar.Add(mn2.nameL(n).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
-                //upar.Add(nameL(n).c_str(), f1->GetParameter(n),parmin(n), parlim(n), 1e-3);
-                //upar.SetLimits(n,parmin(n), parlim(n));
-                //parm.push_back(f1->GetParameter(n)); err.push_back(0);
-                //upar.SetLimits(nameL(n).c_str(),parmin(n), parlim(n));
               }
               std::cout<<"  Okay we have cleared the loop!"<<endl;
               // create Migrad minimizer
@@ -824,12 +802,6 @@ Long_t Det_CsI::process(){
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
                 double mnfit=mn2.model(x, param);
                 double res=100*(yv-mnfit)/yv;
-      	        /*if(x>=70){
-      	        if(abs(res)>5){
-      	          dpval=true;
-      	          goto dpulse;
-      	        }
-      	      }*/
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
                 h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
               }
@@ -882,11 +854,6 @@ Long_t Det_CsI::process(){
                 treeSing->tpeak=max;
                 treeSing->trise=param[1];
 	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
-                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
-		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
-		//std::cout<<" ***** rise time is given as:  "<<param[1]<<std::endl;
-                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
                 treeSing->calInt=area;
                 treeSing->csiArrange[0]=p[0];
                 treeSing->csiArrange[1]=p[1];
@@ -899,95 +866,9 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
 		delete f1;
-	        if(loopX && csiT)
+	        //if(loopX && csiT)
 	          goto exitLoop;
               } // <--- Use this to get rid of double and single fitting functions * /
-      	      dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
-      	        if(dpval){
-      	          std::cout<<" *** Checking to make sure this is called at the right time. \n";
-                  TF1* f2=new TF1("f2",doubleFit.c_str(),1.0,250);
-                  for(int n=0; n<13; n+=1){
-                    f2->SetParameter(n,mn2.par(n));
-                    f2->SetParLimits(n,mn2.parmin(n),mn2.parlim(n));
-                  }
-                  f2->SetParameter(0,y1);
-                  f2->SetParLimits(0,y1-61.7,y1+971.7);
-                  f2->SetParameter(1,x1);
-                  f2->SetParameter(8,bl);
-                  f2->SetParLimits(8,bl-61.7,bl+171.7);
-                  f2->SetParameter(9,100.1);
-                  f2->SetParLimits(1, -21.7, 171.7);
-                  f2->SetParLimits(9,21.7,371.7);
-                  f2->SetParameter(10,y1*.7);
-                  f2->SetParLimits(10,.7*y1-61.7,.7*y1+971.7);
-                  h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"0");
-                  Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
-                  // Create wrapper for minimizer
-                  fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
-                  std::vector<double> param;
-                  std::vector<double> parm(15), err(15);
-                  param.clear(); parm.clear(); err.clear();
-                  MnUserParameters upar;
-                  for(int n=0; n<13;n+=1){
-                    upar.Add(mn2.nameL(n).c_str(), f2->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
-                  }
-                  for(int n=0; n<13;n+=1){
-                    upar.Add(mn2.nameL(n).c_str(), mn2.par(n), 1e-3);
-                  }
-                  // create Migrad minimizer
-                  MnMigrad migrad(ffcn1, upar);
-                  std::cout<<"minimum: "<<min<<std::endl;
-                  //MnHesse hesse;
-                  for(int ivar=0; ivar<13; ivar+=1){
-                    param.push_back(migrad.Value(mn2.nameL(ivar).c_str()));
-                    //std::cout<< "  par["<<ivar<<"] value --> ["<<param[ivar]<<"] \n";
-                  }
-                  for(int ivar=0; ivar<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; ivar+=1){
-                    double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
-                    double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
-                    double mnfit=mn2.model2(x, param);
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
-                    double res=100*(yv-mnfit)/yv;
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
-                    h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
-                  }
-                  double mnx,mny,max,may;
-                  max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-          	        GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-                  if(max>=60 && max<=65){
-                    mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-                    may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
-                    mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
-                    double diff=may-mny;
-                    clock=indexClock;
-                    fb=indexFB;
-                    ud=indexUD;
-                    module=indexModule;
-                    int imod=0, igap=4*indexClock+2;
-                    int csimod=(-1*treeRaw->indexCsI[i])+1;
-                    if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
-                    if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
-                    h2clus->Fill(csimod,igap,diff);
-                    h1kmu2->Fill(diff); h1ped->Fill(mny);
-                    kmu2=diff;          ped=mny;
-                    dubPed=mny;         tpeak=max;
-                    if(indexClock==0 && indexFB==1 && indexUD==0){
-                      h1cali->Fill(diff);
-                      TSpectrum *sp = new TSpectrum(4);
-                      Int_t nf = sp->Search(h1cali,1,"",0.10);
-                      double lowRange,upRange;
-                      Double_t *xps = sp->GetPositionX();
-                      std::sort(xps,xps+nf);
-                      lowRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()-xps[0]/2.0);
-                      upRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()+xps[0]*3.0/2.0);
-                      h1cali->Fit("gaus","Q","",lowRange,upRange);
-        	    }
-                  } //<-- Use to get rid of 2 peaks functions here * /
-      	        } // <--- End dpulse block
-		//delete f1;
             } // <-- End of nfound==1, single peak
           }
         } // <--- End of No. CsI crystals that fired
@@ -995,9 +876,6 @@ Long_t Det_CsI::process(){
     jailbreak:
       firedCsI=true;
     } // <--- End of if loop
-    //nextCrys:
-      //std::cout<<"\n";
-    //break;
   } // <--- End of nChannel for loop
   exitLoop:
     loopX=false;
