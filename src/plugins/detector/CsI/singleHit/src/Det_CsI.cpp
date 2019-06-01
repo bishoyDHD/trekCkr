@@ -479,7 +479,7 @@ Long_t Det_CsI::process(){
             //std::cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
-            if(nfound>=3){
+            if(notfired/*nfound>=3*/){
 	      int parV=13;
               std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
 	      if(nfound==4)
