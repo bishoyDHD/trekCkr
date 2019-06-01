@@ -479,11 +479,11 @@ Long_t Det_CsI::process(){
             //std::cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
-            if(notfired/*nfound>=3*/){
+            if(nfound>=3){
 	      int parV=13;
               std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
-	      if(nfound==4)
-                pileUp=mn2.quadruplemodel();
+	      //if(nfound==4)
+                //pileUp=mn2.quadruplemodel();
               TF1* f1=new TF1("f1",pileUp.c_str(),0.0,250);
               for(int n=0; n<13; n+=1){
                 f1->SetParameter(n,mn2.par(n));
@@ -516,13 +516,13 @@ Long_t Det_CsI::process(){
               f1->SetParLimits(12,xpeaks[2]-61.7,xpeaks[2]+71.7);
               f1->SetParameter(11,valY[2]);
               f1->SetParLimits(11,valY[2]-61.7,valY[2]+101.7);
-	      if(nfound==4){
-	        f1->SetParameter(13,valY[3]);
-                f1->SetParLimits(13,valY[3]-61.7,valY[3]+101.7);
-                f1->SetParameter(14,xpeaks[3]+.1);
-                f1->SetParLimits(14,xpeaks[3]-61.7,xpeaks[3]+71.7);
-	        parV=15;
-	      }
+	      //if(nfound==4){
+	      //  f1->SetParameter(13,valY[3]);
+              //  f1->SetParLimits(13,valY[3]-61.7,valY[3]+101.7);
+              //  f1->SetParameter(14,xpeaks[3]+.1);
+              //  f1->SetParLimits(14,xpeaks[3]-61.7,xpeaks[3]+71.7);
+	      //  parV=15;
+	      //}
       	      p0->Fill(f1->GetParameter(0));
       	      p1->Fill(f1->GetParameter(1));
       	      p9->Fill(f1->GetParameter(9));
@@ -534,7 +534,7 @@ Long_t Det_CsI::process(){
       	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
               // Create wrapper for minimizer
               fitfn3 ffcn1(xpos, xx1, xx2, val, ymax);
-              fitfn4 ffcn2(xpos, xx1, xx2, val, ymax);
+              //fitfn4 ffcn2(xpos, xx1, xx2, val, ymax);
               std::vector<double> param;
               std::vector<double> parm(15), err(15);
               param.clear(); parm.clear(); err.clear();
@@ -545,7 +545,7 @@ Long_t Det_CsI::process(){
               }
               // create Migrad minimizer
               MnMigrad migrad(ffcn1, upar);
-	      if(nfound==4) MnMigrad migrad(ffcn2, upar);
+	      //MnMigrad migrad(ffcn2, upar);
               //FunctionMinimum min = migrad();  //6000,1e-9);
               FunctionMinimum min = migrad(180,1e-6);
               std::cout<<"minimum: "<<min<<std::endl;
@@ -558,8 +558,8 @@ Long_t Det_CsI::process(){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
                 double mnfit=mn2.model3(x, param);
-		if(nfound==4)
-                  mnfit=mn2.model4(x, param);
+		//if(nfound==4)
+                  //mnfit=mn2.model4(x, param);
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
                 double res=100*(yv-mnfit)/yv;
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
