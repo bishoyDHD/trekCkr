@@ -38,5 +38,7 @@
 #pragma link C++ class TtcInfo+;
 #pragma link C++ class PgcInfo+;
 
+#pragma link C++ class CRTtrackVar+;
+#pragma link C++ class trackingE36+;
 
 #endif
