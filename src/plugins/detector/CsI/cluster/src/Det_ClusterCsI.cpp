@@ -1,7 +1,12 @@
+/*****************************************************************
+ *
+ *             WARNING!! ACHTUNG!! WARNING!! ACHTUNG!!
+ *  (Need calibration parameter file in order to run this plugin)
+ *
+ * ***************************************************************/
+
 #include <Det_ClusterCsI.h>
 #include <mn2CsIfn.h>
-//#include <clus_var.h>
-#include<iostream>
 #include<cmath>
 mn2CsIfn minu2;
 Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):Plugin(in,out,inf_,outf_,p){
@@ -9,33 +14,34 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   treeCali=0;
   h1Mnft[12][2][2][16]=NULL;
   h1Diff[12][2][2][16]=NULL;
-  h1rate[12][2][2][16]=NULL; // normalized diff b/n fit and histogram
-  h2Fits[12][2][2][16]=NULL;
   h1Fits[12][2][2][16]=NULL;
-  h1Amps[12][2][2][16]=NULL;
-  h1time[12][2][2][16]=NULL;
-  std::cout<<" checking this shit \n";
+  pi0Etot=NULL;
+  E2g=NULL;
+  h1Mpi0=NULL;
+  h1Mpi02=NULL;
+  //paramFile.open("kpi2evenlist.txt");
+  //parfile.open("calibPar.txt");
+  std::cout<<"....checking this shit \n";
   resetH=false;
+  notfire=false;
 };
 
 Det_ClusterCsI::~Det_ClusterCsI(){
   delete s;
   delete treeSing;
-  cout<<"  Exiting fitting program \n";
+  //outFile.close();
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<16;iModule++){
-          //delete h2Fits[iClock][iFB][iUD][iModule];
-          delete h1time[iClock][iFB][iUD][iModule];
           delete h1Fits[iClock][iFB][iUD][iModule];
-          delete h1Amps[iClock][iFB][iUD][iModule];
           delete h1Mnft[iClock][iFB][iUD][iModule];
           delete h1Diff[iClock][iFB][iUD][iModule];
         }
       }
     }
   }
+  cout<<"  Exiting fitting program \n";
 };
 
 typedef vector<double> ve;
@@ -54,7 +60,36 @@ std::size_t get_nthIndex(ve, std::size_t k){
   return indexes[k];
 }
 
+// Method to read in external files such as calibration par's
+void Det_ClusterCsI::readFiles(){
+  string fileName="calibPar.txt";
+  double calib;
+  int iclock, ifb, iud, imodule;
+  parfile.open(fileName);
+  if(parfile){
+    for(int iClock=0;iClock<12;iClock++){
+      for(int iFB=0;iFB<2;iFB++){
+        for(int iUD=0;iUD<2;iUD++){
+          for(int iModule=0;iModule<16;iModule++){
+            parfile>>iclock>>ifb>>iud>>imodule>>calib;
+            calibpar[iclock][ifb][iud][imodule]=calib;
+          }
+        }
+      }
+    }
+    parfile.close();
+  }else{
+    std::cerr<<" ****** Error opening file ''"<<fileName<<".'' Please make sure you have the file \n";
+    std::abort();
+  }
+}
+
+// utilize this as an initialization method along with histogram definitions
 Long_t Det_ClusterCsI::histos(){
+  pi0Etot=dH1("pi0Etot", " Total Energy of #pi^0",62.5,0.,0.3);
+  E2g=dH1("E2g", " Total Energy of 2#gamma",82.5,0.,0.9);
+  h1Mpi0= dH1("Mpi0", " Invariant mass of #pi^{0}",62.5,0.,0.5);
+  h1Mpi02=dH1("Mpi0", " Invariant mass M^{2} of #pi^{0}",62.5,-.1,0.1);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -64,45 +99,34 @@ Long_t Det_ClusterCsI::histos(){
           tname<<"time";
           name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name2<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name3<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name4<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name5<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
           h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
-          h1Amps[iClock][iFB][iUD][iModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
           h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
           h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
+          calibpar[12][2][2][16]=0;
         }
       }
     }
   }
   // parameter specific histos
   s = new TSpectrum(4);
-  p0=dH1("p0","Parameter p0", 250, 0, 1100);
-  p1=dH1("p1","Parameter p1", 250, 0, 250);
-  p9=dH1("p9","Parameter p9", 250, 0, 300);
-  p10=dH1("p10","Parameter p10", 200, 0, 800);
+  for(int n=0; n<4; n++){
+    px[n]=0; py[n]=0; pz[n]=0; // initialize array
+  }
   std::ostringstream title;
   title<<"CsI(Tl) clusters";
   h2clus=dH2("hclust",title.str().c_str(), 30,-15,15,50,0,50);
-  h1Pamp=dH1("hpulse","Pulse height distribution", 250, 0, 1000);
-  h1kmu2=dH1("kmu2DP","Pulse height distribution", 250, 0, 1000);
-  h1Intg=dH1("Integr","Integrated pulse height distribution", 250, 0, 100000);
-  h1cali=dH1("Calibr","Integrated pulse height distribution", 250, 0, 1000);
-  h1ped=dH1("Ped","Pedestals for the waveform ", 250, 0, 1000);
   c1= new TCanvas("c1","",900,800);
-  //c1->cd();
-  //h2clus->Draw("colz");
-  //c1->Update();
+  readFiles();
   return 0;
 }
 
 Long_t Det_ClusterCsI::startup(){
   getBranchObject("vf48",(TObject **) &treeRaw);
+  getBranchObject("testBranch",(TObject **) &tracktree);
   getBranchObject("RawBeamInfo",(TObject **) &treeBeam);
   gStyle->SetOptStat(0);
+  //outFile.open("kpi2evtList.dat");
 
   return 0;
 }
@@ -114,13 +138,25 @@ Long_t Det_ClusterCsI::process(){
   int iHist=0;
   clus_csi=false;
   idCrys.clear(),  indexph.clear();
-  typeAB.clear(),  gud.clear(),     gno.clear();
+  typeAB.clear(),  gud.clear(),      gno.clear();
   csThet.clear(),  csPhi.clear();
   csiph.clear();   phval->clear();   csiClus.clear();
-  clusth->clear(); clusphi->clear();
-  std::cout<<"\n\n event number is:"<<treeRaw->eventNo<<"\n\n";
-  //if(resetH)
-    //h2clus->Reset(); //need to reset stats in cluster event viewer
+  clusth->clear(); clusphi->clear(); clusEne.clear();
+  singleEne.clear();
+  clusThetaE.clear(); clusPhiE.clear();
+  int evtNum=treeRaw->eventNo;
+  //std::cout<<"\n\n event number is :"<<treeRaw->eventNo<<"\n\n";
+  //std::cout<<"\n\n event number2 is:"<<tracktree->evtNum<<"\n\n";
+  /*
+  if(ppip>=0.195 && ppip<=0.215){
+    outFile<<tracktree->evtNum+1<<std::endl;
+    std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<< "<<>> "<<tracktree->evtNum<<std::endl;
+  }*/
+  ppip=tracktree->pVertpi0;
+  if(ppip<0.195 || ppip>0.215) goto exitLoop;
+  if(resetH)
+    h2clus->Reset(); //need to reset stats in cluster event viewer
+    //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
     int moduleName=(p[3]-'0')*10+(p[2]-'0')-1;
@@ -176,6 +212,9 @@ Long_t Det_ClusterCsI::process(){
       // Utilize fitting method
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      calib=calibpar[indexClock][indexFB][indexUD][indexModule];
+      //FIXME this is makeshift solution to be corrected later
+      if(treeRaw->indexCsI[i]==16) calib=.22;
       if(x1>=50 && x1<=70){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
@@ -185,7 +224,7 @@ Long_t Det_ClusterCsI::process(){
             //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
             //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
             //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
-            //std::cout<< " Chan No.: "<<treeRaw->nChannel<<endl;
+            //std::cout<< " Calib par           :"<<calib<<endl;
 	  //}
           //cout<< " evtNo: "<<ev<<endl;
           //cluster finding algorithm: Finding neighbours!
@@ -196,6 +235,7 @@ Long_t Det_ClusterCsI::process(){
           	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
           double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
+	  //if(tracktree->evtNum==treeRaw->eventNo)
           //cout<<" The baseline is: "<<bl<<endl;
           for(int ivar=1; ivar<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); ivar+=1){
             xpos.push_back(ivar);
@@ -203,7 +243,7 @@ Long_t Det_ClusterCsI::process(){
           }
           if(y1 == 1023){
             double x;
-            for(int ovr = h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); ovr < 250; ovr += 1){
+            for(int ovr=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin(); ovr<250; ovr +=1){
               while(y1 == 1023){
                 x = ovr++;
                 y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -295,10 +335,9 @@ Long_t Det_ClusterCsI::process(){
               integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
         		GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
               double area=integral-(mny*250);
-              h1Intg->Fill(area);
               calInt=area;
 	      std::cout<<" =====> Value for integral1 is:" <<area<<endl;
-              double diff=may-mny; 
+              double diff=(may-mny)*calib; //apply E-calib
               int imod=0;
 	      int igap=4*indexClock+2, igapU=4*indexClock+3;
               int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
@@ -351,18 +390,8 @@ Long_t Det_ClusterCsI::process(){
               csiph[angles]=diff;
               csiClus[angles]=true;
               //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
-              h1Pamp->Fill(diff); h1ped->Fill(mny);      tpeak=max;
               h2clus->Fill(csimod,igap,diff);
-              phei=diff;          ped=mny;
-              kmu2=diff;          h1kmu2->Fill(diff);
-            }else{
-              phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
-            } // <--- Use this to get rid of double and single fitting functions * /
-            //fileOut->cd();
-            //h1Intg->Write();
-            //h1Fits[indexClock][indexFB][indexUD][indexModule]->Write();
-            //h1Mnft[indexClock][indexFB][indexUD][indexModule]->Write();
-            //h1Diff[indexClock][indexFB][indexUD][indexModule]->Write();
+            }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
           if(y1<1023){
             //cout<< "  Size of x is:  "<<xpos.size()<<endl;
@@ -413,10 +442,6 @@ Long_t Det_ClusterCsI::process(){
                 f1->SetParLimits(14,xpeaks[3]-61.7,xpeaks[3]+71.7);
 	        parV=15;
 	      }
-      	      p0->Fill(f1->GetParameter(0));
-      	      p1->Fill(f1->GetParameter(1));
-      	      p9->Fill(f1->GetParameter(9));
-      	      p10->Fill(f1->GetParameter(10));
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
       	      f1chi2=f1->GetChisquare();
               std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1];
@@ -475,39 +500,12 @@ Long_t Det_ClusterCsI::process(){
                       GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
                 integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
-                double diff=may-mny;
+                double diff=(may-mny)*calib;
 		double area=integral-mny*250;
         	clock=indexClock;
         	fb=indexFB;
         	ud=indexUD;
         	module=indexModule;
-		//Filling the TTree here:
-                //treeSing->indexCsI=treeRaw->indexCsI[i];
-                //treeSing->tpeak=max;
-                //treeSing->trise=param[1];
-	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-                //std::cout<<" ***** rise time is given as:  "<<tsigL<<std::endl;
-                //std::cout<<" ***** rise time is given TF1:  "<<tsigL<<std::endl;
-		//std::cout<<" ***** rise time is given p[1]:  "<<param[1]<<std::endl;
-                //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-                //treeSing->kmu2=diff;          
-                //treeSing->phei=diff;          treeSing->ped=mny;
-                //treeSing->dubPed=mny;         
-                //treeSing->calInt=area;
-                //treeSing->intKmu2=area;
-                //treeSing->csiArrange[0]=p[0];
-                //treeSing->csiArrange[1]=p[1];
-                //treeSing->clock=indexClock+1;
-                //treeSing->thSing=csitheta;
-                //treeSing->phiSing=csiphi;
-                //treeSing->dubphei=xpeaks[1];
-                //treeSing->ud=indexUD;         treeSing->fb=indexFB;
-	        //treeSing->tref[0]=T_ref[0];            treeSing->refpk[0]=maxfn[0];
-	        //treeSing->tref[1]=T_ref[1];            treeSing->refpk[1]=maxfn[1];
-	        //treeSing->tref[2]=T_ref[2];            treeSing->refpk[2]=maxfn[2];
-                //treeSing->tcorr[0]=(tsigL-T_ref[0]);   treeSing->refmn[0]=minfn[0];
-                //treeSing->tcorr[1]=(tsigL-T_ref[1]);   treeSing->refmn[1]=minfn[1];
-                //treeSing->tcorr[2]=(tsigL-T_ref[2]);   treeSing->refmn[2]=minfn[2];
                 int imod=0, igap=4*indexClock+2, igapU=4*indexClock+3;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
 	        //std::cout<< "\n\n  ======> "<<clock<<" peaks>=3 <========\n\n";
@@ -561,10 +559,7 @@ Long_t Det_ClusterCsI::process(){
                 csiph[angles]=diff;
                 csiClus[angles]=true;
                 //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
-                h1Pamp->Fill(diff); h1ped->Fill(mny);      tpeak=max;
                 h2clus->Fill(csimod,igap,diff);
-                phei=diff;          ped=mny;
-                kmu2=diff;          h1kmu2->Fill(diff);
 		delete f1;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
@@ -627,10 +622,6 @@ Long_t Det_ClusterCsI::process(){
                 param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
-              //hesse(ffcn1, min1);
-              //std::cout<<"minimum after hesse: "<<min<<std::endl;
-              //FunctionMinimum min1 = migrad();
-              //std::cout<<"minimum1: "<<min1<<std::endl;
               for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
@@ -653,7 +644,7 @@ Long_t Det_ClusterCsI::process(){
                       GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
-                double diff=may-mny;
+                double diff=(may-mny)*calib;
                 indexph.push_back(diff);
                 phval->push_back(diff);
                 clock=indexClock;
@@ -712,9 +703,6 @@ Long_t Det_ClusterCsI::process(){
       	          }
       	        } 
                 h2clus->Fill(csimod,igap,diff);
-                h1kmu2->Fill(diff); h1ped->Fill(mny);
-                kmu2=diff;          ped=mny;
-                dubPed=mny;         tpeak=max;
               }
             } //<-- Use to get rid of 2 peaks functions here * /
             if(nfound==1){
@@ -740,10 +728,6 @@ Long_t Det_ClusterCsI::process(){
               MnUserParameters upar;
               for(int n=0; n<9;n+=1){
                 upar.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
-                //upar.Add(nameL(n).c_str(), f1->GetParameter(n),parmin(n), parlim(n), 1e-3);
-                //upar.SetLimits(n,parmin(n), parlim(n));
-                //parm.push_back(f1->GetParameter(n)); err.push_back(0);
-                //upar.SetLimits(nameL(n).c_str(),parmin(n), parlim(n));
               }
 	      std::cout<<"  Okay we have cleared the loop!"<<endl;
               // create Migrad minimizer
@@ -765,22 +749,11 @@ Long_t Det_ClusterCsI::process(){
                 param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
-              //hesse(ffcn1, min1);
-              //std::cout<<"minimum after hesse: "<<min<<std::endl;
-              //FunctionMinimum min1 = migrad();
-              //std::cout<<"minimum1: "<<min1<<std::endl;
-              bool dpval=false;
               for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
                 double mnfit=minu2.model(x, param);
                 double res=100*(yv-mnfit)/yv;
-                /*if(x>=70){
-                  if(abs(res)>5){
-                    dpval=true;
-                    goto dpulse;
-                  }
-                }*/
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
                 h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
               }
@@ -812,9 +785,8 @@ Long_t Det_ClusterCsI::process(){
                       GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
                 double area=integral-mny*250;
 		std::cout<<" =====> Value for integral1 is:" <<area<<endl;
-                h1Intg->Fill(area);  tpeak=max;
                 calInt=area;
-                double diff=may-mny;
+                double diff=(may-mny)*calib;
       	        indexph.push_back(diff);
       	        phval->push_back(diff);
       	        idCrys.push_back(indexModule), gfb.push_back(fb);
@@ -870,143 +842,13 @@ Long_t Det_ClusterCsI::process(){
       	          }
       	        } 
                 h2clus->Fill(csimod,igap,diff);
-                h1Pamp->Fill(diff); h1ped->Fill(mny);
-                phei=diff;          ped=mny;
-              }else{
-                phei=-100, fb=-100, ud=-100, module=-100; tpeak=-100;
               } // <--- Use this to get rid of double and single fitting functions * /
-              dpulse:  // <-- On off chance that double pulse misdiagnosed as single pulse
-                if(dpval){
-		  std::cout<<" *** Checking to make sure this is called at the right time. \n";
-                  TF1* f2=new TF1("f2",(minu2.doublemodel()).c_str(),1.0,250);
-                  for(int n=0; n<13; n+=1){
-                    f2->SetParameter(n,minu2.par(n));
-                    f2->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
-                  }
-                  f2->SetParameter(0,y1);
-                  f2->SetParLimits(0,y1-61.7,y1+971.7);
-                  f2->SetParameter(1,x1);
-                  f2->SetParameter(8,bl);
-                  f2->SetParLimits(8,bl-61.7,bl+171.7);
-                  f2->SetParameter(9,100.1);
-                  f2->SetParLimits(1, -21.7, 171.7);
-                  f2->SetParLimits(9,21.7,371.7);
-                  f2->SetParameter(10,y1*.7);
-                  f2->SetParLimits(10,.7*y1-61.7,.7*y1+971.7);
-                  h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"0");
-                  Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
-                  // Create wrapper for minimizer 
-                  fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
-                  std::vector<double> param;
-                  std::vector<double> parm(15), err(15);
-                  param.clear(); parm.clear(); err.clear();
-                  MnUserParameters upar;
-                  for(int n=0; n<13;n+=1){
-                    upar.Add((minu2.nameL(n)).c_str(), f2->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
-                  }
-                  for(int n=0; n<13;n+=1){
-                    upar.Add((minu2.nameL(n)).c_str(), minu2.par(n), 1e-3);
-                  }
-                  // create Migrad minimizer
-                  MnMigrad migrad(ffcn1, upar);
-                  std::cout<<"minimum: "<<min<<std::endl;
-                  //MnHesse hesse;
-                  for(int imn2=0; imn2<13; imn2+=1){
-                    param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
-                    //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
-                  }
-                  for(int imn2=0; imn2<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; imn2+=1){
-                    double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(imn2);
-                    double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(imn2);
-                    double mnfit=minu2.model2(x, param);
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
-                    double res=100*(yv-mnfit)/yv;
-                    h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, mnfit);
-                    h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(imn2, res);
-                  }
-                  double mnx,mny,max,may;
-                  max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-          	        GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-                  if(max>=55 && max<=75){
-                    mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-                    may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
-                    mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                          GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
-                    double diff=may-mny;
-                    clock=indexClock;
-                    fb=indexFB;
-                    ud=indexUD;
-                    module=indexModule;
-                    int imod=0, igap=4*indexClock+2, igapU=4*indexClock+3;
-                    int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
-                    if(treeRaw->indexCsI[i]>=10){
-                      igap=4*indexClock+1;
-                      csimod=(-1*treeRaw->indexCsI[i])+7;
-                      if(treeRaw->indexCsI[i]==16) igap=4*indexClock+1.5;
-                    }
-                    if(p[1]=='b' || p[1]=='B'){
-                      csimod=treeRaw->indexCsI[i];
-                      if(treeRaw->indexCsI[i]>=10){
-                        igap=4*indexClock+1;
-                        csimod=(treeRaw->indexCsI[i])-6;
-                        if(treeRaw->indexCsI[i]==16) igap=4*indexClock+1.5;
-                      }
-                    }
-                    if(p[0]=='u' || p[0]=='U'){
-                      igap=4*indexClock+3;
-                      if(treeRaw->indexCsI[i]>=10){
-                        igap=4*(indexClock+1);
-                        csimod=(-1*treeRaw->indexCsI[i])+7;
-                        if(treeRaw->indexCsI[i]==16) igap=4*indexClock+3.5;
-                      }
-                      if(p[1]=='b' || p[1]=='B'){
-                        csimod=treeRaw->indexCsI[i];
-                        if(treeRaw->indexCsI[i]>=10){
-                          igap=4*(indexClock+1);
-                          csimod=(treeRaw->indexCsI[i])-6;
-                          if(treeRaw->indexCsI[i]==16) igap=4*indexClock+3.5;
-                        }
-                      }
-                    }
-                    h2clus->Fill(csimod,igap,diff);
-                    h1kmu2->Fill(diff); h1ped->Fill(mny);
-                    kmu2=diff;          ped=mny;
-                    dubPed=mny;         tpeak=max;
-                    if(indexClock==0 && indexFB==1 && indexUD==0){
-                      h1cali->Fill(diff);
-                      TSpectrum *sp = new TSpectrum(4);
-                      Int_t nf = sp->Search(h1cali,1,"",0.10);
-                      double lowRange,upRange;
-                      Double_t *xps = sp->GetPositionX();
-                      std::sort(xps,xps+nf);
-                      lowRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()-xps[0]/2.0);
-                      upRange=h1cali->GetBinLowEdge(h1cali->GetMaximumBin()+xps[0]*3.0/2.0);
-                      h1cali->Fit("gaus","Q","",lowRange,upRange);
-                    }
-                  }else{
-                    kmu2=-100; calInt=-100;
-                    module=-100;   tpeak=-100;
-                    dubPed=-100;
-                  } //<-- Use to get rid of 2 peaks functions here * /
-                } // <--- End dpulse block
-            } /*else{
-              kmu2=-100; phei=-100; calInt=-100; module=-100;
-            }*/
+            }
           }
         } // <--- End of No. CsI crystals that fired* /
-      }else{
-        kmu2=-100; phei=-100; calInt=-100; module=-100; tpeak=-100;
       }  // <--- End of prelim. timing cut if loop
       //pCali->Fill();
       c1->cd();
-      //Int_t colors[] = {0, 1, 2, 3, 4, 5, 6}; // #colors >= #levels - 1
-      //gStyle->SetPalette((sizeof(colors)/sizeof(Int_t)), colors);
-      // #levels <= #colors + 1 (notes: +-3.4e38 = +-FLT_MAX; +1.17e-38 = +FLT_MIN)
-      //Double_t levels[] = {-3.4e38, 1.17e-38, 0.90, 0.95, 1.00, 1.05, 1.10, 3.4e38};
-      //h2clus->SetContour((sizeof(levels)/sizeof(Double_t)), levels);
-      //h2clus->SetContour(2100);
       h2clus->GetZaxis()->SetRangeUser(0.89, 2100.11);
       h2clus->Draw("colz");
       for(int i=0;i<11;i++){
@@ -1056,37 +898,31 @@ Long_t Det_ClusterCsI::process(){
 
   if(clus_csi){
     std::cout<<"\n ***************************************************************************\n";
+	  std::cout<<" -------------->  || "<<tracktree->pVertpi0<<" || <------------------\n";
     for(UInt_t cr=0;cr<phval->size();cr++){
-      //int idFB=gfb[cr]; int idCryst=idCrys[cr];
-      //int gNo=gno[cr], gUD=gud[cr], tyAB=typeAB[cr];
-      //cout<<" pulse height order is hcrys["<<cr<<"] = "<<theta[idFB][idCryst]<<" "<<phi[gNo][gUD][tyAB]<<" "<<hcrys[cr]<<": Gap No."<<gno[cr]<<endl;
       std::cout<<" angles of corr. pulse heigh["<<cr<<"] = "<<(*phval)[cr]<<endl;
     }
-    //std::map<std::pair<double,double>,bool>::iterator itrr;
     for(auto itrr=csiClus.begin();itrr!=csiClus.end();itrr ++){
       std::cout<<"  cluster bool has the following: "<<itrr->second<<std::endl;
     }
     double ntheta, nphi;
-    int ii=0;
+    int numOfClus=0, numOfsingleClus=0;
     for(std::size_t mm=0; mm !=indexph.size(); mm++){
       const auto index=get_nthIndex(indexph, mm);
       std::cout<<"  the greater index --> "<<index <<std::endl;
               //<< " with value "<<indexph[index]<<std::endl;
       //std::nth_element(begin(hcrys), begin(hcrys)+ii, end(hcrys));
-      //cout<<"   checking value of nth element finder :"<<hcrys[ii]<<endl;
-      //auto phval=std::find(begin(refpulse), end(refpulse),hcrys[ii]);
-      //double loci=std::distance(begin(refpulse),phval);
-      //cout<<" ****  checking the heck out of this| "<<itr->first[ii].first<<"\t"<<itr->first[ii].second<<"\t"<<itr->second<<endl;
       ntheta=csThet[index], nphi=csPhi[index];
       //erpair.clear();
       auto tppair=std::make_pair(ntheta,nphi);
       std::cout<<"   ==>  theta and phi "<<ntheta<<"  "<<nphi<<endl;
-      //cout<<"  Pulse-height for given theta phi pair: "<< csiph[tpair]<<endl;
       auto angP1=std::make_pair(ntheta+7.5,nphi);      auto angP2=std::make_pair(ntheta-7.5,nphi);
       auto angP3=std::make_pair(ntheta,nphi+7.5);      auto angP4=std::make_pair(ntheta,nphi-7.5);
       auto angP5=std::make_pair(ntheta+7.5,nphi+7.5);  auto angP6=std::make_pair(ntheta-7.5,nphi-7.5);
       auto angP7=std::make_pair(ntheta-7.5,nphi+7.5);  auto angP8=std::make_pair(ntheta+7.5,nphi-7.5);
       clusCrys=0;
+      Eclus=0.;
+      thetaE=0; phiE=0;
       if(csiph[angP1] > 0 &&  csiph[angP2] > 0 &&  csiph[angP3] > 0 && csiph[angP4] > 0 &&
         csiph[angP5] > 0 && csiph[angP6] > 0 && csiph[angP7] > 0 &&
         csiph[angP8] > 0){
@@ -1096,21 +932,27 @@ Long_t Det_ClusterCsI::process(){
         csiph[angP8] > 0){
         //clusCrys=clusCrys+1;
         if(csiph[angP1]>0){
-          std::cout<<" This crystal Cluster pulse-height P1: "<<csiClus[angP1]<<std::endl;
+          std::cout<<" This crystal Cluster pulse-height P1: "<<csiph[angP1];
+	  std::cout<<" ["<<std::get<0>(angP1)<<", "<<std::get<1>(angP1)<<"] \n";
           if(csiClus[angP1]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP1];
+	    thetaE=thetaE+csiph[angP1]*(std::get<0>(angP1));
+	    phiE  =phiE  +csiph[angP1]*(std::get<1>(angP1));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP1]=false;
           }else{
             std::cout<<" Already checked this crystal \n";
           }
-          //csiph.erase(erpair); //csiph.erase(itr);
-          //erpair.clear();
         }
         if(csiph[angP2]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P2: "<<csiClus[angP2]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P2: "<<csiph[angP2];
+	  std::cout<<" ["<<std::get<0>(angP2)<<", "<<std::get<1>(angP2)<<"] \n";
           if(csiClus[angP2]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP2];
+	    thetaE=thetaE+csiph[angP2]*(std::get<0>(angP2));
+	    phiE  =phiE  +csiph[angP2]*(std::get<1>(angP2));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP2]=false;
           }else{
@@ -1118,20 +960,27 @@ Long_t Det_ClusterCsI::process(){
           }
         }
         if(csiph[angP3]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P3: "<<csiClus[angP3]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P3: "<<csiph[angP3];
+	  std::cout<<" ["<<std::get<0>(angP3)<<", "<<std::get<1>(angP3)<<"] \n";
           if(csiClus[angP3]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP3];
+	    thetaE=thetaE+csiph[angP3]*(std::get<0>(angP3));
+	    phiE  =phiE  +csiph[angP3]*(std::get<1>(angP3));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP3]=false;
           }else{
             std::cout<<" Already checked this crystal \n";
           }
-          //csiph.erase(erpair); //csiph.erase(itr);
         }
         if(csiph[angP4]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P4: "<<csiClus[angP4]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P4: "<<csiph[angP4];
+	  std::cout<<" ["<<std::get<0>(angP4)<<", "<<std::get<1>(angP4)<<"] \n";
           if(csiClus[angP4]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP4];
+	    thetaE=thetaE+csiph[angP4]*(std::get<0>(angP4));
+	    phiE  =phiE  +csiph[angP4]*(std::get<1>(angP4));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP4]=false;
           }else{
@@ -1139,9 +988,13 @@ Long_t Det_ClusterCsI::process(){
           }
         }
         if(csiph[angP5]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P5: "<<csiClus[angP5]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P5: "<<csiph[angP5];
+	  std::cout<<" ["<<std::get<0>(angP5)<<", "<<std::get<1>(angP5)<<"] \n";
           if(csiClus[angP5]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP5];
+	    thetaE=thetaE+csiph[angP5]*(std::get<0>(angP5));
+	    phiE  =phiE  +csiph[angP5]*(std::get<1>(angP5));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP5]=false;
           }else{
@@ -1149,9 +1002,13 @@ Long_t Det_ClusterCsI::process(){
           }
         }
         if(csiph[angP6]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P6: "<<csiClus[angP6]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P6: "<<csiph[angP6];
+	  std::cout<<" ["<<std::get<0>(angP6)<<", "<<std::get<1>(angP6)<<"] \n";
           if(csiClus[angP6]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP6];
+	    thetaE=thetaE+csiph[angP6]*(std::get<0>(angP6));
+	    phiE  =phiE  +csiph[angP6]*(std::get<1>(angP6));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP6]=false;
           }else{
@@ -1159,9 +1016,13 @@ Long_t Det_ClusterCsI::process(){
           }
         }
         if(csiph[angP7]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P7: "<<csiClus[angP7]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P7: "<<csiph[angP7];
+	  std::cout<<" ["<<std::get<0>(angP7)<<", "<<std::get<1>(angP7)<<"] \n";
           if(csiClus[angP7]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP7];
+	    thetaE=thetaE+csiph[angP7]*(std::get<0>(angP7));
+	    phiE  =phiE  +csiph[angP7]*(std::get<1>(angP7));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP7]=false;
           }else{
@@ -1169,9 +1030,13 @@ Long_t Det_ClusterCsI::process(){
           }
         }
         if(csiph[angP8]>0){
-          std::cout<<" This crystal Cluster finder in pair loop P8: "<<csiClus[angP8]<<std::endl;
+          std::cout<<" This crystal Cluster finder in pair loop P8: "<<csiph[angP8];
+	  std::cout<<" ["<<std::get<0>(angP8)<<", "<<std::get<1>(angP8)<<"] \n";
           if(csiClus[angP8]){
             clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angP8];
+	    thetaE=thetaE+csiph[angP8]*(std::get<0>(angP8));
+	    phiE  =phiE  +csiph[angP8]*(std::get<1>(angP8));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP8]=false;
           }else{
@@ -1180,35 +1045,95 @@ Long_t Det_ClusterCsI::process(){
         }
         std::cout<<" some crystals actually have hits "<<clusCrys<<std::endl;
       }else{
-        clusCrys=clusCrys+1;
-        std::cout<<" number of single cluster crystals is "<<clusCrys<<std::endl;
+        clusCrys=0;//clusCrys+1;
+        std::cout<<" Single cluster crystals here \n"; //<<clusCrys<<std::endl;
         /*if(std::find(thetaPhi.begin(), thetaPhi.end(), angP2) != thetaPhi.end()){
           std::cout<<"  Checking DeMorgan's laws in C++ \n";
         }*/
       }
       if(csiClus[tppair]){
+        clusCrys=clusCrys+1;
+	Eclus=Eclus+csiph[tppair];
+	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
+	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
+	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
+	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
+	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [MeV]";
+      }
+      if(clusCrys>=2){
+        numOfClus++;
+	clusEne.push_back((Eclus)/1000);
+	clusThetaE.push_back(thetaE/Eclus);
+	clusPhiE.push_back(phiE/Eclus);
+      }
+      if(clusCrys==1){
+        numOfsingleClus++;
+	singleEne.push_back((Eclus)/1000);
       }
       csiClus[tppair]=false; // mute central crystal
-      /*
       cout<<"  Number of crystals is:  "<<clusCrys<<endl;
-      ii++;
-      //itr++, ii++;*/
     }
     for(UInt_t idc=0;idc<csThet.size();idc++){
       std::cout<<"    theta[m][n] "<<csThet[idc]<<endl;
       //cout<<"    pairs pHeig "<<csiph.find(thetaPhi)->second<<endl;
     }
+    /***********************************************
+     *   Vertex state vector info. for comparison
+     * *********************************************/
+    // vertex momentum direction for pi+
+    piPpx=-1*(tracktree->nxVert);
+    piPpy=-1*(tracktree->nyVert);
+    piPpz=-1*(tracktree->nzVert);
+    // vertex pi+ position
+    pi0x=tracktree->xVert;
+    pi0y=tracktree->yVert;
+    pi0z=tracktree->zVert;
+    // momentum/Energy in GeV/c (c=1)
+    ppip=tracktree->pVertpi0;
+    T_pi0=std::sqrt(std::pow(ppip,2)+std::pow(M_pi0,2));//-M_pi0;
+    std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
+    if(numOfClus>=2){
+      // calculate momentum direction for pi0: from (theta,phi) of 2*gamma
+      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+      g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+      g2px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+      g2py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+      g2pz=clusEne[1]*std::cos(clusThetaE[1]);
+      // calculate pi0 invariant mass from above info.
+      TLorentzVector gamma1(g1px, g1py, g1pz, clusEne[0]);
+      TLorentzVector gamma2(g2px, g2py, g2pz, clusEne[1]);
+      TLorentzVector pi0=gamma1+gamma2;
+      E2g->Fill(clusEne[0]+clusEne[1]);
+      pi0Etot->Fill(T_pi0);
+      h1Mpi0->Fill(pi0.M());
+      h1Mpi02->Fill(pi0.M2());
+      std::cout<<"\n  Checking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
+      std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
+      std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
+      std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
+    }
     /*
-    for(UInt_t id=0;id<idCrys.size();id++){
-      int gNo=gno[id], gUD=gud[id], tyAB=typeAB[id];
-      cout<<"    phi[gNo][UD][type] "<<phi[gNo][gUD][tyAB]<<endl;
+    else if(numOfClus==1 && numOfsingleClus>=1){
+      Double_t weight=event1.Generate();
+      TLorentzVector* piNeut=event1.GetDecay(0);
+      TLorentzVector* g1=event1.GetDecay(1);
+      TLorentzVector* g2=event1.GetDecay(2);
+      TLorentzVector gamma1(g1->Px(),g1->Py(),g1->Pz(), clusEne[0]);
+      TLorentzVector gamma2(g2->Px(),g2->Py(),g2->Pz(), singleEne[1]);
+      TLorentzVector pi0=gamma1+gamma2;
+    std::cout<<"\n  Checking 4-Vectors  :  "<<g1->Px()<<"  ["<<pi0px<<"]"<<endl;
+    std::cout<<"\n  Checking pi0 InvMass:  "<<pi0.M()*weight<<endl;
     }*/
-    //cout<<"  ~~~~~~~~~~  making sure this works:  "<<csiph[thetaPhi]/*.find(thetaPhi)->second* /<<endl;
+    std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
+    std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
     std::cout<<" ***************************************************************************\n";
   }//<--- end cluster if loop* /
+exitLoop:
   delete phval;
   delete clusth;
   delete clusphi;
+
   return 0;
 }
 

@@ -6,6 +6,7 @@
 #define __CSITREE_H_
 #include "cookerrawtree.h" // for CRTBase
 #include <vector>
+//static const double E_kpi2=0.10854566040017; // in GeV
 class CRTCaliCsI:public CRTBase{
  public:
   UInt_t runNo;

@@ -4,7 +4,7 @@
 
 <init>/${HOME}/.cooker/shared/init/ClusterCsI.xml</init>
 
-<source>vf48_hdw</source> <!-- the source tree name-->
+<source>vf48_hdw:trackingVar</source> <!-- the source tree name-->
 <destination>csi_cali</destination> <!-- the destination tree name-->
 
 <plugins>

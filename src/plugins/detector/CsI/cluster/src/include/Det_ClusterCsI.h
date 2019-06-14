@@ -2,13 +2,16 @@
 #define __Det_ClusterCsI__
 
 #include "csitree.h"
-#include "TObject.h"
+#include "multiTree.h"
 #include "Plugin.h"
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TF1.h"
+#include <fstream>
 #include "TSpectrum.h"
+#include "TLorentzVector.h"
+#include "TGenPhaseSpace.h"
 #include "TCanvas.h"
 #include <TStyle.h>
 #include "TAxis.h"
@@ -31,15 +34,22 @@ class Det_ClusterCsI:public Plugin{
   CRTCaliCsI *treeCali; // Output branch for CSI data
   CRTRawCsI *treeRaw;   // Input tree with CSI raw data
   BeamInfo* treeBeam;
+  trackingE36* tracktree; // Input from tracking
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
   TCanvas* c1;
-  bool resetH;
+  bool resetH, notfire;
+  const double M_pi0=0.1349766;
+  const double E_kpi2=0.2455612; //total energy for Kpi2
+  double px[4], py[4], pz[4];
+  double T_pi0, ppip, thetaE, phiE;
+  //double masses[3];
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
   virtual ~Det_ClusterCsI();
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2, minx;
-  double valx1, valx2;
+  double valx1, valx2, calib;
+  std::ifstream paramFile;
   // add funtions with return value Long_t here:
   
   int clusCrys;
@@ -65,31 +75,37 @@ class Det_ClusterCsI:public Plugin{
   char* pName;
   TSpectrum *s;
   Int_t nfound;
+  std::ofstream outFile;
+  std::ifstream parfile;
   TH1D* h1Mnft[12][2][2][16];
   TH1D* h1Diff[12][2][2][16];
-  TH1D* h1rate[12][2][2][16]; // normalized diff b/n fit and histogram
-  TH2D* h2Fits[12][2][2][16];
   TH1D* h1Fits[12][2][2][16];
-  TH1D* h1Amps[12][2][2][16];
   TH1D* h1time[12][2][2][16];
-  TH1D* h1Pamp, *h1ped;
-  TH1D* h1kmu2;
-  TH1D* h1cali;
+  TH1D* h1Mpi0, *h1Mpi02, *pi0Etot, *E2g;
   TH2D* h2clus;
-  TH1D* h1Intg, *p0, *p10, *p9, *p1, *f1X2;
   TLine *hbox1[22], *hline1[23];
   TLine *hbox2[2], *hline2[26];
   TLine *vbox1[22], *hline3[22];
   TLine *vbox2[4];
   Int_t clock;
   Int_t fb;
+  double calibpar[12][2][2][16];
   Int_t ud, event, module, multip;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
   Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
+  double pi0px, pi0py, pi0pz;
+  double g1px, g1py, g1pz;
+  double g2px, g2py, g2pz;
+  double piPpx, piPpy, piPpz;
+  double pi0x, pi0y, pi0z;
+  int evtNum; 
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;
+  std::vector<double> clusEne,singleEne;
+  std::vector<double> clusThetaE, clusPhiE;
+  double Eclus;
   bool clus_csi;
   Long_t histos();
   Long_t startup();
@@ -105,6 +121,7 @@ class Det_ClusterCsI:public Plugin{
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
   void initVector();
+  void readFiles();
 
   virtual Long_t cmdline(char * cmd);
 
