@@ -218,13 +218,13 @@ Long_t Det_ClusterCsI::process(){
       if(x1>=50 && x1<=70){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
-            //std::cout<< "\n\n ****************************************** "<<endl;
-            //std::cout<< " Index clock: "<<indexClock<<endl;
-            //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-            //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-            //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
-            //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
-            //std::cout<< " Calib par           :"<<calib<<endl;
+            std::cout<< "\n\n ****************************************** "<<endl;
+            std::cout<< " Index clock: "<<indexClock<<endl;
+            std::cout<< " Gap config FB is  : " <<p[1]<<endl;
+            std::cout<< " Gap config UD is  : " <<p[0]<<endl;
+            std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+            std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
+            std::cout<< " Calib par           :"<<calib<<endl;
 	  //}
           //cout<< " evtNo: "<<ev<<endl;
           //cluster finding algorithm: Finding neighbours!
@@ -409,8 +409,12 @@ Long_t Det_ClusterCsI::process(){
                 f1->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
               }
               double *xpeaks=s->GetPositionX();
-              double posX[3];
-              double valY[3];
+              double posX[4];
+              double valY[4];
+	      for(int nval=0; nval<4; nval++){
+	        posX[nval]=0;
+		valY[nval]=0;
+	      }
               for(int ivar=0; ivar<nfound; ivar++){
                 double a=xpeaks[ivar];
                 int bin=1+Int_t(a+.5);
@@ -430,22 +434,22 @@ Long_t Det_ClusterCsI::process(){
               f1->SetParameter(9,xpeaks[1]+.9);
               f1->SetParLimits(9,xpeaks[1]-31.7,xpeaks[1]+21.7);
               f1->SetParameter(10,valY[1]);
-              f1->SetParLimits(10,valY[1]-61.7,valY[1]+171.7);
-              f1->SetParameter(12,xpeaks[2]+.1);
-              f1->SetParLimits(12,xpeaks[2]-61.7,xpeaks[2]+71.7);
+              f1->SetParLimits(10,valY[1]-61.7,valY[1]+17.7);
+              f1->FixParameter(12,xpeaks[2]+.1);
+              //f1->SetParLimits(12,xpeaks[2]-61.7,xpeaks[2]+71.7);
               f1->SetParameter(11,valY[2]);
               f1->SetParLimits(11,valY[2]-61.7,valY[2]+101.7);
 	      if(nfound==4){
 	        f1->SetParameter(13,valY[3]);
                 f1->SetParLimits(13,valY[3]-61.7,valY[3]+101.7);
                 f1->SetParameter(14,xpeaks[3]+.1);
-                f1->SetParLimits(14,xpeaks[3]-61.7,xpeaks[3]+71.7);
+                f1->SetParLimits(14,xpeaks[3]-91.7,xpeaks[3]+71.7);
 	        parV=15;
 	      }
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
       	      f1chi2=f1->GetChisquare();
               std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1];
-	      std::cout<<", "<<xpeaks[2]<<std::endl;
+	      std::cout<<", "<<xpeaks[2]<<", "<<xpeaks[3]<<std::endl;
       	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
               Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
               // Create wrapper for minimizer
@@ -564,7 +568,8 @@ Long_t Det_ClusterCsI::process(){
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
             if(nfound==2){
-              TF1* f1=new TF1("f1",(minu2.doublemodel()).c_str(),1.0,250);
+	      std::string dubFit = minu2.doublemodel();
+              TF1* f1=new TF1("f1",dubFit.c_str(),0.0,250);
               for(int n=0; n<15; n+=1){
                 f1->SetParameter(n,minu2.par(n));
                 f1->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
@@ -581,29 +586,25 @@ Long_t Det_ClusterCsI::process(){
               double yp2=h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(xpeaks[1]));
               f1->SetParameter(0,y1);
-              f1->SetParLimits(0,y1-61.7,y1+971.7);
-              f1->SetParameter(1,xpeaks[0]+.1);
+              f1->SetParLimits(0,y1-6.7,y1+7.7);
+              f1->SetParameter(1,xpeaks[0]-10.1);
+              f1->SetParLimits(1,xpeaks[0]-26.7,xpeaks[0]+27.7);
               f1->SetParameter(8,bl);
-              f1->SetParLimits(8,bl-61.7,bl+171.7);
-              f1->SetParameter(9,xpeaks[1]+.1);
-              f1->SetParLimits(1,xpeaks[0]-61.7,xpeaks[0]+71.7);
-              f1->SetParLimits(9,xpeaks[1]-61.7,xpeaks[1]+71.7);
+              f1->SetParLimits(8,bl-161.7,bl+171.7);
+              f1->SetParameter(9,xpeaks[1]-10.1);
+              f1->SetParLimits(9,xpeaks[1]-16.7,xpeaks[1]+17.7);
               f1->SetParameter(10,yp2);
-              f1->SetParLimits(10,yp2-61.7,yp2+971.7);
-              h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"0");
-              Minuit2Minimizer* mnu2=new Minuit2Minimizer("Minuit2");
+              f1->SetParLimits(10,yp2-7.7,yp2+7.7);
+              h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
               // Create wrapper for minimizer 
               fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
               std::vector<double> param;
               std::vector<double> parm(15), err(15);
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
-              for(int n=0; n<15;n+=1){
+              for(int n=0; n<11;n+=1){
                 upar.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
                 //upar.Add(nameL(n).c_str(), f1->GetParameter(n), parmin(n), parlim(n), 1e-3);
-              }
-              for(int n=0; n<15;n+=1){
-                upar.Add((minu2.nameL(n)).c_str(), minu2.par(n), 1e-3);
               }
               // create Migrad minimizer
               MnMigrad migrad(ffcn1, upar);
@@ -618,7 +619,7 @@ Long_t Det_ClusterCsI::process(){
                 std::cerr<<" Found assertion error \n";
               }*/
               //MnHesse hesse;
-              for(int imn2=0; imn2<15; imn2+=1){
+              for(int imn2=0; imn2<11; imn2+=1){
                 param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
                 //std::cout<< "  par["<<i<<"] value --> ["<<param[i]<<"] \n";
               }
@@ -704,6 +705,7 @@ Long_t Det_ClusterCsI::process(){
       	        } 
                 h2clus->Fill(csimod,igap,diff);
               }
+	      delete f1;
             } //<-- Use to get rid of 2 peaks functions here * /
             if(nfound==1){
               TF1* f1=new TF1("f1",(minu2.singlemodel()).c_str(),1.0,250);

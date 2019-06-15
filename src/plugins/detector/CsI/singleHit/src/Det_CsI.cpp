@@ -306,7 +306,7 @@ Long_t Det_CsI::process(){
       //std::cout<< " iHist: "<<iHist<<endl;
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
-        if(treeRaw->nChannel==7){ // Start by checking how many CsI crystals have fired
+        if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
           //if(treeRaw->indexCsI[i]-1==15){
             //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
             //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
