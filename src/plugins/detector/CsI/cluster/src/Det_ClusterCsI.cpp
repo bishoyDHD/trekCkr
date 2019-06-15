@@ -400,13 +400,13 @@ Long_t Det_ClusterCsI::process(){
             if(nfound>=3){
 	      int parV=13;
               std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
-	      std::string pileUp=minu2.doublemodel();
+	      std::string pileUp=minu2.triplemodel();
 	      if(nfound==4)
                 pileUp=minu2.quadruplemodel();
               TF1* f1=new TF1("f1",pileUp.c_str(),0.0,250);
-              for(int n=0; n<13; n+=1){
-                f1->SetParameter(n,minu2.par(n));
-                f1->SetParLimits(n,minu2.parmin(n),minu2.parlim(n));
+              for(int nnp=0; nnp<13; nnp+=1){
+                f1->SetParameter(nnp,minu2.par(nnp));
+                f1->SetParLimits(nnp,minu2.parmin(nnp),minu2.parlim(nnp));
               }
               double *xpeaks=s->GetPositionX();
               double posX[4];
@@ -427,23 +427,23 @@ Long_t Det_ClusterCsI::process(){
               f1->SetParameter(0,valY[0]);
               f1->SetParLimits(0,valY[0]-11.7,valY[0]+71.7);
               //f1->SetParLimits(0,y1-61.7,y1+971.7);
-              f1->SetParameter(1,xpeaks[0]);
+              f1->SetParameter(1,xpeaks[0]-5.);
               f1->SetParLimits(1,xpeaks[0]-25.7,xpeaks[0]+10.7);
               f1->SetParameter(8,bl);
               f1->SetParLimits(8,bl-61.7,bl+171.7);
-              f1->SetParameter(9,xpeaks[1]+.9);
+              f1->SetParameter(9,xpeaks[1]-1.9);
               f1->SetParLimits(9,xpeaks[1]-31.7,xpeaks[1]+21.7);
               f1->SetParameter(10,valY[1]);
               f1->SetParLimits(10,valY[1]-61.7,valY[1]+17.7);
-              f1->FixParameter(12,xpeaks[2]+.1);
+              f1->FixParameter(12,xpeaks[2]-15.1);
               //f1->SetParLimits(12,xpeaks[2]-61.7,xpeaks[2]+71.7);
               f1->SetParameter(11,valY[2]);
-              f1->SetParLimits(11,valY[2]-61.7,valY[2]+101.7);
+              f1->SetParLimits(11,valY[2]-41.7,valY[2]+25.77);
 	      if(nfound==4){
 	        f1->SetParameter(13,valY[3]);
-                f1->SetParLimits(13,valY[3]-61.7,valY[3]+101.7);
-                f1->SetParameter(14,xpeaks[3]+.1);
-                f1->SetParLimits(14,xpeaks[3]-91.7,xpeaks[3]+71.7);
+                f1->SetParLimits(13,valY[3]-61.7,valY[3]+10.7);
+                f1->SetParameter(14,xpeaks[3]-9.1);
+                f1->SetParLimits(14,xpeaks[3]-21.7,xpeaks[3]+11.7);
 	        parV=15;
 	      }
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
@@ -460,24 +460,37 @@ Long_t Det_ClusterCsI::process(){
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
               for(int n=0; n<parV;n+=1){
-                upar.Add(minu2.nameL(n).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
+                upar.Add(minu2.nameL(n).c_str(), f1->GetParameter(n),0.1); //,parmin(n), parlim(n), 0.1);
                 //upar.Add(nameL(n).c_str(), f1->GetParameter(n), parmin(n), parlim(n), 1e-3);
               }
               // create Migrad minimizer
-              MnMigrad migrad(ffcn1, upar);
-	      if(nfound==4) MnMigrad migrad(ffcn2, upar);
-              //FunctionMinimum min = migrad();  //6000,1e-9);
-              FunctionMinimum min = migrad(180,1e-6);
-              std::cout<<"minimum: "<<min<<std::endl;
-              //MnHesse hesse;
-              for(int ivar=0; ivar<parV; ivar+=1){
-                param.push_back(migrad.Value(minu2.nameL(ivar).c_str()));
-                //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
-              }
+	      if(nfound==3){
+                MnMigrad migrad(ffcn1, upar);
+                //FunctionMinimum min = migrad();  //6000,1e-9);
+                FunctionMinimum min = migrad(180,1e-6);
+                std::cout<<"minimum: "<<min<<std::endl;
+                //MnHesse hesse;
+                for(int ivar=0; ivar<parV; ivar+=1){
+                  param.push_back(migrad.Value(minu2.nameL(ivar).c_str()));
+                  //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
+                }
+	      }
+	      if(nfound==4){
+	        MnMigrad migrad(ffcn2, upar);
+                //FunctionMinimum min = migrad();  //6000,1e-9);
+                FunctionMinimum min = migrad(180,1e-6);
+                std::cout<<"minimum: "<<min<<std::endl;
+                //MnHesse hesse;
+                for(int ivar=0; ivar<parV; ivar+=1){
+                  param.push_back(migrad.Value(minu2.nameL(ivar).c_str()));
+                  //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
+                }
+	      }
+              double mnfit=0;
               for(int ivar=0; ivar<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; ivar+=1){
                 double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
                 double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
-                double mnfit=minu2.model3(x, param);
+                mnfit=minu2.model3(x, param);
 		if(nfound==4)
                   mnfit=minu2.model4(x, param);
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
