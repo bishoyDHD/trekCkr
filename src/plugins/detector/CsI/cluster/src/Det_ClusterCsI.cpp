@@ -218,25 +218,20 @@ Long_t Det_ClusterCsI::process(){
       if(x1>=50 && x1<=70){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
-            std::cout<< "\n\n ****************************************** "<<endl;
-            std::cout<< " Index clock: "<<indexClock<<endl;
-            std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-            std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-            std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
-            std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
-            std::cout<< " Calib par           :"<<calib<<endl;
+            //std::cout<< "\n\n ****************************************** "<<endl;
+            //std::cout<< " Index clock: "<<indexClock<<endl;
+            //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
+            //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
+            //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+            //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
+            std::cout<< "\n   ** Event Number ------> "<<treeRaw->eventNo<<"\n\n";
 	  //}
-          //cout<< " evtNo: "<<ev<<endl;
-          //cluster finding algorithm: Finding neighbours!
-          //gud=0, typeAB=0,gno=indexClock, fb=indexFB; crysID=indexModule;
           double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
           y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(x1));
           double bl = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(mn));
-	  //if(tracktree->evtNum==treeRaw->eventNo)
-          //cout<<" The baseline is: "<<bl<<endl;
           for(int ivar=1; ivar<=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetNbinsX(); ivar+=1){
             xpos.push_back(ivar);
             val.push_back(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar));
@@ -251,44 +246,20 @@ Long_t Det_ClusterCsI::process(){
               }
             }
 	    std::cout<< " Okay this thing is smart x =" << x << endl;
-            TF1* f1=new TF1("wave1",(minu2.overrangemodel()).c_str(), 0.5, x1);
-            // fill parameters for the fit function(s)
-            for(int imn2par = 1; imn2par < 10; imn2par+=1){
-              f1->SetParameter(imn2par,minu2.par(imn2par));
-              f1->SetParLimits(imn2par,minu2.parmin(imn2par),minu2.parlim(imn2par));
-            }
-            double rtime=(xx1+xx2)/2;
-            f1->SetParameter(0,y1+1023*2);
-            f1->SetParLimits(0,y1-61.7,y1+1723.7);
-            f1->SetParameter(1,rtime+20.1);
-            f1->SetParLimits(1,rtime-261.7,rtime+271.7);
-            f1->SetParameter(8,bl);
-            f1->SetParLimits(8,bl-61.7,bl+171.7);
-            h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //, "0");
-            xx1=(int)x1; xx2=(int)x; ymax=y1;
             ovrfn ffcn(xpos, xx1, xx2, val, ymax);
             // Create wrapper for minimizer 
+	    std::cout<<"  ....Oops just making sure this thing works! \n";
             MnUserParameters upar2;
             std::vector<double> par(10), err(10);
             par.clear(); err.clear();
 	    std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
             for(int n=0; n<10;n+=1){
-              upar2.Add((minu2.nameL(n)).c_str(), f1->GetParameter(n), 0.1);
+              upar2.Add((minu2.nameL(n)).c_str(), ovrpar[n], 0.1);
             }
             // create Migrad minimizer
             MnMigrad migrad(ffcn, upar2);
             FunctionMinimum min = migrad(180,1e-2);
-            try{
-              throw logic_error("Assertion `s0.IsValid()' failed.");
-            }
-            catch(const std::logic_error & e){
-              std::cerr<<" Found assertion error \n";
-            }
             std::cout<<"minimum: "<<min<<std::endl;
-            // Minos factory
-            //MnMinos minos(ffcn, min);
-            //FunctionMinimum min3 = migrad();
-            MnHesse hesse;
             std::vector<double> param;
             param.clear();
             for(int imn2=0; imn2<10; imn2+=1){
@@ -393,7 +364,7 @@ Long_t Det_ClusterCsI::process(){
               h2clus->Fill(csimod,igap,diff);
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
-          if(y1<1023){
+	  else if(y1<1023){
             //cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
@@ -603,7 +574,7 @@ Long_t Det_ClusterCsI::process(){
               f1->SetParameter(1,xpeaks[0]-10.1);
               f1->SetParLimits(1,xpeaks[0]-26.7,xpeaks[0]+27.7);
               f1->SetParameter(8,bl);
-              f1->SetParLimits(8,bl-161.7,bl+171.7);
+              f1->SetParLimits(8,bl-161.7,bl+11.7);
               f1->SetParameter(9,xpeaks[1]-10.1);
               f1->SetParLimits(9,xpeaks[1]-16.7,xpeaks[1]+17.7);
               f1->SetParameter(10,yp2);
