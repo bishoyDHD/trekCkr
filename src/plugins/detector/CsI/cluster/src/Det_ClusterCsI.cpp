@@ -405,6 +405,11 @@ Long_t Det_ClusterCsI::process(){
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
             if(nfound>=3){
+              double *xpeaks=s->GetPositionX();
+              sort(xpeaks,xpeaks+nfound);
+	      if(nfound==4){
+	        if(xpeaks[3]-xpeaks[2]<=25) nfound==4;
+	      }
 	      int parV=13;
               std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
 	      std::string pileUp=minu2.triplemodel();
@@ -415,7 +420,6 @@ Long_t Det_ClusterCsI::process(){
                 f1->SetParameter(nnp,minu2.par(nnp));
                 f1->SetParLimits(nnp,minu2.parmin(nnp),minu2.parlim(nnp));
               }
-              double *xpeaks=s->GetPositionX();
               double posX[4];
               double valY[4];
 	      for(int nval=0; nval<4; nval++){
@@ -427,7 +431,6 @@ Long_t Det_ClusterCsI::process(){
                 int bin=1+Int_t(a+.5);
                 posX[ivar]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
               }
-              sort(xpeaks,xpeaks+nfound);
 	      for(int valy=0; valy<nfound; valy++)
                 valY[valy]=h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(xpeaks[valy]));
@@ -474,7 +477,7 @@ Long_t Det_ClusterCsI::process(){
 	      if(nfound==3){
                 MnMigrad migrad(ffcn1, upar);
                 //FunctionMinimum min = migrad();  //6000,1e-9);
-                FunctionMinimum min = migrad(180,1e-6);
+                FunctionMinimum min = migrad(180,1e-2);
                 std::cout<<"minimum: "<<min<<std::endl;
                 //MnHesse hesse;
                 for(int ivar=0; ivar<parV; ivar+=1){
@@ -485,7 +488,7 @@ Long_t Det_ClusterCsI::process(){
 	      if(nfound==4){
 	        MnMigrad migrad(ffcn2, upar);
                 //FunctionMinimum min = migrad();  //6000,1e-9);
-                FunctionMinimum min = migrad(180,1e-6);
+                FunctionMinimum min = migrad(180,1e-2);
                 std::cout<<"minimum: "<<min<<std::endl;
                 //MnHesse hesse;
                 for(int ivar=0; ivar<parV; ivar+=1){
