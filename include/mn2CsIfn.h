@@ -85,7 +85,7 @@ class mn2CsIfn{
   std::string overrangemodel(){
     char norm[1000],modelname[1000];
     sprintf(norm,"1-exp(-(x-[1])/[6])");
-    sprintf(modelname,"[0]*TMath::Freq((x-[1]-[2])/[3])/(%s)*((x-[1])/[4]*exp(1-(x-[1])/[4])+\
+    sprintf(modelname,"[0]*2*TMath::Freq((x-[1]-[2])/[3])/(%s)*((x-[1])/[4]*exp(1-(x-[1])/[4])+\
           [5]*((x-[1])/([7]))*exp(1-(x-[1])/[7]))+[8]",norm);  
     std::string namestring=modelname;
     return namestring;
