@@ -218,12 +218,12 @@ Long_t Det_ClusterCsI::process(){
       if(x1>=50 && x1<=70){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
-            //std::cout<< "\n\n ****************************************** "<<endl;
-            //std::cout<< " Index clock: "<<indexClock<<endl;
-            //std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-            //std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-            //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
-            //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
+            std::cout<< "\n\n ****************************************** "<<endl;
+            std::cout<< " Index clock: "<<indexClock<<endl;
+            std::cout<< " Gap config FB is  : " <<p[1]<<endl;
+            std::cout<< " Gap config UD is  : " <<p[0]<<endl;
+            std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+            std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
             std::cout<< "\n   ** Event Number ------> "<<treeRaw->eventNo<<"\n\n";
 	  //}
           double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -246,6 +246,42 @@ Long_t Det_ClusterCsI::process(){
               }
             }
 	    std::cout<< " Okay this thing is smart x =" << x << endl;
+	    TF1* f1=new TF1("wave1",(minu2.overrangemodel()).c_str(), 0.5, x1);
+            // fill parameters for the fit function(s)
+            for(int ivar=0; ivar<10; ivar+=1){
+              f1->SetParameter(ivar, minu2.par(ivar));
+              f1->SetParLimits(ivar,minu2.parmin(ivar),minu2.parlim(ivar));
+            }
+            nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
+            double *xpeaks=NULL;
+            xpeaks=s->GetPositionX();
+            double posX[2];
+            for(int ivar=0; ivar<nfound; ivar++){
+              double a=xpeaks[ivar];
+              int bin=1+Int_t(a+.5);
+              posX[ivar]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
+            }
+            sort(xpeaks,xpeaks+nfound);
+            //std::cout<<"\n ---->  Gotta check the hell outta this shit \n";
+            double rtime=(xx1+xx2)/2;
+            f1->SetParameter(0,y1+1023*2.8);
+            f1->SetParLimits(0,y1-61.7,y1+1723.7);
+            f1->SetParameter(1,rtime+20.1);
+            f1->SetParLimits(1,rtime-261.7,rtime+271.7);
+            f1->SetParameter(8,bl);
+            f1->SetParLimits(8,bl-61.7,bl+171.7);
+            h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //, "0");
+            f1chi2=f1->GetChisquare();
+            xx1=(int)x1; xx2=(int)x; ymax=y1;
+            ovrfn ffcn(xpos, xx1, xx2, val, ymax);
+            // Create wrapper for minimizer
+            MnUserParameters upar2;
+            std::vector<double> par(10), err(10);
+            par.clear(); err.clear();
+            //std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
+            for(int n=0; n<10;n+=1){
+              upar2.Add(minu2.nameL(n).c_str(), f1->GetParameter(n), 0.1);
+            }/*
             ovrfn ffcn(xpos, xx1, xx2, val, ymax);
             // Create wrapper for minimizer 
 	    std::cout<<"  ....Oops just making sure this thing works! \n";
@@ -255,7 +291,7 @@ Long_t Det_ClusterCsI::process(){
 	    std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
             for(int n=0; n<10;n+=1){
               upar2.Add((minu2.nameL(n)).c_str(), ovrpar[n], 0.1);
-            }
+            }*/
             // create Migrad minimizer
             MnMigrad migrad(ffcn, upar2);
             FunctionMinimum min = migrad(180,1e-2);
