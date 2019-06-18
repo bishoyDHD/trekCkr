@@ -10,6 +10,7 @@
 #include "TF1.h"
 #include <fstream>
 #include "TSpectrum.h"
+#include "TVector3.h"
 #include "TLorentzVector.h"
 #include "TGenPhaseSpace.h"
 #include "TCanvas.h"
@@ -27,6 +28,7 @@
 #include <numeric>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
+#define _USE_MATH_DEFINES
 
 typedef std::pair<UInt_t,UInt_t> IdCsI;
 class Det_ClusterCsI:public Plugin{
@@ -44,6 +46,7 @@ class Det_ClusterCsI:public Plugin{
   const double E_kpi2=0.2455612; //total energy for Kpi2
   double px[4], py[4], pz[4];
   double T_pi0, ppip, thetaE, phiE;
+  double rtheta, rphi;
   //double masses[3];
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
@@ -87,6 +90,7 @@ class Det_ClusterCsI:public Plugin{
   TH1D* h1pi0px, *h1pi0py, *h1pi0pz;
   TH1D* h1vertpx, *h1vertpy, *h1vertpz;
   TH2D* h2clus, *h2Ene;
+  TH1D* E_cut, *cosTheta, *vertOp;
   TLine *hbox1[22], *hline1[23];
   TLine *hbox2[2], *hline2[26];
   TLine *vbox1[22], *hline3[22];

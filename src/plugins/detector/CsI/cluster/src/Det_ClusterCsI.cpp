@@ -17,10 +17,12 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1Fits[12][2][2][16]=NULL;
   pi0Etot=NULL;
   E2g=NULL; h2Ene=NULL;
+  E_cut=NULL, cosTheta=NULL;
   h1Mpi0=NULL;
   h1Mpi02=NULL;
   h1pi0px=NULL; h1pi0py=NULL; h1pi0pz=NULL;
   h1vertpx=NULL; h1vertpy=NULL; h1vertpz=NULL;
+  vertOp=NULL;
   //paramFile.open("kpi2evenlist.txt");
   //parfile.open("calibPar.txt");
   std::cout<<"....checking this shit \n";
@@ -99,6 +101,9 @@ Long_t Det_ClusterCsI::histos(){
   h1vertpy=dH1("h1vertpy", " #gamma momentum direction p_{y}",62.5, -0.4, 0.4);
   h1vertpz=dH1("h1vertpz", " #gamma momentum direction p_{z}",62.5, -0.4, 0.4);
   h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
+  E_cut=dH1("E_cut", "#pi^{0} total energy", 62.5, 0., 0.25);
+  cosTheta=dH1("cosTheta", "opening angle for 2 #gamma's", 25., 0., 100.);
+  vertOp=dH1("vertOp", "Opening angle between #pi^{+} and #pi^{0}", 50.,0.,190.);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -1083,6 +1088,9 @@ Long_t Det_ClusterCsI::process(){
 	Eclus=Eclus+csiph[tppair];
 	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
 	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
+	// perform conversion from deg-->rad
+	rtheta=(thetaE*M_PI)/180;
+	rphi=(phiE*M_PI)/180;
 	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
 	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [MeV]";
@@ -1090,8 +1098,8 @@ Long_t Det_ClusterCsI::process(){
       if(clusCrys>=2){
         numOfClus++;
 	clusEne.push_back((Eclus)/1000);
-	clusThetaE.push_back(thetaE/Eclus);
-	clusPhiE.push_back(phiE/Eclus);
+	clusThetaE.push_back(rtheta/Eclus);
+	clusPhiE.push_back(rphi/Eclus);
       }
       if(clusCrys==1){
         numOfsingleClus++;
@@ -1110,9 +1118,9 @@ Long_t Det_ClusterCsI::process(){
     // momentum/Energy in GeV/c (c=1)
     ppip=tracktree->pVertpi0;
     // vertex momentum direction for pi+
-    piPpx=-1*ppip*(tracktree->nxVert);
-    piPpy=-1*ppip*(tracktree->nyVert);
-    piPpz=-1*ppip*(tracktree->nzVert);
+    piPpx=ppip*(tracktree->nxVert);
+    piPpy=ppip*(tracktree->nyVert);
+    piPpz=ppip*(tracktree->nzVert);
     // vertex pi+ position
     pi0x=tracktree->xVert;
     pi0y=tracktree->yVert;
@@ -1120,6 +1128,7 @@ Long_t Det_ClusterCsI::process(){
     T_pi0=std::sqrt(std::pow(ppip,2)+std::pow(M_pi0,2));//-M_pi0;
     pipEtot=std::sqrt(std::pow(ppip,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
+      std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
     if(numOfClus>=2){
       // calculate momentum direction for pi0: from (theta,phi) of 2*gamma
       g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
@@ -1132,6 +1141,12 @@ Long_t Det_ClusterCsI::process(){
       TLorentzVector gamma1(g1px, g1py, g1pz, clusEne[0]);
       TLorentzVector gamma2(g2px, g2py, g2pz, clusEne[1]);
       TLorentzVector pi0=gamma1+gamma2;
+      //ThreeVector for angular analysis
+      TVector3 piPv(piPpx, piPpy,piPpz);
+      TVector3 pi0v(pi0.Px(), pi0.Py(),pi0.Pz());
+      TVector3 gv1(g1px, g1py, g1pz);
+      TVector3 gv2(g2px, g2py, g2pz);
+      // Fill histos
       E2g->Fill(clusEne[0]+clusEne[1]);
       pi0Etot->Fill(T_pi0);
       h1Mpi0->Fill(pi0.M());
@@ -1143,11 +1158,16 @@ Long_t Det_ClusterCsI::process(){
       h1vertpx->Fill(pi0.Px());
       h1vertpy->Fill(pi0.Py());
       h1vertpz->Fill(pi0.Pz());
+      vertOp->Fill(piPv.Angle(pi0v)*(180./M_PI));
+      if(clusEne[0]+clusEne[1] >=.225 && clusEne[0]+clusEne[1]<=.252) E_cut->Fill(clusEne[0]+clusEne[1]);
+      if((clusEne[0]-clusEne[1])/(clusEne[0]+clusEne[1])<=0.1) cosTheta->Fill(gv1.Angle(gv2)*(180./M_PI));
       h2Ene->Fill(clusEne[0]+clusEne[1]+T_pi0,pipEtot+T_pi0);
       std::cout<<"\n  Checking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
       std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
+      std::cout<<"\n  Checking cos(theta):       "<<pi0.CosTheta()<<endl;
+      std::cout<<"\n  Checking vertex opening    "<<piPv.Angle(pi0v)<<endl;
     }
     /*
     else if(numOfClus==1 && numOfsingleClus>=1){
