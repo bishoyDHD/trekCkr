@@ -40,6 +40,7 @@ class Det_ClusterCsI:public Plugin{
   TCanvas* c1;
   bool resetH, notfire;
   const double M_pi0=0.1349766;
+  const double M_piP=0.13957018;
   const double E_kpi2=0.2455612; //total energy for Kpi2
   double px[4], py[4], pz[4];
   double T_pi0, ppip, thetaE, phiE;
@@ -83,7 +84,9 @@ class Det_ClusterCsI:public Plugin{
   TH1D* h1time[12][2][2][16];
   double ovrpar[10]={1023.*4, 35.76, 26.68, 19.85, 15.83, 0.065, 2.255, 31.21,120,  120.5};
   TH1D* h1Mpi0, *h1Mpi02, *pi0Etot, *E2g;
-  TH2D* h2clus;
+  TH1D* h1pi0px, *h1pi0py, *h1pi0pz;
+  TH1D* h1vertpx, *h1vertpy, *h1vertpz;
+  TH2D* h2clus, *h2Ene;
   TLine *hbox1[22], *hline1[23];
   TLine *hbox2[2], *hline2[26];
   TLine *vbox1[22], *hline3[22];
@@ -100,6 +103,7 @@ class Det_ClusterCsI:public Plugin{
   double g2px, g2py, g2pz;
   double piPpx, piPpy, piPpz;
   double pi0x, pi0y, pi0z;
+  double pipEtot;
   int evtNum; 
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
