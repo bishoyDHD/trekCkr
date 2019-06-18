@@ -16,9 +16,11 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1Diff[12][2][2][16]=NULL;
   h1Fits[12][2][2][16]=NULL;
   pi0Etot=NULL;
-  E2g=NULL;
+  E2g=NULL; h2Ene=NULL;
   h1Mpi0=NULL;
   h1Mpi02=NULL;
+  h1pi0px=NULL; h1pi0py=NULL; h1pi0pz=NULL;
+  h1vertpx=NULL; h1vertpy=NULL; h1vertpz=NULL;
   //paramFile.open("kpi2evenlist.txt");
   //parfile.open("calibPar.txt");
   std::cout<<"....checking this shit \n";
@@ -86,10 +88,17 @@ void Det_ClusterCsI::readFiles(){
 
 // utilize this as an initialization method along with histogram definitions
 Long_t Det_ClusterCsI::histos(){
-  pi0Etot=dH1("pi0Etot", " Total Energy of #pi^0",62.5,0.,0.3);
+  pi0Etot=dH1("pi0Etot", " Total Energy of #pi^0",62.5,0.,0.5);
   E2g=dH1("E2g", " Total Energy of 2#gamma",82.5,0.,0.9);
   h1Mpi0= dH1("Mpi0", " Invariant mass of #pi^{0}",62.5,0.,0.5);
-  h1Mpi02=dH1("Mpi0", " Invariant mass M^{2} of #pi^{0}",62.5,-.1,0.1);
+  h1Mpi02=dH1("Mpi02", " Invariant mass M^{2} of #pi^{0}",62.5,-.2,0.2);
+  h1pi0px=dH1("h1pi0px", " #gamma momentum direction p_{x}",62.5, -0.4, 0.4);
+  h1pi0py=dH1("h1pi0py", " #gamma momentum direction p_{y}",62.5, -0.4, 0.4);
+  h1pi0pz=dH1("h1pi0pz", " #gamma momentum direction p_{z}",62.5, -0.4, 0.4);
+  h1vertpx=dH1("h1vertpx", " #gamma momentum direction p_{x}",62.5, -0.4, 0.4);
+  h1vertpy=dH1("h1vertpy", " #gamma momentum direction p_{y}",62.5, -0.4, 0.4);
+  h1vertpz=dH1("h1vertpz", " #gamma momentum direction p_{z}",62.5, -0.4, 0.4);
+  h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -477,7 +486,7 @@ Long_t Det_ClusterCsI::process(){
 	      if(nfound==3){
                 MnMigrad migrad(ffcn1, upar);
                 //FunctionMinimum min = migrad();  //6000,1e-9);
-                FunctionMinimum min = migrad(180,1e-2);
+                FunctionMinimum min = migrad(90,1e-12);
                 std::cout<<"minimum: "<<min<<std::endl;
                 //MnHesse hesse;
                 for(int ivar=0; ivar<parV; ivar+=1){
@@ -488,7 +497,7 @@ Long_t Det_ClusterCsI::process(){
 	      if(nfound==4){
 	        MnMigrad migrad(ffcn2, upar);
                 //FunctionMinimum min = migrad();  //6000,1e-9);
-                FunctionMinimum min = migrad(180,1e-2);
+                FunctionMinimum min = migrad(90,1e-12);
                 std::cout<<"minimum: "<<min<<std::endl;
                 //MnHesse hesse;
                 for(int ivar=0; ivar<parV; ivar+=1){
@@ -614,8 +623,8 @@ Long_t Det_ClusterCsI::process(){
               f1->SetParLimits(1,xpeaks[0]-26.7,xpeaks[0]+27.7);
               f1->SetParameter(8,bl);
               f1->SetParLimits(8,bl-161.7,bl+11.7);
-              f1->SetParameter(9,xpeaks[1]-10.1);
-              f1->SetParLimits(9,xpeaks[1]-16.7,xpeaks[1]+17.7);
+              f1->SetParameter(9,xpeaks[1]-15.1);
+              f1->SetParLimits(9,xpeaks[1]-61.7,xpeaks[1]+17.7);
               f1->SetParameter(10,yp2);
               f1->SetParLimits(10,yp2-7.7,yp2+7.7);
               h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
@@ -632,15 +641,8 @@ Long_t Det_ClusterCsI::process(){
               // create Migrad minimizer
               MnMigrad migrad(ffcn1, upar);
               //FunctionMinimum min = migrad();  //6000,1e-9);
-              FunctionMinimum min = migrad(180,1e-2);
+              FunctionMinimum min = migrad(10,1e-2);
               std::cout<<"minimum: "<<min<<std::endl;
-              /*
-              try{
-                throw logic_error("Assertion `s0.IsValid()' failed.");
-              }
-              catch(const std::logic_error & e){
-                std::cerr<<" Found assertion error \n";
-              }*/
               //MnHesse hesse;
               for(int imn2=0; imn2<11; imn2+=1){
                 param.push_back(migrad.Value((minu2.nameL(imn2)).c_str()));
@@ -1105,17 +1107,18 @@ Long_t Det_ClusterCsI::process(){
     /***********************************************
      *   Vertex state vector info. for comparison
      * *********************************************/
+    // momentum/Energy in GeV/c (c=1)
+    ppip=tracktree->pVertpi0;
     // vertex momentum direction for pi+
-    piPpx=-1*(tracktree->nxVert);
-    piPpy=-1*(tracktree->nyVert);
-    piPpz=-1*(tracktree->nzVert);
+    piPpx=-1*ppip*(tracktree->nxVert);
+    piPpy=-1*ppip*(tracktree->nyVert);
+    piPpz=-1*ppip*(tracktree->nzVert);
     // vertex pi+ position
     pi0x=tracktree->xVert;
     pi0y=tracktree->yVert;
     pi0z=tracktree->zVert;
-    // momentum/Energy in GeV/c (c=1)
-    ppip=tracktree->pVertpi0;
     T_pi0=std::sqrt(std::pow(ppip,2)+std::pow(M_pi0,2));//-M_pi0;
+    pipEtot=std::sqrt(std::pow(ppip,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
     if(numOfClus>=2){
       // calculate momentum direction for pi0: from (theta,phi) of 2*gamma
@@ -1133,6 +1136,14 @@ Long_t Det_ClusterCsI::process(){
       pi0Etot->Fill(T_pi0);
       h1Mpi0->Fill(pi0.M());
       h1Mpi02->Fill(pi0.M2());
+      h1pi0px->Fill(piPpx);
+      h1pi0py->Fill(piPpy);
+      h1pi0pz->Fill(piPpz);
+      //vertex info.
+      h1vertpx->Fill(pi0.Px());
+      h1vertpy->Fill(pi0.Py());
+      h1vertpz->Fill(pi0.Pz());
+      h2Ene->Fill(clusEne[0]+clusEne[1]+T_pi0,pipEtot+T_pi0);
       std::cout<<"\n  Checking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
