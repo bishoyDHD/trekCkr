@@ -33,7 +33,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
 
 Det_ClusterCsI::~Det_ClusterCsI(){
   delete s;
-  delete treeSing;
+  delete treeClus;
   //outFile.close();
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
@@ -142,12 +142,27 @@ Long_t Det_ClusterCsI::startup(){
   getBranchObject("vf48",(TObject **) &treeRaw);
   getBranchObject("testBranch",(TObject **) &tracktree);
   getBranchObject("RawBeamInfo",(TObject **) &treeBeam);
+  treeClus=new CRTClusterCsI();
+  makeBranch("treeClus",(TObject **) &treeClus);
   gStyle->SetOptStat(0);
   //outFile.open("kpi2evtList.dat");
 
   return 0;
 }
 
+void Det_ClusterCsI::initVar(){
+  int dummy=-1000;
+  // init 2 gamma variables
+  treeClus->g1Px=dummy;       treeClus->g2Px=dummy;
+  treeClus->g1Py=dummy;       treeClus->g2Py=dummy;
+  treeClus->g1Pz=dummy;       treeClus->g2Pz=dummy;
+  // init pion vars
+  treeClus->piPpx=dummy;       treeClus->pi0px=dummy;
+  treeClus->piPpy=dummy;       treeClus->pi0py=dummy;
+  treeClus->piPpz=dummy;       treeClus->pi0pz=dummy;
+  treeClus->piPpi0=dummy;      treeClus->piP2g=dummy;
+  treeClus->ggCosTheta=dummy;  treeClus->piCosTheta=dummy;
+}
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
   clusth=new vector<double>();
@@ -162,6 +177,8 @@ Long_t Det_ClusterCsI::process(){
   singleEne.clear();
   clusThetaE.clear(); clusPhiE.clear();
   int evtNum=treeRaw->eventNo;
+  treeClus->evtNo=evtNum;
+  initVar(); // make sure variables are initialized V events
   //std::cout<<"\n\n event number is :"<<treeRaw->eventNo<<"\n\n";
   //std::cout<<"\n\n event number2 is:"<<tracktree->evtNum<<"\n\n";
   /*
@@ -415,6 +432,7 @@ Long_t Det_ClusterCsI::process(){
               csiClus[angles]=true;
               //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
               h2clus->Fill(csimod,igap,diff);
+	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
 	  else if(y1<1023){
@@ -425,7 +443,7 @@ Long_t Det_ClusterCsI::process(){
               double *xpeaks=s->GetPositionX();
               sort(xpeaks,xpeaks+nfound);
 	      if(nfound==4){
-	        if(xpeaks[3]-xpeaks[2]<=25) nfound==4;
+	        if(xpeaks[3]-xpeaks[2]<=25) nfound==3;
 	      }
 	      int parV=13;
               std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
@@ -529,6 +547,11 @@ Long_t Det_ClusterCsI::process(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
+	        treeClus->waveID=nfound;
+		goto exitLoop;
+	        if(!clus_csi)
+                  clus_csi=true;
+		if(!resetH) resetH=true;
                 mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
                 may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
@@ -669,6 +692,12 @@ Long_t Det_ClusterCsI::process(){
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
+	        treeClus->waveID=nfound;
+	        if(xpeaks[0] < 60){
+	          treeClus->waveID=nfound;
+	          treeClus->dubP_1=1;
+	        }
+	        goto exitLoop;
 	        if(!clus_csi)
                   clus_csi=true;
 		if(!resetH) resetH=true;
@@ -877,6 +906,7 @@ Long_t Det_ClusterCsI::process(){
       	          }
       	        } 
                 h2clus->Fill(csimod,igap,diff);
+	        treeClus->waveID=nfound;
               } // <--- Use this to get rid of double and single fitting functions * /
             }
           }
@@ -1166,7 +1196,19 @@ Long_t Det_ClusterCsI::process(){
       if(clusEne[0]+clusEne[1] >=.225 && clusEne[0]+clusEne[1]<=.252) E_cut->Fill(clusEne[0]+clusEne[1]);
       if((clusEne[0]-clusEne[1])/(clusEne[0]+clusEne[1])<=0.1) cosTheta->Fill(gv1.Angle(gv2)*(180./M_PI));
       h2Ene->Fill(clusEne[0]+clusEne[1]+pipEtot,pipEtot+T_pi0);
-      std::cout<<"\n  Checking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
+      // Fill tree var
+      treeClus->E_pi0=clusEne[0]+clusEne[1];
+      treeClus->g1Px=g1px;     treeClus->g2Px=g2px;
+      treeClus->g1Py=g1py;     treeClus->g2Py=g2py;
+      treeClus->g1Pz=g1pz;     treeClus->g2Pz=g2pz;
+      treeClus->piPpx=piPpx;     treeClus->pi0px=pi0.Px();
+      treeClus->piPpy=piPpy;     treeClus->pi0py=pi0.Py();
+      treeClus->piPpz=piPpz;     treeClus->pi0pz=pi0.Pz();
+      treeClus->ggCosTheta=pi0.CosTheta();
+      treeClus->piCosTheta=pi0.CosTheta();
+      treeClus->piP2g=clusEne[0]+clusEne[1]+pipEtot;
+      treeClus->piPpi0=T_pi0+pipEtot;
+      std::cout<<"\n  piPecking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
       std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
@@ -1185,7 +1227,10 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"\n  Checking 4-Vectors  :  "<<g1->Px()<<"  ["<<pi0px<<"]"<<endl;
     std::cout<<"\n  Checking pi0 InvMass:  "<<pi0.M()*weight<<endl;
     }*/
-    if(numOfClus>0) h1clust->Fill(numOfClus);
+    if(numOfClus>0){
+      h1clust->Fill(numOfClus);
+      treeClus->clusterM=numOfClus;
+    }
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
     std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
     std::cout<<" ***************************************************************************\n";

@@ -68,16 +68,26 @@ class CRTSingleCsI:public CRTBase{
 };
 class CRTClusterCsI:public CRTBase{
  public:
-  Int_t clock;
-  Int_t fb;
-  Int_t ud, event, module, multip;
-  Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref;
-  Double_t clusE, thClus, phiClus;
+  Int_t evtNo;
+  int waveID;  // distinguish between 4-different kinds of waves
+  Int_t dubP_1; // pre-pile up with double peak
+  Double_t E_pi0, thetaE, phiE;
+  Double_t ggCosTheta, piCosTheta;
+  Int_t clusterM; // cluster multiplicity
+  Int_t Ncrys; // number of fired crystals
+  Int_t ClustCrys; // number of crystals within cluster
+  Double_t piPpi0, piP2g;
+  // state vector information for 2 gammas
+  Double_t g1Px, g1Py, g1Pz;
+  Double_t g2Px, g2Py, g2Pz;
+  // state vector information for pions
+  Double_t pi0px, pi0py, pi0pz;
+  Double_t piPpx, piPpy, piPpz;/*
   std::vector<double> xpos, val;
   std::vector<double> csThet, csPhi;
   std::vector<std::pair<double,double>> pos;
   std::vector<int> idCrys, ncrys, nclus;
-  std::vector<int> crysID, typeAB, gud, gno, gfb;
+  std::vector<int> crysID, typeAB, gud, gno, gfb;*/
   CRTClusterCsI();
   virtual ~CRTClusterCsI();
   ClassDef(CRTClusterCsI,1);

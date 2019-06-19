@@ -38,7 +38,7 @@ class Det_ClusterCsI:public Plugin{
   BeamInfo* treeBeam;
   trackingE36* tracktree; // Input from tracking
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
-  CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
+  CRTClusterCsI *treeClus;  // Output branch for CSI single hit var
   TCanvas* c1;
   bool resetH, notfire;
   const double M_pi0=0.1349766;
@@ -129,7 +129,7 @@ class Det_ClusterCsI:public Plugin{
   Long_t setIdCsI(std::map<IdCsI,UInt_t>& mapCsI);
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
-  void initVector();
+  void initVar();
   void readFiles();
 
   virtual Long_t cmdline(char * cmd);
