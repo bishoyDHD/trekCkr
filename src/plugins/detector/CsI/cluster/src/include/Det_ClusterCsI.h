@@ -87,7 +87,7 @@ class Det_ClusterCsI:public Plugin{
   TH1D* h1time[12][2][2][16];
   double ovrpar[10]={1023.*4, 35.76, 26.68, 19.85, 15.83, 0.065, 2.255, 31.21,120,  120.5};
   TH1D* h1Mpi0, *h1Mpi02, *pi0Etot, *E2g;
-  TH1D* h1pi0px, *h1pi0py, *h1pi0pz;
+  TH1D* h1pi0px, *h1pi0py, *h1pi0pz, *h1clust, *h1sclus;
   TH1D* h1vertpx, *h1vertpy, *h1vertpz;
   TH2D* h2clus, *h2Ene;
   TH1D* E_cut, *cosTheta, *vertOp;

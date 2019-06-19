@@ -16,6 +16,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1Diff[12][2][2][16]=NULL;
   h1Fits[12][2][2][16]=NULL;
   pi0Etot=NULL;
+  h1clust=NULL; h1sclus=NULL;
   E2g=NULL; h2Ene=NULL;
   E_cut=NULL, cosTheta=NULL;
   h1Mpi0=NULL;
@@ -103,7 +104,9 @@ Long_t Det_ClusterCsI::histos(){
   h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
   E_cut=dH1("E_cut", "#pi^{0} total energy", 62.5, 0., 0.25);
   cosTheta=dH1("cosTheta", "opening angle for 2 #gamma's", 25., 0., 100.);
-  vertOp=dH1("vertOp", "Opening angle between #pi^{+} and #pi^{0}", 50.,0.,190.);
+  vertOp=dH1("vertOp", "Opening angle between #pi^{+} and #pi^{0}", 50.,-1.1,1.1);
+  h1clust=dH1("h1clust", "Cluster multiplicity", 12, 0., 12.);
+  h1sclus=dH1("h1sclust", "Single cluster multiplicity", 12, 0., 12.);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -1103,6 +1106,7 @@ Long_t Det_ClusterCsI::process(){
       }
       if(clusCrys==1){
         numOfsingleClus++;
+        h1sclus->Fill(1);
 	singleEne.push_back((Eclus)/1000);
       }
       csiClus[tppair]=false; // mute central crystal
@@ -1129,7 +1133,7 @@ Long_t Det_ClusterCsI::process(){
     pipEtot=std::sqrt(std::pow(ppip,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
-    if(numOfClus>=2){
+    if(numOfClus==2){
       // calculate momentum direction for pi0: from (theta,phi) of 2*gamma
       g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
       g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
@@ -1158,10 +1162,10 @@ Long_t Det_ClusterCsI::process(){
       h1vertpx->Fill(pi0.Px());
       h1vertpy->Fill(pi0.Py());
       h1vertpz->Fill(pi0.Pz());
-      vertOp->Fill(piPv.Angle(pi0v)*(180./M_PI));
+      vertOp->Fill(std::cos(piPv.Angle(pi0v)));
       if(clusEne[0]+clusEne[1] >=.225 && clusEne[0]+clusEne[1]<=.252) E_cut->Fill(clusEne[0]+clusEne[1]);
       if((clusEne[0]-clusEne[1])/(clusEne[0]+clusEne[1])<=0.1) cosTheta->Fill(gv1.Angle(gv2)*(180./M_PI));
-      h2Ene->Fill(clusEne[0]+clusEne[1]+T_pi0,pipEtot+T_pi0);
+      h2Ene->Fill(clusEne[0]+clusEne[1]+pipEtot,pipEtot+T_pi0);
       std::cout<<"\n  Checking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
@@ -1181,6 +1185,7 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"\n  Checking 4-Vectors  :  "<<g1->Px()<<"  ["<<pi0px<<"]"<<endl;
     std::cout<<"\n  Checking pi0 InvMass:  "<<pi0.M()*weight<<endl;
     }*/
+    if(numOfClus>0) h1clust->Fill(numOfClus);
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
     std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
     std::cout<<" ***************************************************************************\n";
