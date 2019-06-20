@@ -111,15 +111,14 @@ Long_t Det_ClusterCsI::histos(){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<16;iModule++){
-          std::ostringstream name, name2, name3, name4, name5, name6, tname;
-          name<<"stat_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
-          tname<<"time";
-          name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
+          std::ostringstream name1, name2, name3;
+          name1<<"stat_"; name2<<"Mnfit_"; name3<<"Diff_";
+          name1<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name2<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
+          name3<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
+          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name1.str().c_str(),"stat",250,0,250);
           h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
-          h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
+          h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name3.str().c_str(),"stat",250,0,250);
           calibpar[12][2][2][16]=0;
         }
       }
@@ -162,6 +161,12 @@ void Det_ClusterCsI::initVar(){
   treeClus->piPpz=dummy;       treeClus->pi0pz=dummy;
   treeClus->piPpi0=dummy;      treeClus->piP2g=dummy;
   treeClus->ggCosTheta=dummy;  treeClus->piCosTheta=dummy;
+  // WaveID and cluster var
+  treeClus->waveID=dummy;
+  treeClus->dubP_1=dummy;
+  treeClus->clusterM=dummy;
+  treeClus->ClustCrys=dummy;
+  treeClus->Ncrys=dummy;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -249,7 +254,7 @@ Long_t Det_ClusterCsI::process(){
       calib=calibpar[indexClock][indexFB][indexUD][indexModule];
       //FIXME this is makeshift solution to be corrected later
       if(treeRaw->indexCsI[i]==16) calib=.22;
-      if(x1>=50 && x1<=70){
+      if(x1>=58 && x1<=68){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
             std::cout<< "\n\n ****************************************** "<<endl;
