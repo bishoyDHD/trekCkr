@@ -7,6 +7,7 @@
 #include "TTree.h"
 #include "TSpectrum.h"
 #include "TLegend.h"
+#include <TLine.h>
 #include <TStyle.h>
 #include <TH1D.h>
 #include <iostream>
@@ -16,6 +17,7 @@
 class covfefe:public Plugin{
  private:
   CATSingleCsI* csimar;
+  CATClusterCsI* clsmar;
   CATCaliCsI* calibcsi;
   const double dE=143.5;
   double sigdE=3.25;
@@ -56,6 +58,16 @@ class covfefe:public Plugin{
   Long_t startup();
   Long_t process();
   Long_t finalize();
+  // functions for cluster analysis:
+  Long_t hist_clust();
+  Long_t startup_clust();
+  Long_t process_clust();
+  Long_t finalize_clust();
+  // histograms for cluster analysis
+  TH1D* E_pi0; // pi0 total energy
+  TH1D* waveID, *clustM, *id1;
+  TH2D* kmass;
+
 
   virtual Long_t cmdline(char * cmd);
 

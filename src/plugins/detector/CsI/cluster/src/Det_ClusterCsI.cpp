@@ -252,8 +252,9 @@ Long_t Det_ClusterCsI::process(){
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
       calib=calibpar[indexClock][indexFB][indexUD][indexModule];
+      calib=calib/1000.; // convert MeV to GeV
       //FIXME this is makeshift solution to be corrected later
-      if(treeRaw->indexCsI[i]==16) calib=.22;
+      if(treeRaw->indexCsI[i]==16) calib=.22/1000.;
       if(x1>=58 && x1<=68){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
@@ -430,12 +431,17 @@ Long_t Det_ClusterCsI::process(){
               idCrys.push_back(indexModule), gfb.push_back(fb);
               typeAB.push_back(tAB), gno.push_back(indexClock), gud.push_back(ud);
               double csitheta=theta[fb][indexModule], csiphi=phi[indexClock][ud][tAB];
+	      // handeling phi for channel 16: Crystal type 10
+	      if(treeRaw->indexCsI[i]==16){
+	        csiphi=indexClock*30.;
+		if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
+	      }
+              cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
               auto angles=std::make_pair(csitheta,csiphi);
               csThet.push_back(csitheta), csPhi.push_back(csiphi);
               //thetaPhi.push_back(angles);
               csiph[angles]=diff;
               csiClus[angles]=true;
-              //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
               h2clus->Fill(csimod,igap,diff);
 	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
@@ -445,6 +451,7 @@ Long_t Det_ClusterCsI::process(){
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
             if(nfound>=3){
+	      goto exitLoop;
               double *xpeaks=s->GetPositionX();
               sort(xpeaks,xpeaks+nfound);
 	      if(nfound==4){
@@ -625,6 +632,12 @@ Long_t Det_ClusterCsI::process(){
                 idCrys.push_back(indexModule), gfb.push_back(fb);
                 typeAB.push_back(tAB), gno.push_back(indexClock), gud.push_back(ud);
                 double csitheta=theta[fb][indexModule], csiphi=phi[indexClock][ud][tAB];
+	        // handeling phi for channel 16: Crystal type 10
+	        if(treeRaw->indexCsI[i]==16){
+	          csiphi=indexClock*30.;
+	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
+	        }
+                cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
                 auto angles=std::make_pair(csitheta,csiphi);
                 csThet.push_back(csitheta), csPhi.push_back(csiphi);
                 //thetaPhi.push_back(angles);
@@ -636,6 +649,7 @@ Long_t Det_ClusterCsI::process(){
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
             if(nfound==2){
+	      goto exitLoop;
 	      std::string dubFit = minu2.doublemodel();
               TF1* f1=new TF1("f1",dubFit.c_str(),0.0,250);
               for(int n=0; n<15; n+=1){
@@ -702,7 +716,7 @@ Long_t Det_ClusterCsI::process(){
 	          treeClus->waveID=nfound;
 	          treeClus->dubP_1=1;
 	        }
-	        goto exitLoop;
+	        //goto exitLoop;
 	        if(!clus_csi)
                   clus_csi=true;
 		if(!resetH) resetH=true;
@@ -727,6 +741,12 @@ Long_t Det_ClusterCsI::process(){
       	        int imod=0, igap=4*indexClock+2, igapU=4*indexClock+3;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
       	        double csitheta=theta[fb][indexModule], csiphi=phi[indexClock][ud][tAB];
+	        // handeling phi for channel 16: Crystal type 10
+	        if(treeRaw->indexCsI[i]==16){
+	          csiphi=indexClock*30.;
+	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
+	        }
+                cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
       	        auto angles=std::make_pair(csitheta,csiphi);
       	        //thetaPhi.push_back(angles);
       	        csThet.push_back(csitheta), csPhi.push_back(csiphi);
@@ -864,6 +884,12 @@ Long_t Det_ClusterCsI::process(){
       	        if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
       	        typeAB.push_back(tAB), gno.push_back(indexClock), gud.push_back(ud);
       	        double csitheta=theta[fb][indexModule], csiphi=phi[indexClock][ud][tAB];
+	        // handeling phi for channel 16: Crystal type 10
+	        if(treeRaw->indexCsI[i]==16){
+	          csiphi=indexClock*30.;
+	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
+	        }
+                cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
       	        auto angles=std::make_pair(csitheta,csiphi);
       	        //thetaPhi.push_back(angles);
       	        csThet.push_back(csitheta), csPhi.push_back(csiphi);
@@ -1135,14 +1161,14 @@ Long_t Det_ClusterCsI::process(){
       }
       if(clusCrys>=2){
         numOfClus++;
-	clusEne.push_back((Eclus)/1000);
+	clusEne.push_back(Eclus);
 	clusThetaE.push_back(rtheta/Eclus);
 	clusPhiE.push_back(rphi/Eclus);
       }
       if(clusCrys==1){
         numOfsingleClus++;
         h1sclus->Fill(1);
-	singleEne.push_back((Eclus)/1000);
+	singleEne.push_back(Eclus);
       }
       csiClus[tppair]=false; // mute central crystal
       cout<<"  Number of crystals is:  "<<clusCrys<<endl;

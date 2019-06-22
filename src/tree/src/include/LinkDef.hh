@@ -18,6 +18,7 @@
 #pragma link C++ class CATBase+;
 #pragma link C++ class CATCaliCsI+;
 #pragma link C++ class CATSingleCsI+;
+#pragma link C++ class CATClusterCsI+;
 
 #pragma link C++ class CRTRawCsI+;
 #pragma link C++ class CRTCaliCsI+;

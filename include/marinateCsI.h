@@ -70,6 +70,28 @@ class CATSingleCsI:public CATBase{
   ClassDef(CATSingleCsI,1);
 };
 
+class CATClusterCsI:public CATBase{
+ public:
+  Int_t evtNo;
+  int waveID;  // distinguish between 4-different kinds of waves
+  Int_t dubP_1; // pre-pile up with double peak
+  Double_t E_pi0, thetaE, phiE;
+  Double_t ggCosTheta, piCosTheta;
+  Int_t clusterM; // cluster multiplicity
+  Int_t Ncrys; // number of fired crystals
+  Int_t ClustCrys; // number of crystals within cluster
+  Double_t piPpi0, piP2g;
+  // state vector information for 2 gammas
+  Double_t g1Px, g1Py, g1Pz;
+  Double_t g2Px, g2Py, g2Pz;
+  // state vector information for pions
+  Double_t pi0px, pi0py, pi0pz;
+  Double_t piPpx, piPpy, piPpz;
+  CATClusterCsI();
+  virtual ~CATClusterCsI();
+  ClassDef(CATClusterCsI,1);
+};
+
 /* 
  * Marinate-er class definition
  */

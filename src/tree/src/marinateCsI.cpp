@@ -11,3 +11,7 @@ ClassImp(CATCaliCsI);
 CATSingleCsI::CATSingleCsI(){};
 CATSingleCsI::~CATSingleCsI(){};
 ClassImp(CATSingleCsI);
+
+CATClusterCsI::CATClusterCsI(){};
+CATClusterCsI::~CATClusterCsI(){};
+ClassImp(CATClusterCsI);
