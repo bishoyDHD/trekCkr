@@ -164,9 +164,9 @@ void Det_ClusterCsI::initVar(){
   // WaveID and cluster var
   treeClus->waveID=dummy;
   treeClus->dubP_1=dummy;
-  treeClus->clusterM=dummy;
-  treeClus->ClustCrys=dummy;
-  treeClus->Ncrys=dummy;
+  treeClus->clusterM.push_back(dummy);
+  treeClus->ClustCrys.push_back(dummy);
+  treeClus->Ncrys.push_back(dummy);
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1162,12 +1162,15 @@ Long_t Det_ClusterCsI::process(){
       if(clusCrys>=2){
         numOfClus++;
 	clusEne.push_back(Eclus);
+	treeClus->Ncrys.push_back(clusCrys);
+	treeClus->ClustCrys.push_back(clusCrys);
 	clusThetaE.push_back(rtheta/Eclus);
 	clusPhiE.push_back(rphi/Eclus);
       }
       if(clusCrys==1){
         numOfsingleClus++;
         h1sclus->Fill(1);
+	treeClus->Ncrys.push_back(1);
 	singleEne.push_back(Eclus);
       }
       csiClus[tppair]=false; // mute central crystal
@@ -1260,7 +1263,7 @@ Long_t Det_ClusterCsI::process(){
     }*/
     if(numOfClus>0){
       h1clust->Fill(numOfClus);
-      treeClus->clusterM=numOfClus;
+      treeClus->clusterM.push_back(numOfClus);
     }
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
     std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
