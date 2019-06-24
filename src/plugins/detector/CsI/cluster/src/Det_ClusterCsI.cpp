@@ -145,12 +145,6 @@ Long_t Det_ClusterCsI::startup(){
   makeBranch("treeClus",(TObject **) &treeClus);
   gStyle->SetOptStat(0);
   //outFile.open("kpi2evtList.dat");
-  // initialize some vector variables 
-  treeClus->clusterM.clear();
-  treeClus->ClustCrys.clear();
-  treeClus->Ncrys.clear();
-  treeClus->thetaE.clear();
-  treeClus->phiE.clear();
 
   return 0;
 }
@@ -171,6 +165,12 @@ void Det_ClusterCsI::initVar(){
   treeClus->waveID=dummy;
   treeClus->dubP_1=dummy;
   treeClus->channel=dummy;
+  // initialize some vector variables 
+  treeClus->clusterM=dummy;
+  treeClus->ClustCrys=dummy;
+  treeClus->Ncrys=dummy;
+  treeClus->thetaE=dummy;
+  treeClus->phiE=dummy;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1160,8 +1160,8 @@ Long_t Det_ClusterCsI::process(){
 	rtheta=(thetaE*M_PI)/180;
 	rphi=(phiE*M_PI)/180;
 	// Fill the theta, phi distributions
-	treeClus->thetaE.push_back(rtheta);
-	treeClus->phiE.push_back(rphi);
+	treeClus->thetaE=rtheta;
+	treeClus->phiE=rphi;
 	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
 	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [GeV]";
@@ -1169,15 +1169,15 @@ Long_t Det_ClusterCsI::process(){
       if(clusCrys>=2){
         numOfClus++;
 	clusEne.push_back(Eclus);
-	treeClus->Ncrys.push_back(clusCrys);
-	treeClus->ClustCrys.push_back(clusCrys);
+	treeClus->Ncrys=clusCrys;
+	treeClus->ClustCrys=clusCrys;
 	clusThetaE.push_back(rtheta/Eclus);
 	clusPhiE.push_back(rphi/Eclus);
       }
       if(clusCrys==1){
         numOfsingleClus++;
         h1sclus->Fill(1);
-	treeClus->Ncrys.push_back(1);
+	treeClus->Ncrys=1;
 	singleEne.push_back(Eclus);
       }
       csiClus[tppair]=false; // mute central crystal
@@ -1258,7 +1258,7 @@ Long_t Det_ClusterCsI::process(){
     }
     if(numOfClus>0){
       h1clust->Fill(numOfClus);
-      treeClus->clusterM.push_back(numOfClus);
+      treeClus->clusterM=numOfClus;
     }
     treeClus->channel=(numOfClus+numOfsingleClus);
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;

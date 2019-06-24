@@ -45,7 +45,7 @@ Long_t covfefe::process_clust(){
     //clustM->Fill(clsmar->clusterM);
     kmass->Fill(clsmar->piP2g,clsmar->piPpi0);
   }
-  std::cout<<" try to get theta and phi "<<clsmar->thetaE.at(0)<<", "<<clsmar->phiE.at(0)<<std::endl;
+  //std::cout<<" try to get theta and phi "<<clsmar->thetaE.at(0)<<", "<<clsmar->phiE.at(0)<<std::endl;
 
   return 0; // 0 = all ok
 };
