@@ -72,14 +72,15 @@ class CATSingleCsI:public CATBase{
 
 class CATClusterCsI:public CATBase{
  public:
-  Int_t evtNo;
+  Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak
-  Double_t E_pi0, thetaE, phiE;
+  Double_t E_pi0;
+  std::vector<Double_t> thetaE, phiE;
   Double_t ggCosTheta, piCosTheta;
-  Int_t clusterM; // cluster multiplicity
-  Int_t Ncrys; // number of fired crystals
-  Int_t ClustCrys; // number of crystals within cluster
+  std::vector<Int_t> clusterM; // cluster multiplicity
+  std::vector<Int_t> Ncrys; // number of fired crystals
+  std::vector<Int_t> ClustCrys; // number of crystals within cluster
   Double_t piPpi0, piP2g;
   // state vector information for 2 gammas
   Double_t g1Px, g1Py, g1Pz;

@@ -14,6 +14,13 @@
 Long_t covfefe::hist_clust(){
   E_pi0=dH1("Epi0", " E_{total}(2#gamma)",110.5,0.,0.9);
   waveID=dH1("waveID", "Waveform ID", 8,0.,8.);
+  g1px=dH1("g1px", "p_{x#gamma1}",63.5,-.3,.3);
+  g1py=dH1("g1py", "p_{y#gamma1}",63.5,-.3,.3);
+  g1pz=dH1("g1pz", "p_{z#gamma1}",63.5,-.3,.3);
+  g2px=dH1("g2px", "p_{x#gamma2}",63.5,-.3,.3);
+  g2py=dH1("g2py", "p_{y#gamma2}",63.5,-.3,.3);
+  g2pz=dH1("g2pz", "p_{z#gamma2}",63.5,-.3,.3);
+  h2Angle=dH2("h2Ang","#phi vs #theta", 15.4,0.,3.5,30.5,0.,7.);
   id1=dH1("id1", "Waveform ID", 8,0.,8.);
   clustM=dH1("clustM", "Cluster multiplicity", 12,0.,12.);
   kmass=dH2("kmass", "E_{tot}(#pi^{+}+#pi^{0}) vs. E_{tot}(2#gamma+#pi^{+})", 62.5,0.,1.,62.5,0.,.7);
@@ -35,9 +42,10 @@ Long_t covfefe::process_clust(){
     waveID->Fill(clsmar->waveID);
     id1->Fill(clsmar->dubP_1);
     E_pi0->Fill(clsmar->E_pi0);
-    clustM->Fill(clsmar->clusterM);
+    //clustM->Fill(clsmar->clusterM);
     kmass->Fill(clsmar->piP2g,clsmar->piPpi0);
   }
+  std::cout<<" try to get theta and phi "<<clsmar->thetaE.at(0)<<", "<<clsmar->phiE.at(0)<<std::endl;
 
   return 0; // 0 = all ok
 };

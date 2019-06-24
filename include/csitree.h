@@ -68,7 +68,7 @@ class CRTSingleCsI:public CRTBase{
 };
 class CRTClusterCsI:public CRTBase{
  public:
-  Int_t evtNo;
+  Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak
   Double_t E_pi0;

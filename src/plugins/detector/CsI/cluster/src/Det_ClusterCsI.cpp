@@ -170,6 +170,7 @@ void Det_ClusterCsI::initVar(){
   // WaveID and cluster var
   treeClus->waveID=dummy;
   treeClus->dubP_1=dummy;
+  treeClus->channel=dummy;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1259,6 +1260,7 @@ Long_t Det_ClusterCsI::process(){
       h1clust->Fill(numOfClus);
       treeClus->clusterM.push_back(numOfClus);
     }
+    treeClus->channel=(numOfClus+numOfsingleClus);
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
     std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
     std::cout<<" ***************************************************************************\n";

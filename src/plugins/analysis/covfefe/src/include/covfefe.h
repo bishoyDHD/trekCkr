@@ -66,7 +66,9 @@ class covfefe:public Plugin{
   // histograms for cluster analysis
   TH1D* E_pi0; // pi0 total energy
   TH1D* waveID, *clustM, *id1;
-  TH2D* kmass;
+  TH1D* g1px, *g1py, *g1pz;
+  TH1D* g2px, *g2py, *g2pz;
+  TH2D* kmass, *h2Angle;
 
 
   virtual Long_t cmdline(char * cmd);
