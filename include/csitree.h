@@ -71,7 +71,8 @@ class CRTClusterCsI:public CRTBase{
   Int_t evtNo;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak
-  Double_t E_pi0, thetaE, phiE;
+  Double_t E_pi0;
+  std::vector<double> thetaE, phiE;
   Double_t ggCosTheta, piCosTheta;
   std::vector<Int_t> clusterM; // cluster multiplicity
   std::vector<Int_t> Ncrys; // number of fired crystals

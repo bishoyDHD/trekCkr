@@ -145,6 +145,12 @@ Long_t Det_ClusterCsI::startup(){
   makeBranch("treeClus",(TObject **) &treeClus);
   gStyle->SetOptStat(0);
   //outFile.open("kpi2evtList.dat");
+  // initialize some vector variables 
+  treeClus->clusterM.clear();
+  treeClus->ClustCrys.clear();
+  treeClus->Ncrys.clear();
+  treeClus->thetaE.clear();
+  treeClus->phiE.clear();
 
   return 0;
 }
@@ -164,9 +170,6 @@ void Det_ClusterCsI::initVar(){
   // WaveID and cluster var
   treeClus->waveID=dummy;
   treeClus->dubP_1=dummy;
-  treeClus->clusterM.push_back(dummy);
-  treeClus->ClustCrys.push_back(dummy);
-  treeClus->Ncrys.push_back(dummy);
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1155,9 +1158,12 @@ Long_t Det_ClusterCsI::process(){
 	// perform conversion from deg-->rad
 	rtheta=(thetaE*M_PI)/180;
 	rphi=(phiE*M_PI)/180;
+	// Fill the theta, phi distributions
+	treeClus->thetaE.push_back(rtheta);
+	treeClus->phiE.push_back(rphi);
 	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
-	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [MeV]";
+	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [GeV]";
       }
       if(clusCrys>=2){
         numOfClus++;
@@ -1198,7 +1204,7 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
     if(numOfClus==2){
-      // calculate momentum direction for pi0: from (theta,phi) of 2*gamma
+      // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
       g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
       g1pz=clusEne[0]*std::cos(clusThetaE[0]);
@@ -1249,18 +1255,6 @@ Long_t Det_ClusterCsI::process(){
       std::cout<<"\n  Checking cos(theta):       "<<pi0.CosTheta()<<endl;
       std::cout<<"\n  Checking vertex opening    "<<piPv.Angle(pi0v)<<endl;
     }
-    /*
-    else if(numOfClus==1 && numOfsingleClus>=1){
-      Double_t weight=event1.Generate();
-      TLorentzVector* piNeut=event1.GetDecay(0);
-      TLorentzVector* g1=event1.GetDecay(1);
-      TLorentzVector* g2=event1.GetDecay(2);
-      TLorentzVector gamma1(g1->Px(),g1->Py(),g1->Pz(), clusEne[0]);
-      TLorentzVector gamma2(g2->Px(),g2->Py(),g2->Pz(), singleEne[1]);
-      TLorentzVector pi0=gamma1+gamma2;
-    std::cout<<"\n  Checking 4-Vectors  :  "<<g1->Px()<<"  ["<<pi0px<<"]"<<endl;
-    std::cout<<"\n  Checking pi0 InvMass:  "<<pi0.M()*weight<<endl;
-    }*/
     if(numOfClus>0){
       h1clust->Fill(numOfClus);
       treeClus->clusterM.push_back(numOfClus);
