@@ -1157,8 +1157,8 @@ Long_t Det_ClusterCsI::process(){
 	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
 	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
 	// perform conversion from deg-->rad
-	rtheta=(thetaE*M_PI)/180;
-	rphi=(phiE*M_PI)/180;
+	rtheta=(thetaE/Eclus)*(M_PI/180);
+	rphi=(phiE/Eclus)*(M_PI/180);
 	// Fill the theta, phi distributions
 	treeClus->thetaE=rtheta;
 	treeClus->phiE=rphi;
@@ -1171,8 +1171,8 @@ Long_t Det_ClusterCsI::process(){
 	clusEne.push_back(Eclus);
 	treeClus->Ncrys=clusCrys;
 	treeClus->ClustCrys=clusCrys;
-	clusThetaE.push_back(rtheta/Eclus);
-	clusPhiE.push_back(rphi/Eclus);
+	clusThetaE.push_back(rtheta);
+	clusPhiE.push_back(rphi);
       }
       if(clusCrys==1){
         numOfsingleClus++;
