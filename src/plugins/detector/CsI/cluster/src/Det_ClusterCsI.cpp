@@ -1220,8 +1220,10 @@ Long_t Det_ClusterCsI::process(){
       g2py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
       g2pz=clusEne[1]*std::cos(clusThetaE[1]);
       // calculate pi0 invariant mass from above info.
-      TLorentzVector gamma1(g1px, g1py, g1pz, clusEne[0]);
-      TLorentzVector gamma2(g2px, g2py, g2pz, clusEne[1]);
+      TLorentzVector gamma1;
+      TLorentzVector gamma2;
+      gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+      gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
       TLorentzVector pi0=gamma1+gamma2;
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
