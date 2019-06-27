@@ -9,6 +9,7 @@
 #include "TLegend.h"
 #include <TLine.h>
 #include <TStyle.h>
+#include <TAxis.h>
 #include <TH1D.h>
 #include <iostream>
 #include <map>
@@ -69,11 +70,11 @@ class covfefe:public Plugin{
   TH1D* g1px, *g1py, *g1pz;
   TH1D* g2px, *g2py, *g2pz;
   TH2D* kmass, *h2Angle;
-
+  // angles
+  TH1D *h1theta, *h1phi;
 
   virtual Long_t cmdline(char * cmd);
 
   ClassDef(covfefe,1);
 };
-
 #endif

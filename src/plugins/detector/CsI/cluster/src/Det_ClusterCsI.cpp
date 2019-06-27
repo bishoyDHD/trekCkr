@@ -17,7 +17,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1Fits[12][2][2][16]=NULL;
   pi0Etot=NULL;
   h1clust=NULL; h1sclus=NULL;
-  E2g=NULL; h2Ene=NULL;
+  E2g=NULL; h2Ene=NULL; h2ang=NULL; h2deg=NULL;
   E_cut=NULL, cosTheta=NULL;
   h1Mpi0=NULL;
   h1Mpi02=NULL;
@@ -101,6 +101,8 @@ Long_t Det_ClusterCsI::histos(){
   h1vertpx=dH1("h1vertpx", " #gamma momentum direction p_{x}",62.5, -0.4, 0.4);
   h1vertpy=dH1("h1vertpy", " #gamma momentum direction p_{y}",62.5, -0.4, 0.4);
   h1vertpz=dH1("h1vertpz", " #gamma momentum direction p_{z}",62.5, -0.4, 0.4);
+  h2ang=dH2("h2ang", "Angular distribution #phi vs #theta", 24.0,0,M_PI, 48.0,0.,2.*M_PI);
+  h2deg=dH2("h2deg", "Angular distribution #phi vs #theta deg", 24.0,0.,180., 48.0,0.,360.);
   h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
   E_cut=dH1("E_cut", "#pi^{0} total energy", 62.5, 0., 0.25);
   cosTheta=dH1("cosTheta", "opening angle for 2 #gamma's", 25., 0., 100.);
@@ -131,8 +133,10 @@ Long_t Det_ClusterCsI::histos(){
   }
   std::ostringstream title;
   title<<"CsI(Tl) clusters";
-  h2clus=dH2("hclust",title.str().c_str(), 30,-15,15,50,0,50);
+  h2clus=dH2("h2clust",title.str().c_str(), 30,-15,15,50,0,50);
   c1= new TCanvas("c1","",900,800);
+  c1->cd();
+  c1->Update();
   readFiles();
   return 0;
 }
@@ -197,8 +201,8 @@ Long_t Det_ClusterCsI::process(){
   }*/
   ppip=tracktree->pVertpi0;
   if(ppip<0.195 || ppip>0.215) goto exitLoop;
-  if(resetH)
-    h2clus->Reset(); //need to reset stats in cluster event viewer
+  //if(resetH)
+    //h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -450,7 +454,7 @@ Long_t Det_ClusterCsI::process(){
 	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
-	  else if(y1<1023){
+	  if(y1<1023){
             //cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
@@ -564,7 +568,7 @@ Long_t Det_ClusterCsI::process(){
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
 	        treeClus->waveID=nfound;
-		goto exitLoop;
+		//goto exitLoop;
 	        if(!clus_csi)
                   clus_csi=true;
 		if(!resetH) resetH=true;
@@ -720,7 +724,6 @@ Long_t Det_ClusterCsI::process(){
 	          treeClus->waveID=nfound;
 	          treeClus->dubP_1=1;
 	        }
-	        //goto exitLoop;
 	        if(!clus_csi)
                   clus_csi=true;
 		if(!resetH) resetH=true;
@@ -856,7 +859,7 @@ Long_t Det_ClusterCsI::process(){
               if(max>=60 && max<=65){
 	        if(!clus_csi)
                   clus_csi=true;
-		if(!resetH) resetH=true;
+		//if(!resetH) resetH=true;
                 clock=indexClock;
                 fb=indexFB;
                 module=indexModule;
@@ -897,6 +900,8 @@ Long_t Det_ClusterCsI::process(){
       	        auto angles=std::make_pair(csitheta,csiphi);
       	        //thetaPhi.push_back(angles);
       	        csThet.push_back(csitheta), csPhi.push_back(csiphi);
+		//h2ang->Fill(csitheta*M_PI/180,csiphi*M_PI/180);
+		//h2deg->Fill(csitheta,csiphi);
       	        csiph[angles]=diff;
       	        //csiph[thetaPhi]=diff;
       	        csiClus[angles]=true;
@@ -949,7 +954,7 @@ Long_t Det_ClusterCsI::process(){
       }  // <--- End of prelim. timing cut if loop
       //pCali->Fill();
       c1->cd();
-      h2clus->GetZaxis()->SetRangeUser(0.89, 2100.11);
+      h2clus->GetZaxis()->SetRangeUser(0., .5);
       h2clus->Draw("colz");
       for(int i=0;i<11;i++){
         hbox1[i]=new TLine(-2.0,4*(i+1),4.00,4*(i+1));
@@ -1156,10 +1161,10 @@ Long_t Det_ClusterCsI::process(){
 	Eclus=Eclus+csiph[tppair];
 	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
 	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
-	// perform conversion from deg-->rad
+	// perform energy-weighting and convert from deg-->rad
 	rtheta=(thetaE/Eclus)*(M_PI/180);
 	rphi=(phiE/Eclus)*(M_PI/180);
-	// Fill the theta, phi distributions
+	// Fill the theta, phi distributions in rad
 	treeClus->thetaE=rtheta;
 	treeClus->phiE=rphi;
 	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
@@ -1173,6 +1178,8 @@ Long_t Det_ClusterCsI::process(){
 	treeClus->ClustCrys=clusCrys;
 	clusThetaE.push_back(rtheta);
 	clusPhiE.push_back(rphi);
+        h2ang->Fill(rtheta,rphi);
+        h2deg->Fill(rtheta*180./M_PI,rphi*180/M_PI);
       }
       if(clusCrys==1){
         numOfsingleClus++;
