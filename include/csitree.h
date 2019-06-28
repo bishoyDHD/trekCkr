@@ -71,7 +71,8 @@ class CRTClusterCsI:public CRTBase{
   Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak
-  Double_t E_pi0;
+  Double_t E_pi0, M_pi0, pi0M2;
+  Double_t M_k, kM2;
   double thetaE, phiE;
   Double_t ggCosTheta, piCosTheta;
   Int_t clusterM; // cluster multiplicity

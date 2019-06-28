@@ -13,6 +13,7 @@
 
 Long_t covfefe::hist_clust(){
   E_pi0=dH1("Epi0", " E_{total}(2#gamma)",110.5,0.,0.9);
+  M_pi0=dH1("Mpi0", " M_{#pi^{0}}",110.5,0.,0.9);
   waveID=dH1("waveID", "Waveform ID", 8,0.,8.);
   g1px=dH1("g1px", "px_{#gamma1}",63.5,-.3,.3);
   g1py=dH1("g1py", "py_{#gamma1}",63.5,-.3,.3);
@@ -20,6 +21,12 @@ Long_t covfefe::hist_clust(){
   g2px=dH1("g2px", "px_{#gamma2}",63.5,-.3,.3);
   g2py=dH1("g2py", "py_{#gamma2}",63.5,-.3,.3);
   g2pz=dH1("g2pz", "pz_{#gamma2}",63.5,-.3,.3);
+  pi0px=dH1("pi0px", "px_{#pi^{0}}",63.5,-.3,.3);
+  pi0py=dH1("pi0py", "py_{#pi^{0}}",63.5,-.3,.3);
+  pi0pz=dH1("pi0pz", "pz_{#pi^{0}}",63.5,-.3,.3);
+  vertpx=dH1("vertpx", "px_{#pi^{+}}",63.5,-.3,.3);
+  vertpy=dH1("vertpy", "py_{#pi^{+}}",63.5,-.3,.3);
+  vertpz=dH1("vertpz", "pz_{#pi^{+}}",63.5,-.3,.3);
   h1theta=dH1("theta", "#theta distribution",24.,0,M_PI);
   h1phi=dH1("phi", "#phi distribution",48.,0,2*M_PI);
   h2Angle=dH2("h2Ang","#phi vs #theta", 24.0,0.,M_PI,48.0,0.,2.*M_PI);
@@ -44,6 +51,7 @@ Long_t covfefe::process_clust(){
     waveID->Fill(clsmar->waveID);
     id1->Fill(clsmar->dubP_1);
     E_pi0->Fill(clsmar->E_pi0);
+    M_pi0->Fill(clsmar->M_pi0);
     clustM->Fill(clsmar->clusterM);
     g1px->Fill(clsmar->g1Px);
     g1py->Fill(clsmar->g1Py);
@@ -52,6 +60,14 @@ Long_t covfefe::process_clust(){
     g2px->Fill(clsmar->g2Px);
     g2py->Fill(clsmar->g2Py);
     g2pz->Fill(clsmar->g2Pz);
+    // pi0 vertex
+    pi0px->Fill(clsmar->pi0px);
+    pi0py->Fill(clsmar->pi0py);
+    pi0pz->Fill(clsmar->pi0pz);
+    // pi+ vertex
+    vertpx->Fill(clsmar->piPpx);
+    vertpy->Fill(clsmar->piPpy);
+    vertpz->Fill(clsmar->piPpz);
     kmass->Fill(clsmar->piP2g,clsmar->piPpi0);
     h2Angle->Fill(clsmar->thetaE,clsmar->phiE);
   }
@@ -71,7 +87,7 @@ Long_t covfefe::finalize_clust(){
   TCanvas* c3=new TCanvas("c3","Total energy of 2#gamma",808,700);
   TCanvas* c4=new TCanvas("c4","Total energy of K^{+}",808,700);
   TCanvas* c5=new TCanvas("c5","State vector info.",808,700);
-  //TCanvas* c6=new TCanvas("c6"," CsI timing",808,700);
+  TCanvas* c6=new TCanvas("c6"," Invariant Mass",808,700);
   //TCanvas* c7=new TCanvas("c7"," Peak time ",808,700);
   c1->Divide(1,3);
   c1->cd(3);
@@ -155,7 +171,7 @@ Long_t covfefe::finalize_clust(){
   tl6->Draw();
   c4->Write();
 
-  c5->Divide(3,2);
+  c5->Divide(3,4);
   c5->cd(1);
   gStyle->SetOptStat(0);
   g1px->GetXaxis()->SetTitle("px_{#gamma1} [GeV/c]");
@@ -193,7 +209,51 @@ Long_t covfefe::finalize_clust(){
   g2pz->GetYaxis()->SetTitle("counts/bin");
   g2pz->SetLineWidth(2);
   g2pz->Draw("hist");
+  c5->cd(7);
+  gStyle->SetOptStat(0);
+  pi0px->GetXaxis()->SetTitle("px_{#pi^{0}} [GeV/c]");
+  pi0px->GetYaxis()->SetTitle("counts/bin");
+  pi0px->SetLineWidth(2);
+  pi0px->Draw("hist");
+  c5->cd(8);
+  gStyle->SetOptStat(0);
+  pi0py->GetXaxis()->SetTitle("py_{#pi^{0}} [GeV/c]");
+  pi0py->GetYaxis()->SetTitle("counts/bin");
+  pi0py->SetLineWidth(2);
+  pi0py->Draw("hist");
+  c5->cd(9);
+  gStyle->SetOptStat(0);
+  pi0pz->GetXaxis()->SetTitle("pz_{#pi^{0}} [GeV/c]");
+  pi0pz->GetYaxis()->SetTitle("counts/bin");
+  pi0pz->SetLineWidth(2);
+  pi0pz->Draw("hist");
+  c5->cd(10);
+  gStyle->SetOptStat(0);
+  vertpx->GetXaxis()->SetTitle("px_{#pi^{+}} [GeV/c]");
+  vertpx->GetYaxis()->SetTitle("counts/bin");
+  vertpx->SetLineWidth(2);
+  vertpx->Draw("hist");
+  c5->cd(11);
+  gStyle->SetOptStat(0);
+  vertpy->GetXaxis()->SetTitle("py_{#pi^{+}} [GeV/c]");
+  vertpy->GetYaxis()->SetTitle("counts/bin");
+  vertpy->SetLineWidth(2);
+  vertpy->Draw("hist");
+  c5->cd(12);
+  gStyle->SetOptStat(0);
+  vertpz->GetXaxis()->SetTitle("pz_{#pi^{+}} [GeV/c]");
+  vertpz->GetYaxis()->SetTitle("counts/bin");
+  vertpz->SetLineWidth(2);
+  vertpz->Draw("hist");
   c5->Write();
+
+  c6->cd();
+  gStyle->SetOptStat(0);
+  M_pi0->GetXaxis()->SetTitle("M_{#pi^{0}} [GeV/c]");
+  M_pi0->GetYaxis()->SetTitle("counts/bin");
+  M_pi0->SetLineWidth(2);
+  M_pi0->Draw("hist");
+  c6->Write();
 
   return 0; // 0 = all ok
 };

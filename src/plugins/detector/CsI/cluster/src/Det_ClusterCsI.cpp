@@ -175,6 +175,12 @@ void Det_ClusterCsI::initVar(){
   treeClus->Ncrys=dummy;
   treeClus->thetaE=dummy;
   treeClus->phiE=dummy;
+
+  treeClus->E_pi0=dummy;
+  treeClus->M_pi0=dummy;
+  treeClus->pi0M2=dummy;
+  treeClus->M_k=dummy;
+  treeClus->kM2=dummy;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1225,6 +1231,10 @@ Long_t Det_ClusterCsI::process(){
       gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
       gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
       TLorentzVector pi0=gamma1+gamma2;
+      // K+ Lorentz vector info. from pi+ and pi0
+      TLorentzVector piPl;
+      piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
+      TLorentzVector kaon=piPl+pi0;
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
       TVector3 pi0v(pi0.Px(), pi0.Py(),pi0.Pz());
@@ -1258,6 +1268,10 @@ Long_t Det_ClusterCsI::process(){
       treeClus->piCosTheta=pi0.CosTheta();
       treeClus->piP2g=clusEne[0]+clusEne[1]+pipEtot;
       treeClus->piPpi0=T_pi0+pipEtot;
+      treeClus->M_pi0=pi0.M();
+      treeClus->pi0M2=pi0.M2();
+      treeClus->M_k=kaon.M();
+      treeClus->kM2=kaon.M2();
       std::cout<<"\n  piPecking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
