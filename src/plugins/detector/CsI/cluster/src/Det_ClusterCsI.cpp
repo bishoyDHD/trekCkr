@@ -181,6 +181,8 @@ void Det_ClusterCsI::initVar(){
   treeClus->pi0M2=dummy;
   treeClus->M_k=dummy;
   treeClus->kM2=dummy;
+  treeClus->g1E=dummy;
+  treeClus->g2E=dummy;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1031,6 +1033,43 @@ Long_t Det_ClusterCsI::process(){
       auto angP3=std::make_pair(ntheta,nphi+7.5);      auto angP4=std::make_pair(ntheta,nphi-7.5);
       auto angP5=std::make_pair(ntheta+7.5,nphi+7.5);  auto angP6=std::make_pair(ntheta-7.5,nphi-7.5);
       auto angP7=std::make_pair(ntheta-7.5,nphi+7.5);  auto angP8=std::make_pair(ntheta+7.5,nphi-7.5);
+      // accounting for the complicated case of Crystal No. 10 (index=16)
+      // This is strange because they are 2X larger in phi
+      std::pair<double,double> angE1, angE2, angE3, angE4, angE5;
+      std::pair<double,double> angE6, angE7, angE8, angE9, angE10;
+      // from chan16 -> chan15: Back
+      if(ntheta==161.25){
+        angE1=std::make_pair(ntheta-7.5,nphi-3.75);  angE2=std::make_pair(ntheta-7.5,nphi+11.25);
+        angE3=std::make_pair(ntheta-7.5,nphi-11.25); angE4=std::make_pair(ntheta-7.5,nphi+3.75);
+        // only phi angle of chan16 changes
+        angE9=std::make_pair(ntheta, nphi+15);       angE10=std::make_pair(ntheta,nphi-15);
+      }
+      if(ntheta==18.75){// from chan16 -> chan15: Front
+        angE5=std::make_pair(ntheta+7.5,nphi-3.75);  angE6=std::make_pair(ntheta+7.5,nphi+11.25);
+        angE7=std::make_pair(ntheta+7.5,nphi-11.25); angE8=std::make_pair(ntheta+7.5,nphi+3.75);
+        // only phi angle of chan16 changes
+        angE9=std::make_pair(ntheta, nphi+15);       angE10=std::make_pair(ntheta,nphi-15);
+      }
+      // handeling of going from chan15->chan16: Back
+      if((ntheta+7.5)==161.25){
+        angE1=std::make_pair(ntheta+7.5,nphi-3.75);  angE2=std::make_pair(ntheta+7.5,nphi+11.25);
+        angE3=std::make_pair(ntheta+7.5,nphi-11.25); angE4=std::make_pair(ntheta+7.5,nphi+3.75);
+      }
+      // from chan15 -> chan16: Front
+      if((ntheta-7.5)==18.75){
+        angE5=std::make_pair(ntheta-7.5,nphi-3.75);  angE6=std::make_pair(ntheta-7.5,nphi+11.25);
+        angE7=std::make_pair(ntheta-7.5,nphi-11.25); angE8=std::make_pair(ntheta-7.5,nphi+3.75);
+      }
+      // dealing with the revolution case
+      std::pair<double,double> angR1, angR2;
+      if(nphi==345. || nphi==356.25){
+        // only phi angle of chan16 changes
+        angR1=std::make_pair(ntheta, 0.);       angR2=std::make_pair(ntheta,3.75);
+      }
+      if(nphi==0. || nphi==3.75){
+        // only phi angle of chan16 changes
+        angR1=std::make_pair(ntheta, 345.);       angR2=std::make_pair(ntheta,356.25);
+      }
       clusCrys=0;
       Eclus=0.;
       thetaE=0; phiE=0;
@@ -1038,9 +1077,11 @@ Long_t Det_ClusterCsI::process(){
         csiph[angP5] > 0 && csiph[angP6] > 0 && csiph[angP7] > 0 &&
         csiph[angP8] > 0){
         std::cout<<"  Total number of cluster crystals is 8 \n";
-      }else if(csiph[angP1] > 0 || csiph[angP2] > 0 || csiph[angP3] > 0 || csiph[angP4] > 0 || 
-        csiph[angP5] > 0 || csiph[angP6] > 0 || csiph[angP7] > 0 || 
-        csiph[angP8] > 0){
+      }else if(csiph[angP1]>0 || csiph[angP2]>0 || csiph[angP3]>0 || csiph[angP4]>0 || 
+        csiph[angP5]>0 || csiph[angP6]>0 || csiph[angP7]>0 || csiph[angP8]>0 ||
+	csiph[angE1]>0 || csiph[angE2]>0 || csiph[angE3]>0 || csiph[angE4]>0 ||
+	csiph[angE5]>0 || csiph[angE6]>0 || csiph[angE7]>0 || csiph[angE8]>0 ||
+	csiph[angE9]>0 || csiph[angE10]>0 || csiph[angR1]>0 || csiph[angR2]>0){
         //clusCrys=clusCrys+1;
         if(csiph[angP1]>0){
           std::cout<<" This crystal Cluster pulse-height P1: "<<csiph[angP1];
@@ -1150,6 +1191,175 @@ Long_t Det_ClusterCsI::process(){
 	    phiE  =phiE  +csiph[angP8]*(std::get<1>(angP8));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP8]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE1]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E1: "<<csiph[angE1];
+	  std::cout<<" ["<<std::get<0>(angE1)<<", "<<std::get<1>(angE1)<<"] \n";
+          if(csiClus[angE1]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE1];
+	    thetaE=thetaE+csiph[angE1]*(std::get<0>(angE1));
+	    phiE  =phiE  +csiph[angE1]*(std::get<1>(angE1));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE1]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE2]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E2: "<<csiph[angE2];
+	  std::cout<<" ["<<std::get<0>(angE2)<<", "<<std::get<1>(angE2)<<"] \n";
+          if(csiClus[angE2]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE2];
+	    thetaE=thetaE+csiph[angE2]*(std::get<0>(angE2));
+	    phiE  =phiE  +csiph[angE2]*(std::get<1>(angE2));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE2]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE3]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E3: "<<csiph[angE3];
+	  std::cout<<" ["<<std::get<0>(angE3)<<", "<<std::get<1>(angE3)<<"] \n";
+          if(csiClus[angE3]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE3];
+	    thetaE=thetaE+csiph[angE3]*(std::get<0>(angE3));
+	    phiE  =phiE  +csiph[angE3]*(std::get<1>(angE3));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE3]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE4]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E4: "<<csiph[angE4];
+	  std::cout<<" ["<<std::get<0>(angE4)<<", "<<std::get<1>(angE4)<<"] \n";
+          if(csiClus[angE4]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE4];
+	    thetaE=thetaE+csiph[angE4]*(std::get<0>(angE4));
+	    phiE  =phiE  +csiph[angE4]*(std::get<1>(angE4));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE4]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE5]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E5: "<<csiph[angE5];
+	  std::cout<<" ["<<std::get<0>(angE5)<<", "<<std::get<1>(angE5)<<"] \n";
+          if(csiClus[angE5]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE5];
+	    thetaE=thetaE+csiph[angE5]*(std::get<0>(angE5));
+	    phiE  =phiE  +csiph[angE5]*(std::get<1>(angE5));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE5]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE6]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E6: "<<csiph[angE6];
+	  std::cout<<" ["<<std::get<0>(angE6)<<", "<<std::get<1>(angE6)<<"] \n";
+          if(csiClus[angE6]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE6];
+	    thetaE=thetaE+csiph[angE6]*(std::get<0>(angE6));
+	    phiE  =phiE  +csiph[angE6]*(std::get<1>(angE6));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE6]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE7]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E7: "<<csiph[angE7];
+	  std::cout<<" ["<<std::get<0>(angE7)<<", "<<std::get<1>(angE7)<<"] \n";
+          if(csiClus[angE7]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE7];
+	    thetaE=thetaE+csiph[angE7]*(std::get<0>(angE7));
+	    phiE  =phiE  +csiph[angE7]*(std::get<1>(angE7));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE7]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE8]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E8: "<<csiph[angE8];
+	  std::cout<<" ["<<std::get<0>(angE8)<<", "<<std::get<1>(angE8)<<"] \n";
+          if(csiClus[angE8]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE8];
+	    thetaE=thetaE+csiph[angE8]*(std::get<0>(angE8));
+	    phiE  =phiE  +csiph[angE8]*(std::get<1>(angE8));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE8]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE9]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E9: "<<csiph[angE9];
+	  std::cout<<" ["<<std::get<0>(angE9)<<", "<<std::get<1>(angE9)<<"] \n";
+          if(csiClus[angE9]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE9];
+	    thetaE=thetaE+csiph[angE9]*(std::get<0>(angE9));
+	    phiE  =phiE  +csiph[angE9]*(std::get<1>(angE9));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE9]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angE10]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop E10: "<<csiph[angE10];
+	  std::cout<<" ["<<std::get<0>(angE10)<<", "<<std::get<1>(angE10)<<"] \n";
+          if(csiClus[angE10]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angE10];
+	    thetaE=thetaE+csiph[angE10]*(std::get<0>(angE10));
+	    phiE  =phiE  +csiph[angE10]*(std::get<1>(angE10));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angE10]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+	// revolution around CsI(Tl) barrel
+        if(csiph[angR1]>0){
+          std::cout<<" Revolution case Cluster pulse-height R1: "<<csiph[angR1];
+	  std::cout<<" ["<<std::get<0>(angR1)<<", "<<std::get<1>(angR1)<<"] \n";
+          if(csiClus[angR1]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR1];
+	    thetaE=thetaE+csiph[angR1]*(std::get<0>(angR1));
+	    phiE  =phiE  +csiph[angR1]*(std::get<1>(angR1));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR1]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angR2]>0){
+          std::cout<<" Revolution case Cluster finder in pair loop R2: "<<csiph[angR2];
+	  std::cout<<" ["<<std::get<0>(angR2)<<", "<<std::get<1>(angR2)<<"] \n";
+          if(csiClus[angR2]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR2];
+	    thetaE=thetaE+csiph[angR2]*(std::get<0>(angR2));
+	    phiE  =phiE  +csiph[angR2]*(std::get<1>(angR2));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR2]=false;
           }else{
             std::cout<<" Already checked this crystal \n";
           }
@@ -1272,6 +1482,8 @@ Long_t Det_ClusterCsI::process(){
       treeClus->pi0M2=pi0.M2();
       treeClus->M_k=kaon.M();
       treeClus->kM2=kaon.M2();
+      treeClus->g1E=clusEne[0];
+      treeClus->g2E=clusEne[1];
       std::cout<<"\n  piPecking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";

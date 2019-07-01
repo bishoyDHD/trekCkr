@@ -82,6 +82,7 @@ class CRTClusterCsI:public CRTBase{
   // state vector information for 2 gammas
   Double_t g1Px, g1Py, g1Pz;
   Double_t g2Px, g2Py, g2Pz;
+  Double_t g1E, g2E;
   // state vector information for pions
   Double_t pi0px, pi0py, pi0pz;
   Double_t piPpx, piPpy, piPpz;/*
