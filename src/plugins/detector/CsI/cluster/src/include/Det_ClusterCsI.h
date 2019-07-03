@@ -90,6 +90,7 @@ class Det_ClusterCsI:public Plugin{
   TH1D* h1pi0px, *h1pi0py, *h1pi0pz, *h1clust, *h1sclus;
   TH1D* h1vertpx, *h1vertpy, *h1vertpz;
   TH2D* h2clus, *h2Ene, *h2ang, *h2deg;
+  TH2D* h2corrAng;
   TH1D* E_cut, *cosTheta, *vertOp;
   TLine *hbox1[22], *hline1[23];
   TLine *hbox2[2], *hline2[26];

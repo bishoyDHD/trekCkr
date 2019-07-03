@@ -7,6 +7,8 @@
 #include "TTree.h"
 #include "TSpectrum.h"
 #include "TLegend.h"
+#include <TLorentzVector.h>
+#include <TVector3.h>
 #include <TLine.h>
 #include <TStyle.h>
 #include <TAxis.h>
@@ -65,15 +67,17 @@ class covfefe:public Plugin{
   Long_t process_clust();
   Long_t finalize_clust();
   // histograms for cluster analysis
-  TH1D* E_pi0, *M_pi0; // pi0 total energy
-  TH1D* waveID, *clustM, *id1;
-  TH1D* g1px, *g1py, *g1pz;
-  TH1D* g2px, *g2py, *g2pz;
-  TH1D* pi0px, *pi0py, *pi0pz;
-  TH1D* vertpx, *vertpy, *vertpz;
-  TH2D* kmass, *h2Angle;
+  TH1D* E_pi0[2], *M_pi0[2]; // pi0 total energy
+  TH1D* waveID[2], *clustM[2], *id1;
+  TH1D* g1px[2], *g1py[2], *g1pz[2];
+  TH1D* g2px[2], *g2py[2], *g2pz[2];
+  TH1D* pi0px[2], *pi0py[2], *pi0pz[2];
+  TH1D* vertpx[2], *vertpy[2], *vertpz[2];
+  TH2D* kmass[2], *h2Angle[2];
   // angles
-  TH1D *h1theta, *h1phi;
+  TH1D *h1theta[2], *h1phi[2];
+  TH1D *angPP[3], *piPang[3], *pi0ang[3];
+  TH2D *h2corrAng;
 
   virtual Long_t cmdline(char * cmd);
 

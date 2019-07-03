@@ -24,6 +24,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1pi0px=NULL; h1pi0py=NULL; h1pi0pz=NULL;
   h1vertpx=NULL; h1vertpy=NULL; h1vertpz=NULL;
   vertOp=NULL;
+  h2corrAng=NULL;
   //paramFile.open("kpi2evenlist.txt");
   //parfile.open("calibPar.txt");
   std::cout<<"....checking this shit \n";
@@ -104,6 +105,7 @@ Long_t Det_ClusterCsI::histos(){
   h2ang=dH2("h2ang", "Angular distribution #phi vs #theta", 24.0,0,M_PI, 48.0,0.,2.*M_PI);
   h2deg=dH2("h2deg", "Angular distribution #phi vs #theta deg", 24.0,0.,180., 48.0,0.,360.);
   h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
+  //h2corrAng=dH2("h2cAng", "cos(#theta_{#pi^{+}}) vs. cos(#theta_{#gamma#gamma})",25.,-1.,1.,25,-1.,1.);
   E_cut=dH1("E_cut", "#pi^{0} total energy", 62.5, 0., 0.25);
   cosTheta=dH1("cosTheta", "opening angle for 2 #gamma's", 25., 0., 100.);
   vertOp=dH1("vertOp", "Opening angle between #pi^{+} and #pi^{0}", 50.,-1.1,1.1);
@@ -1447,7 +1449,7 @@ Long_t Det_ClusterCsI::process(){
       TLorentzVector kaon=piPl+pi0;
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
-      TVector3 pi0v(pi0.Px(), pi0.Py(),pi0.Pz());
+      TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
       TVector3 gv1(g1px, g1py, g1pz);
       TVector3 gv2(g2px, g2py, g2pz);
       // Fill histos
@@ -1468,9 +1470,9 @@ Long_t Det_ClusterCsI::process(){
       h2Ene->Fill(clusEne[0]+clusEne[1]+pipEtot,pipEtot+T_pi0);
       // Fill tree var
       treeClus->E_pi0=clusEne[0]+clusEne[1];
-      treeClus->g1Px=g1px;     treeClus->g2Px=g2px;
-      treeClus->g1Py=g1py;     treeClus->g2Py=g2py;
-      treeClus->g1Pz=g1pz;     treeClus->g2Pz=g2pz;
+      treeClus->g1Px=g1px;       treeClus->g2Px=g2px;      treeClus->pi0vx=pi0v.X();
+      treeClus->g1Py=g1py;       treeClus->g2Py=g2py;      treeClus->pi0vy=pi0v.Y();
+      treeClus->g1Pz=g1pz;       treeClus->g2Pz=g2pz;      treeClus->pi0vz=pi0v.Z();
       treeClus->piPpx=piPpx;     treeClus->pi0px=pi0.Px();
       treeClus->piPpy=piPpy;     treeClus->pi0py=pi0.Py();
       treeClus->piPpz=piPpz;     treeClus->pi0pz=pi0.Pz();

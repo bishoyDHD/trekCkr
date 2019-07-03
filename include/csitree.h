@@ -85,6 +85,7 @@ class CRTClusterCsI:public CRTBase{
   Double_t g1E, g2E;
   // state vector information for pions
   Double_t pi0px, pi0py, pi0pz;
+  Double_t pi0vx, pi0vy, pi0vz;
   Double_t piPpx, piPpy, piPpz;/*
   std::vector<double> xpos, val;
   std::vector<double> csThet, csPhi;
