@@ -903,8 +903,8 @@ Long_t Det_ClusterCsI::process(){
       	        double csitheta=theta[fb][indexModule], csiphi=phi[indexClock][ud][tAB];
 	        // handeling phi for channel 16: Crystal type 10
 	        if(treeRaw->indexCsI[i]==16){
-	          csiphi=indexClock*30.;
-	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
+	          csiphi=phiCh16[indexClock];
+	          if(p[0]=='u' || p[0]=='U') csiphi=phiCh16[indexClock]+15.;
 	        }
                 cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
       	        auto angles=std::make_pair(csitheta,csiphi);

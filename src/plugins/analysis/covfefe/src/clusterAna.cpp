@@ -36,7 +36,7 @@ Long_t covfefe::hist_clust(){
   kmass[0]=dH2("kmass", "E_{tot}(#pi^{+}+#pi^{0}) vs. E_{tot}(2#gamma+#pi^{+})", 62.5,0.,1.,62.5,0.,.7);
   // histograms under various cut conditions
   E_pi0[1]=dH1("Epi0_1", " E_{total}(2#gamma)",40.5,0.,0.70);
-  M_pi0[1]=dH1("Mpi0_1", " M_{#pi^{0}}",40.5,0.,0.4);
+  M_pi0[1]=dH1("Mpi0_1", " Invariant Mass of #pi^{0} ",40.5,0.,0.4);
   g1px[1]=dH1("g1px_1", "px_{#gamma1}",63.5,-.3,.3);
   g1py[1]=dH1("g1py_1", "py_{#gamma1}",63.5,-.3,.3);
   g1pz[1]=dH1("g1pz_1", "pz_{#gamma1}",63.5,-.3,.3);
@@ -54,11 +54,11 @@ Long_t covfefe::hist_clust(){
   h2Angle[1]=dH2("h2Ang_1","#phi vs #theta", 24.0,0.,M_PI,48.0,0.,2.*M_PI);
   clustM[1]=dH1("clustM_1", "Cluster multiplicity", 12,0.,12.);
   kmass[1]=dH2("kmass_1", "E_{tot}(#pi^{+}+#pi^{0}) vs. E_{tot}(2#gamma+#pi^{+})", 62.5,0.,1.,62.5,0.,.7);
-  angPP[0]=dH1("angPP_1","Angle between #pi^{+} and #pi^{0}",26.0,-1.5,1.5);
-  h2corrAng=dH2("h2cAng", "cos(#theta_{#pi^{+}}) vs. cos(#theta_{#gamma#gamma})",25.,-1.,1.,25,-1.,1.);
+  angPP[0]=dH1("angPP_1","Opening angle of #pi^{+}#pi^{0}",26.0,-1.1,1.1);
+  h2corrAng=dH2("h2cAng", "cos(#theta_{#pi^{+}#gamma{1}}) vs. cos(#theta_{#pi^{+}#gamma{2}})",25.,-1.,1.,25,-1.,1.);
   piPang[0]=dH1("piPAng1", "cos(#theta_{#pi^{+}}", 45.,-1.5,1.5);
-  pi0ang[0]=dH1("pi0Ang0", "cos(#theta_{#gamma#gamma}", 45.,-1.1,1.1);
-  pi0ang[1]=dH1("pi0Ang1", "cos(#theta_{#gamma#gamma}", 45.,-1.1,1.1);
+  pi0ang[0]=dH1("pi0Ang0", "cos(#theta_{#gamma#gamma})", 45.,-1.1,1.1);
+  pi0ang[1]=dH1("pi0Ang1", "cos(#theta_{#gamma#gamma})", 26.,-1.1,1.1);
 
   return 0;
 }
@@ -73,13 +73,13 @@ Long_t covfefe::startup_clust(){
 };
 
 Long_t covfefe::process_clust(){
-  TLorentzVector piPlv, pi0lv;
+  TLorentzVector piPlv, pi0lv, g1lv, g2lv;
   // 3-vector to calculate the angle between pi+ and pi0
   TVector3 piPv3, pi0v3, ggv3, g1v3, g2v3;
-  if(clsmar->waveID>0){
+  //TVector3 
+  if(clsmar->E_pi0>0){
     waveID[0]->Fill(clsmar->waveID);
     id1->Fill(clsmar->dubP_1);
-    E_pi0[0]->Fill(clsmar->E_pi0);
     M_pi0[0]->Fill(clsmar->M_pi0);
     clustM[0]->Fill(clsmar->clusterM);
     g1px[0]->Fill(clsmar->g1Px);
@@ -104,9 +104,8 @@ Long_t covfefe::process_clust(){
     h1phi[0]->Fill(clsmar->phiE);
     // apply cut in total energy of pi0
     // replot with new cut condition
-    if(clsmar->E_pi0>=.1 && clsmar->E_pi0<=.3){
+    //if(clsmar->E_pi0>=.1 && clsmar->E_pi0<=.3){
       E_pi0[1]->Fill(clsmar->E_pi0);
-      M_pi0[1]->Fill(clsmar->M_pi0);
       clustM[1]->Fill(clsmar->clusterM);
       g1px[1]->Fill(clsmar->g1Px);
       g1py[1]->Fill(clsmar->g1Py);
@@ -123,6 +122,7 @@ Long_t covfefe::process_clust(){
       vertpx[1]->Fill(clsmar->piPpx);
       vertpy[1]->Fill(clsmar->piPpy);
       vertpz[1]->Fill(clsmar->piPpz);
+      //std::cout<<" checking vert: (px, py, pz) ("<<clsmar->piPpx<<", "<<clsmar->piPpy<<", "<<clsmar->piPpz<<") \n";
       kmass[1]->Fill(clsmar->piP2g,clsmar->piPpi0);
       h2Angle[1]->Fill(clsmar->thetaE,clsmar->phiE);
       // angles
@@ -132,17 +132,28 @@ Long_t covfefe::process_clust(){
       g1v3.SetXYZ(clsmar->g1Px,clsmar->g1Py,clsmar->g1Pz);
       g2v3.SetXYZ(clsmar->g2Px,clsmar->g2Py,clsmar->g2Pz);
       // rotate angles
-      pi0v3.RotateZ(M_PI/2);
-      double ang=piPv3.Angle(ggv3);
+      //pi0v3.RotateZ(M_PI/2);
+      //g1v3.RotateZ(M_PI/2);
+      //g2v3.RotateZ(M_PI/2);
+      g1lv.SetVect(g1v3);
+      g2lv.SetVect(g2v3);
+      g1lv.SetE(clsmar->g1E);
+      g2lv.SetE(clsmar->g2E);
+      pi0lv=g1lv + g2lv;
+      double angpiPg1=piPv3.Angle(g1v3);
+      double angpiPg2=piPv3.Angle(g2v3);
+      double angpiPpi0=piPv3.Angle(pi0v3);
       double ggAng=g1v3.Angle(g2v3);
-      h2corrAng->Fill(pi0v3.CosTheta(),std::cos(ang));
-      angPP[0]->Fill(std::cos(ang));
+      h2corrAng->Fill(std::cos(angpiPg1),std::cos(angpiPg2));
+      angPP[0]->Fill(std::cos(angpiPpi0));
       h1theta[1]->Fill(clsmar->thetaE);
       h1phi[1]->Fill(clsmar->phiE);
       piPang[0]->Fill(piPv3.CosTheta());
       pi0ang[0]->Fill(pi0v3.CosTheta());
-      pi0ang[1]->Fill(ggAng);
-    }
+      pi0ang[1]->Fill(std::cos(ggAng));
+      M_pi0[1]->Fill(pi0lv.M());
+      E_pi0[0]->Fill(pi0lv.E());
+    //}
   }
 
   return 0; // 0 = all ok
@@ -157,7 +168,7 @@ Long_t covfefe::finalize_clust(){
   TCanvas* c6=new TCanvas("c6"," Invariant Mass",808,700);
   TCanvas* c7=new TCanvas("c7"," Angle b/n pi+ and pi0 ",808,700);
   TCanvas* c8=new TCanvas("c8"," Angle b/n pi+ and 2gamma ",808,700);
-  TCanvas* c9=new TCanvas("c9"," Angle cosTheta ",808,700);
+  TCanvas* c9=new TCanvas("c9"," Parameters to check ",808,700);
   c1->Divide(2,2);
   c1->cd(3);
   gStyle->SetOptStat(0);
@@ -376,22 +387,22 @@ Long_t covfefe::finalize_clust(){
   pi0pz[1]->Draw("hist same");
   c5->cd(10);
   gStyle->SetOptStat(0);
-  vertpx[0]->GetXaxis()->SetTitle("px_{#pi^{+}} [GeV/c]");
-  vertpx[0]->GetYaxis()->SetTitle("counts/bin");
-  vertpx[0]->SetLineWidth(2);
-  vertpx[0]->Draw("hist");
+  vertpx[1]->GetXaxis()->SetTitle("px_{#pi^{+}} [GeV/c]");
+  vertpx[1]->GetYaxis()->SetTitle("counts/bin");
+  vertpx[1]->SetLineWidth(2);
+  vertpx[1]->Draw("hist");
   c5->cd(11);
   gStyle->SetOptStat(0);
-  vertpy[0]->GetXaxis()->SetTitle("py_{#pi^{+}} [GeV/c]");
-  vertpy[0]->GetYaxis()->SetTitle("counts/bin");
-  vertpy[0]->SetLineWidth(2);
-  vertpy[0]->Draw("hist");
+  vertpy[1]->GetXaxis()->SetTitle("py_{#pi^{+}} [GeV/c]");
+  vertpy[1]->GetYaxis()->SetTitle("counts/bin");
+  vertpy[1]->SetLineWidth(2);
+  vertpy[1]->Draw("hist");
   c5->cd(12);
   gStyle->SetOptStat(0);
-  vertpz[0]->GetXaxis()->SetTitle("pz_{#pi^{+}} [GeV/c]");
-  vertpz[0]->GetYaxis()->SetTitle("counts/bin");
-  vertpz[0]->SetLineWidth(2);
-  vertpz[0]->Draw("hist");
+  vertpz[1]->GetXaxis()->SetTitle("pz_{#pi^{+}} [GeV/c]");
+  vertpz[1]->GetYaxis()->SetTitle("counts/bin");
+  vertpz[1]->SetLineWidth(2);
+  vertpz[1]->Draw("hist");
   c5->Write();
 
   c6->cd();
@@ -422,18 +433,35 @@ Long_t covfefe::finalize_clust(){
   h2corrAng->Draw("colz");
   c8->Write();
 
-  c9->cd();
+  c9->Divide(2,2);
+  c9->cd(1);
   gStyle->SetOptStat(0);
   pi0ang[1]->GetXaxis()->SetTitle("cos(#theta)");
   pi0ang[1]->GetYaxis()->SetTitle("counts/bin");
   pi0ang[1]->SetLineWidth(2);
-  //piPang[0]->Draw("hist");
-  //pi0ang[0]->SetLineWidth(2);
-  //pi0ang[0]->SetLineColor(kRed);
-  //pi0ang[0]->Draw("hist same");
   pi0ang[1]->SetLineWidth(2);
-  //pi0ang[1]->SetLineColor(kCyan);
   pi0ang[1]->Draw("hist");
+  c9->cd(2);
+  M_pi0[1]->GetXaxis()->SetTitle("M_{#gamma#gamma}");
+  M_pi0[1]->GetYaxis()->SetTitle("counts/bin");
+  M_pi0[1]->SetLineWidth(2);
+  M_pi0[1]->SetLineWidth(2);
+  M_pi0[1]->Draw("hist");
+  c9->cd(3);
+  E_pi0[1]->GetXaxis()->SetTitle("E_{#gamma#gamma}");
+  E_pi0[1]->GetYaxis()->SetTitle("counts/bin");
+  E_pi0[1]->SetLineWidth(2);
+  E_pi0[1]->SetLineWidth(2);
+  E_pi0[1]->Draw("hist");
+  E_pi0[0]->SetLineWidth(2);
+  E_pi0[0]->SetLineColor(kMagenta);
+  E_pi0[0]->Draw("hist same");
+  c9->cd(4);
+  angPP[0]->GetXaxis()->SetTitle("E_{#gamma#gamma}");
+  angPP[0]->GetYaxis()->SetTitle("counts/bin");
+  angPP[0]->SetLineWidth(2);
+  angPP[0]->SetLineWidth(2);
+  angPP[0]->Draw("hist");
   c9->Write();
 
   return 0; // 0 = all ok
