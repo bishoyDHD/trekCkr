@@ -18,6 +18,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   pi0Etot=NULL;
   h1clust=NULL; h1sclus=NULL;
   E2g=NULL; h2Ene=NULL; h2ang=NULL; h2deg=NULL;
+  h2theta=NULL; h2phi=NULL; h2Ang=NULL;
   E_cut=NULL, cosTheta=NULL;
   h1Mpi0=NULL;
   h1Mpi02=NULL;
@@ -50,6 +51,8 @@ Det_ClusterCsI::~Det_ClusterCsI(){
   cout<<"  Exiting fitting program \n";
 };
 
+// this function template is used to obtain max std::vector value
+// then iterate in decending order from max->min
 typedef vector<double> ve;
 extern ve indexph;
 ve indexph;
@@ -90,6 +93,15 @@ void Det_ClusterCsI::readFiles(){
   }
 }
 
+Long_t Det_ClusterCsI::angleCsI(int id, int module, int channel, int yy, int zz){
+  //std::cout<<"\n --- "<<id<<"-"<<module<<"-"<<channel<<"-"<<yy<<"-"<<zz<<" ---\n";
+  phiCsI[module][channel]=yy;
+  thetaCsI[module][channel]=zz;
+  std::cout<<"\n --- thetaCsI["<<module<<"]["<<channel<<"] = "<<yy<<" <---> "<<thetaCsI[module][channel]<<" ---\n";
+
+  return 0;
+}
+
 // utilize this as an initialization method along with histogram definitions
 Long_t Det_ClusterCsI::histos(){
   pi0Etot=dH1("pi0Etot", " Total Energy of #pi^0",62.5,0.,0.5);
@@ -104,7 +116,10 @@ Long_t Det_ClusterCsI::histos(){
   h1vertpz=dH1("h1vertpz", " #gamma momentum direction p_{z}",62.5, -0.4, 0.4);
   h2ang=dH2("h2ang", "Angular distribution #phi vs #theta", 24.0,0,M_PI, 48.0,0.,2.*M_PI);
   h2deg=dH2("h2deg", "Angular distribution #phi vs #theta deg", 24.0,0.,180., 48.0,0.,360.);
+  h2Ang=dH2("h2Ang", "Mapped Angular dist #phi vs #theta deg", 24.0,0.,180., 48.0,0.,360.);
   h2Ene=dH2("h2Ene","E_{tot}(#pi^{+} + #pi^{0}) vs. E_{tot}(2#gamma + #pi^{0})", 62.5,0.,1.,62.5,0.,.7);
+  h2theta=dH2("h2th","#theta(izz) comparison", 48.0,0.,180.,48.,0.,180.);
+  h2phi=dH2("h2ph","#phi(iyy) comparison", 48.0,0.,360.,48.,0.,360.);
   //h2corrAng=dH2("h2cAng", "cos(#theta_{#pi^{+}}) vs. cos(#theta_{#gamma#gamma})",25.,-1.,1.,25,-1.,1.);
   E_cut=dH1("E_cut", "#pi^{0} total energy", 62.5, 0., 0.25);
   cosTheta=dH1("cosTheta", "opening angle for 2 #gamma's", 25., 0., 100.);
@@ -135,7 +150,8 @@ Long_t Det_ClusterCsI::histos(){
   }
   std::ostringstream title;
   title<<"CsI(Tl) clusters";
-  h2clus=dH2("h2clust",title.str().c_str(), 30,-15,15,50,0,50);
+  //h2clus=dH2("h2clust",title.str().c_str(), 30,-15,15,50,0,50);
+  h2clus=dH2("h2clust",title.str().c_str(), 24,0.0,180,48,0,360.); //<-- Mapped angles
   c1= new TCanvas("c1","",900,800);
   c1->cd();
   c1->Update();
@@ -211,8 +227,8 @@ Long_t Det_ClusterCsI::process(){
   }*/
   ppip=tracktree->pVertpi0;
   if(ppip<0.195 || ppip>0.215) goto exitLoop;
-  //if(resetH)
-    //h2clus->Reset(); //need to reset stats in cluster event viewer
+  if(resetH)
+    h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -280,10 +296,31 @@ Long_t Det_ClusterCsI::process(){
             std::cout<< " Index clock: "<<indexClock<<endl;
             std::cout<< " Gap config FB is  : " <<p[1]<<endl;
             std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-            std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<endl;
+	    std::cout<< " TKO Module Name   : "<<nameModule<<std::endl;
+            std::cout<< " Channel number is : " <<treeRaw->indexChannel[i]<<endl;
             std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
             std::cout<< "\n   ** Event Number ------> "<<treeRaw->eventNo<<"\n\n";
 	  //}
+	  // convert TKO module to module number here
+	  if(nameModule=="TK34") moduleNo=1;
+	  if(nameModule=="TK32") moduleNo=2;
+	  if(nameModule=="TK36") moduleNo=3;
+	  if(nameModule=="TK37") moduleNo=4;
+	  if(nameModule=="TK38") moduleNo=5;
+	  if(nameModule=="TK40") moduleNo=6;
+	  if(nameModule=="TK08") moduleNo=7;
+	  if(nameModule=="TK50") moduleNo=8;
+	  if(nameModule=="TK09") moduleNo=9;
+	  if(nameModule=="TK54") moduleNo=10;
+	  if(nameModule=="TK31") moduleNo=11;
+	  if(nameModule=="TK04") moduleNo=12;
+	  if(nameModule=="TK45") moduleNo=13;
+	  if(nameModule=="TK33") moduleNo=14;
+	  if(nameModule=="TK39") moduleNo=15;
+	  if(nameModule=="TK41") moduleNo=16;
+
+	  std::cout<< " CsI module Nmber is : "<<moduleNo<<std::endl;
+	  std::cout<<" ---- Checking XML Parameter --> "<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<", "<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<std::endl;
           double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
           y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -454,13 +491,22 @@ Long_t Det_ClusterCsI::process(){
 	        csiphi=indexClock*30.;
 		if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
 	      }
-              cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
-              auto angles=std::make_pair(csitheta,csiphi);
-              csThet.push_back(csitheta), csPhi.push_back(csiphi);
+	      int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	      int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	      otheta=mapTheta[20-thetaIndex];
+	      ophi=2*180*(phiIndex-0.5)/48.;
+              cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
+              cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	      h2Ang->Fill(otheta,ophi);
+	      h2theta->Fill(otheta,csitheta);
+	      h2phi->Fill(ophi,csiphi);
+              auto angles=std::make_pair(otheta,ophi);
+              csThet.push_back(otheta), csPhi.push_back(ophi);
               //thetaPhi.push_back(angles);
               csiph[angles]=diff;
               csiClus[angles]=true;
-              h2clus->Fill(csimod,igap,diff);
+              //h2clus->Fill(csimod,igap,diff);
+              h2clus->Fill(otheta,ophi,diff);
 	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
@@ -655,19 +701,28 @@ Long_t Det_ClusterCsI::process(){
 	          csiphi=indexClock*30.;
 	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
 	        }
-                cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
-                auto angles=std::make_pair(csitheta,csiphi);
-                csThet.push_back(csitheta), csPhi.push_back(csiphi);
+	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        otheta=mapTheta[20-thetaIndex];
+	        ophi=2*180*(phiIndex-0.5)/48.;
+                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	        h2Ang->Fill(otheta,ophi);
+	        h2theta->Fill(otheta,csitheta);
+	        h2phi->Fill(ophi,csiphi);
+                auto angles=std::make_pair(otheta,ophi);
+                csThet.push_back(otheta), csPhi.push_back(ophi);
                 //thetaPhi.push_back(angles);
                 csiph[angles]=diff;
                 csiClus[angles]=true;
                 //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
-                h2clus->Fill(csimod,igap,diff);
+                //h2clus->Fill(csimod,igap,diff);
+                h2clus->Fill(otheta,ophi,diff);
 		delete f1;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
             if(nfound==2){
-	      goto exitLoop;
+	      //goto exitLoop;
 	      std::string dubFit = minu2.doublemodel();
               TF1* f1=new TF1("f1",dubFit.c_str(),0.0,250);
               for(int n=0; n<15; n+=1){
@@ -763,12 +818,19 @@ Long_t Det_ClusterCsI::process(){
 	          csiphi=indexClock*30.;
 	          if(p[0]=='u' || p[0]=='U') csiphi=indexClock*30.+15.;
 	        }
-                cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
-      	        auto angles=std::make_pair(csitheta,csiphi);
+	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        otheta=mapTheta[20-thetaIndex];
+	        ophi=2*180*(phiIndex-0.5)/48.;
+                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	        h2Ang->Fill(otheta,ophi);
+	        h2theta->Fill(otheta,csitheta);
+	        h2phi->Fill(ophi,csiphi);
+      	        auto angles=std::make_pair(otheta,ophi);
       	        //thetaPhi.push_back(angles);
-      	        csThet.push_back(csitheta), csPhi.push_back(csiphi);
+      	        csThet.push_back(otheta), csPhi.push_back(ophi);
       	        csiph[angles]=diff;
-      	        //csiph[thetaPhi]=diff;
       	        csiClus[angles]=true;
       	        //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
 	        //std::cout<< "\n\n  ======> "<<clock<<" peaks>=2 <========\n\n";
@@ -807,7 +869,8 @@ Long_t Det_ClusterCsI::process(){
                     }
       	          }
       	        } 
-                h2clus->Fill(csimod,igap,diff);
+                //h2clus->Fill(csimod,igap,diff);
+                h2clus->Fill(otheta,ophi,diff);
               }
 	      delete f1;
             } //<-- Use to get rid of 2 peaks functions here * /
@@ -869,7 +932,7 @@ Long_t Det_ClusterCsI::process(){
               if(max>=60 && max<=65){
 	        if(!clus_csi)
                   clus_csi=true;
-		//if(!resetH) resetH=true;
+		if(!resetH) resetH=true;
                 clock=indexClock;
                 fb=indexFB;
                 module=indexModule;
@@ -907,15 +970,23 @@ Long_t Det_ClusterCsI::process(){
 	          if(p[0]=='u' || p[0]=='U') csiphi=phiCh16[indexClock]+15.;
 	        }
                 cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
-      	        auto angles=std::make_pair(csitheta,csiphi);
+	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
+	        otheta=mapTheta[20-thetaIndex];
+	        ophi=2*180*(phiIndex-0.5)/48.;
+                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+      	        auto angles=std::make_pair(otheta,ophi);
       	        //thetaPhi.push_back(angles);
-      	        csThet.push_back(csitheta), csPhi.push_back(csiphi);
+      	        csThet.push_back(otheta), csPhi.push_back(ophi);
 		//h2ang->Fill(csitheta*M_PI/180,csiphi*M_PI/180);
 		//h2deg->Fill(csitheta,csiphi);
       	        csiph[angles]=diff;
       	        //csiph[thetaPhi]=diff;
       	        csiClus[angles]=true;
-      	        //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
+	        h2Ang->Fill(otheta,ophi);
+	        h2theta->Fill(otheta,csitheta);
+	        h2phi->Fill(ophi,csiphi);
       	        int imod=0, igap=4*indexClock+2;  // igapU=4*indexClock+3;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
 		//indexClock=0;
@@ -955,7 +1026,8 @@ Long_t Det_ClusterCsI::process(){
 	            }
       	          }
       	        } 
-                h2clus->Fill(csimod,igap,diff);
+                h2clus->Fill(otheta,ophi,diff);
+                //h2clus->Fill(csimod,igap,diff);
 	        treeClus->waveID=nfound;
               } // <--- Use this to get rid of double and single fitting functions * /
             }
@@ -966,29 +1038,30 @@ Long_t Det_ClusterCsI::process(){
       c1->cd();
       h2clus->GetZaxis()->SetRangeUser(0., .5);
       h2clus->Draw("colz");
+      // Create a drawing of CsI outline using anlges
       for(int i=0;i<11;i++){
-        hbox1[i]=new TLine(-2.0,4*(i+1),4.00,4*(i+1));
-        vbox1[i]=new TLine(-2.0,4*(i+1),-2.0,4*(i+1)+2);
-        hbox1[i+11]=new TLine(-2.0,4*(i+1)+2,4.00,4*(i+1)+2);
-        vbox1[i+11]=new TLine(4.0,4*(i+1),4.00,4*(i+1)+2);
-        hline1[i]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
-        hline1[i+11]=new TLine(-9.0,4*(i+1)-1,11.0,4*(i+1)-1);
-        hline2[i]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
-        hline2[i+11]=new TLine(-9.0,4*(i+1)+1,-2.0,4*(i+1)+1);
-        hline3[i]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
-        hline3[i+11]=new TLine(4.00,4*(i+1)+1,11.0,4*(i+1)+1);
+        hbox1[i]=new TLine(67.5,30*i+7.5,112.5,30*i+7.5); //lower gap edge in phi
+        vbox1[i]=new TLine(67.5,30*i+22.5,67.5,30*i+37.5); // create left gap edge in theta
+        hbox1[i+11]=new TLine(67.5,30*i+22.5,112.5,30*i+22.5); // upper gap edge in phi
+        vbox1[i+11]=new TLine(112.5,30*i+22.5,112.5,30*i+37.5);
+        hline1[i]=new TLine(15.0,30*i+15.0,165.5,30*i+15.0);
+        hline1[i+11]=new TLine(15.0,30*i+15.0,165.5,30*i+15.0);
+        hline2[i]=new TLine(15.0,30*i,67.5,30*i);
+        hline2[i+11]=new TLine(15.0,30*i,67.5,30*i);
+        hline3[i]=new TLine(112.5,30*i,165.5,30*i);
+        hline3[i+11]=new TLine(112.5,30*i,165.5,30*i);
       }
-      hline2[22]=new TLine(-9.0,1,-2.0,1);
-      hline2[23]=new TLine(4.00,1,11.0,1);
-      hline2[24]=new TLine(-9.0,49,-2.0,49);
-      hline2[25]=new TLine(4.00,49,11.0,49);
-      hbox2[0]=new TLine(-2.0,2.0,4,2.0);
-      hbox2[1]=new TLine(-2.0,48.,4,48.);
-      vbox2[0]=new TLine(-2.0,1.0,-2,2.0);
-      vbox2[1]=new TLine(4.00,1.0,4.,2.0);
-      vbox2[2]=new TLine(-2.0,48.,-2,49.);
-      vbox2[3]=new TLine(4.00,48.,4.,49.);
-      hline1[22]=new TLine(-9.0,47,11.0,47);
+      hline2[22]=new TLine(15.0,330.0,67.5,330.0);
+      hline2[23]=new TLine(112.5,330.0,165.5,330.0);
+      hline2[24]=new TLine(15.0,352.5,67.5,352.5);
+      hline2[25]=new TLine(112.5,352.5,165.5,352.5);
+      hbox2[0]=new TLine(67.5,337.5,112.5,337.5);
+      hbox2[1]=new TLine(67.5,352.5,112.5,352.5);
+      vbox2[0]=new TLine(67.5,0.0,67.5,7.5);
+      vbox2[1]=new TLine(112.5,0.0,112.5,7.5);
+      vbox2[2]=new TLine(67.5,352.5,67.5,360.0);
+      vbox2[3]=new TLine(112.5,352.5,112.5,360.0);
+      hline1[22]=new TLine(15.0,345.0,165.5,345.0);
       for(int n=0;n<22;n++){
         hbox1[n]->Draw("l");
         vbox1[n]->Draw("l");
@@ -1001,9 +1074,11 @@ Long_t Det_ClusterCsI::process(){
       }
       for(int n=0;n<4;n++){
         vbox2[n]->Draw("l");
-        hline2[n+22]->Draw("l");
       }
       hline1[22]->Draw("l");
+      hline2[22]->Draw("l");
+      hline2[23]->Draw("l");
+      vbox2[0]->Draw("l");
       c1->Modified();
       c1->Update();
       empty();
@@ -1016,10 +1091,10 @@ Long_t Det_ClusterCsI::process(){
 	  std::cout<<" -------------->  || "<<tracktree->pVertpi0<<" || <------------------\n";
     for(UInt_t cr=0;cr<phval->size();cr++){
       std::cout<<" angles of corr. pulse heigh["<<cr<<"] = "<<(*phval)[cr]<<endl;
-    }
+    }/*
     for(auto itrr=csiClus.begin();itrr!=csiClus.end();itrr ++){
       std::cout<<"  cluster bool has the following: "<<itrr->second<<std::endl;
-    }
+    }*/
     double ntheta, nphi;
     int numOfClus=0, numOfsingleClus=0;
     for(std::size_t mm=0; mm !=indexph.size(); mm++){
@@ -1041,36 +1116,39 @@ Long_t Det_ClusterCsI::process(){
       std::pair<double,double> angE6, angE7, angE8, angE9, angE10;
       // from chan16 -> chan15: Back
       if(ntheta==161.25){
-        angE1=std::make_pair(ntheta-7.5,nphi-3.75);  angE2=std::make_pair(ntheta-7.5,nphi+11.25);
-        angE3=std::make_pair(ntheta-7.5,nphi-11.25); angE4=std::make_pair(ntheta-7.5,nphi+3.75);
+        angE1=std::make_pair(ntheta-7.5,nphi-7.50);  angE2=std::make_pair(ntheta-7.5,nphi+15.0);
+        angE3=std::make_pair(ntheta-7.5,nphi);       angE4=std::make_pair(ntheta-7.5,nphi+7.50);
         // only phi angle of chan16 changes
         angE9=std::make_pair(ntheta, nphi+15);       angE10=std::make_pair(ntheta,nphi-15);
       }
       if(ntheta==18.75){// from chan16 -> chan15: Front
-        angE5=std::make_pair(ntheta+7.5,nphi-3.75);  angE6=std::make_pair(ntheta+7.5,nphi+11.25);
-        angE7=std::make_pair(ntheta+7.5,nphi-11.25); angE8=std::make_pair(ntheta+7.5,nphi+3.75);
+        angE5=std::make_pair(ntheta+7.5,nphi-7.50);  angE6=std::make_pair(ntheta+7.5,nphi+15.0);
+        angE7=std::make_pair(ntheta+7.5,nphi);       angE8=std::make_pair(ntheta+7.5,nphi+7.5);
         // only phi angle of chan16 changes
         angE9=std::make_pair(ntheta, nphi+15);       angE10=std::make_pair(ntheta,nphi-15);
       }
       // handeling of going from chan15->chan16: Back
       if((ntheta+7.5)==161.25){
-        angE1=std::make_pair(ntheta+7.5,nphi-3.75);  angE2=std::make_pair(ntheta+7.5,nphi+11.25);
-        angE3=std::make_pair(ntheta+7.5,nphi-11.25); angE4=std::make_pair(ntheta+7.5,nphi+3.75);
+        angE1=std::make_pair(ntheta+7.5,nphi-7.50);  angE2=std::make_pair(ntheta+7.5,nphi+7.50);
+        angE3=std::make_pair(ntheta+7.5,nphi);       //angE4=std::make_pair(ntheta+7.5,nphi+3.75);
       }
       // from chan15 -> chan16: Front
       if((ntheta-7.5)==18.75){
-        angE5=std::make_pair(ntheta-7.5,nphi-3.75);  angE6=std::make_pair(ntheta-7.5,nphi+11.25);
-        angE7=std::make_pair(ntheta-7.5,nphi-11.25); angE8=std::make_pair(ntheta-7.5,nphi+3.75);
+        angE5=std::make_pair(ntheta-7.5,nphi-7.50);  angE6=std::make_pair(ntheta-7.5,nphi+7.50);
+        angE7=std::make_pair(ntheta-7.5,nphi);       //angE8=std::make_pair(ntheta-7.5,nphi+3.75);
       }
       // dealing with the revolution case
-      std::pair<double,double> angR1, angR2;
-      if(nphi==345. || nphi==356.25){
+      std::pair<double,double> angR1, angR2, angR3, angR4, angR5, angR6;
+      if(nphi==348.75 || nphi==356.25){
         // only phi angle of chan16 changes
-        angR1=std::make_pair(ntheta, 0.);       angR2=std::make_pair(ntheta,3.75);
+        angR1=std::make_pair(ntheta, 3.75);       angR2=std::make_pair(ntheta+7.5,3.75);
+        angR3=std::make_pair(ntheta-7.5, 3.75);   //angR4=std::make_pair(ntheta+7.5,3.75);
       }
-      if(nphi==0. || nphi==3.75){
+      if(nphi==3.75){
         // only phi angle of chan16 changes
-        angR1=std::make_pair(ntheta, 345.);       angR2=std::make_pair(ntheta,356.25);
+        angR1=std::make_pair(ntheta, 348.75);       angR2=std::make_pair(ntheta,356.25);
+        angR3=std::make_pair(ntheta-7.5, 348.75);   angR4=std::make_pair(ntheta+7.5,356.25);
+        angR5=std::make_pair(ntheta-7.5, 356.25);   angR6=std::make_pair(ntheta+7.5,348.75);
       }
       clusCrys=0;
       Eclus=0.;
@@ -1239,20 +1317,8 @@ Long_t Det_ClusterCsI::process(){
             std::cout<<" Already checked this crystal \n";
           }
         }
-        if(csiph[angE4]>0){
-          std::cout<<" Edge effect Cluster finder in pair loop E4: "<<csiph[angE4];
-	  std::cout<<" ["<<std::get<0>(angE4)<<", "<<std::get<1>(angE4)<<"] \n";
-          if(csiClus[angE4]){
-            clusCrys=clusCrys+1;
-	    Eclus=Eclus+csiph[angE4];
-	    thetaE=thetaE+csiph[angE4]*(std::get<0>(angE4));
-	    phiE  =phiE  +csiph[angE4]*(std::get<1>(angE4));
-            std::cout<<" This crystal is now removed from the list: "<<std::endl;
-            csiClus[angE4]=false;
-          }else{
-            std::cout<<" Already checked this crystal \n";
-          }
-        }
+	// Got rid of angE4 and angE8 pairs because they are not needed at this time
+	// Dongwi: 07.14.2019
         if(csiph[angE5]>0){
           std::cout<<" Edge effect Cluster finder in pair loop E5: "<<csiph[angE5];
 	  std::cout<<" ["<<std::get<0>(angE5)<<", "<<std::get<1>(angE5)<<"] \n";
@@ -1291,20 +1357,6 @@ Long_t Det_ClusterCsI::process(){
 	    phiE  =phiE  +csiph[angE7]*(std::get<1>(angE7));
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE7]=false;
-          }else{
-            std::cout<<" Already checked this crystal \n";
-          }
-        }
-        if(csiph[angE8]>0){
-          std::cout<<" Edge effect Cluster finder in pair loop E8: "<<csiph[angE8];
-	  std::cout<<" ["<<std::get<0>(angE8)<<", "<<std::get<1>(angE8)<<"] \n";
-          if(csiClus[angE8]){
-            clusCrys=clusCrys+1;
-	    Eclus=Eclus+csiph[angE8];
-	    thetaE=thetaE+csiph[angE8]*(std::get<0>(angE8));
-	    phiE  =phiE  +csiph[angE8]*(std::get<1>(angE8));
-            std::cout<<" This crystal is now removed from the list: "<<std::endl;
-            csiClus[angE8]=false;
           }else{
             std::cout<<" Already checked this crystal \n";
           }
@@ -1366,6 +1418,62 @@ Long_t Det_ClusterCsI::process(){
             std::cout<<" Already checked this crystal \n";
           }
         }
+        if(csiph[angR3]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop R3: "<<csiph[angR3];
+	  std::cout<<" ["<<std::get<0>(angR3)<<", "<<std::get<1>(angR3)<<"] \n";
+          if(csiClus[angR3]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR3];
+	    thetaE=thetaE+csiph[angR3]*(std::get<0>(angR3));
+	    phiE  =phiE  +csiph[angR3]*(std::get<1>(angR3));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR3]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angR4]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop R4: "<<csiph[angR4];
+	  std::cout<<" ["<<std::get<0>(angR4)<<", "<<std::get<1>(angR4)<<"] \n";
+          if(csiClus[angR4]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR4];
+	    thetaE=thetaE+csiph[angR4]*(std::get<0>(angR4));
+	    phiE  =phiE  +csiph[angR4]*(std::get<1>(angR4));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR4]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angR5]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop R5: "<<csiph[angR5];
+	  std::cout<<" ["<<std::get<0>(angR5)<<", "<<std::get<1>(angR5)<<"] \n";
+          if(csiClus[angR5]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR5];
+	    thetaE=thetaE+csiph[angR5]*(std::get<0>(angR5));
+	    phiE  =phiE  +csiph[angR5]*(std::get<1>(angR5));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR5]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
+        if(csiph[angR6]>0){
+          std::cout<<" Edge effect Cluster finder in pair loop R6: "<<csiph[angR6];
+	  std::cout<<" ["<<std::get<0>(angR6)<<", "<<std::get<1>(angR6)<<"] \n";
+          if(csiClus[angR6]){
+            clusCrys=clusCrys+1;
+	    Eclus=Eclus+csiph[angR6];
+	    thetaE=thetaE+csiph[angR6]*(std::get<0>(angR6));
+	    phiE  =phiE  +csiph[angR6]*(std::get<1>(angR6));
+            std::cout<<" This crystal is now removed from the list: "<<std::endl;
+            csiClus[angR6]=false;
+          }else{
+            std::cout<<" Already checked this crystal \n";
+          }
+        }
         std::cout<<" some crystals actually have hits "<<clusCrys<<std::endl;
       }else{
         clusCrys=0;//clusCrys+1;
@@ -1385,7 +1493,7 @@ Long_t Det_ClusterCsI::process(){
 	// Fill the theta, phi distributions in rad
 	treeClus->thetaE=rtheta;
 	treeClus->phiE=rphi;
-	std::cout<<"\n >>>  pulse-heignt for central crystal: "<<csiph[tppair];
+	std::cout<<" -->  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
 	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [GeV]";
       }
@@ -1407,6 +1515,7 @@ Long_t Det_ClusterCsI::process(){
       }
       csiClus[tppair]=false; // mute central crystal
       cout<<"  Number of crystals is:  "<<clusCrys<<endl;
+      std::cout<<"\n --------------------------------------------------------------------->\n\n";
     }
     for(UInt_t idc=0;idc<csThet.size();idc++){
       std::cout<<"    theta[m][n] "<<csThet[idc]<<endl;

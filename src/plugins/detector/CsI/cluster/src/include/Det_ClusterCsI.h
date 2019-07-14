@@ -59,6 +59,17 @@ class Det_ClusterCsI:public Plugin{
   int clusCrys;
   boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiph;
   boost::unordered_map<std::pair<double,double>,bool, boost::hash<std::pair<double,double>>> csiClus;
+  //enum tk {TK34,TK32,TK36,TK37,TK38,TK40,TK08,TK50,TK09,TK54,TK31,TK04,TK45,TK33,TK39,TK41};
+  int moduleNo;
+  // indices start at zero now
+  int thetaCsI[16][48];
+  int phiCsI[16][48];
+  // mapped angles from Osaka Group
+  double mapTheta[20]={18.75, 26.25, 33.75, 41.25, 48.75, 56.25,63.75, 71.25, 78.75, 86.25,
+	               93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,161.25};
+  double mapPhi;
+  // angles to be used by the clusterFinder table
+  double otheta, ophi;
   //arranged theta[fb][crystalNo. 0-15]: f=0,b=1
   double theta[2][16]={86.25, 78.75, 71.25, 63.75, 56.25, 48.75, 41.25, 33.75, 26.25,
                                             63.75, 56.25, 48.75, 41.25, 33.75, 26.25, 18.75,
@@ -88,7 +99,34 @@ class Det_ClusterCsI:public Plugin{
                       {{183.75,191.25},{198.75,206.25}},
                       {{213.75,221.25},{228.75,236.25}},
                       {{243.75,251.25},{258.75,266.25}},
-                      {{273.75,281.25},{288.75,296.25}}};*/
+                      {{273.75,281.25},{288.75,296.25}}};
+
+  // phi back
+  double phiB[12][2][2]={{{123.75,131.25},{138.75,146.25}},   //Iclock_1  120
+                        {{153.75,161.25},{168.75,176.25}},   //Iclock_2  150
+                        {{183.75,191.25},{198.75,206.25}},   //Iclock_3  180
+                        {{213.75,221.25},{228.75,236.25}},   //Iclock_4  210
+                        {{243.75,251.25},{258.75,266.25}},   //Iclock_5  240
+                        {{273.75,281.25},{288.75,296.25}},   //Iclock_6  270
+                        {{303.75,311.25},{318.75,326.25}},   //Iclock_7  300
+                        {{333.75,341.25},{348.75,356.25}},   //Iclock_8  330
+		        {{3.75, 11.25},{18.75, 26.25}},      //Iclock_9  0
+                        {{33.75,41.25},{48.75, 56.25}},      //Iclock_10 30
+	                {{63.75,71.25},{78.75, 86.25}},      //Iclock_11 60
+                        {{93.75,101.25},{108.75,116.25}}};   //Iclock_12 90
+  // phi front
+  double phiF[12][2][2]={{{93.75,101.25},{108.75,116.25}},    //Iclock_1 90
+	                {{63.75,71.25},{78.75, 86.25}},      //Iclock_2 60
+                        {{33.75,41.25},{48.75, 56.25}},      //Iclock_3 30
+		        {{3.75, 11.25},{18.75, 26.25}},      //Iclock_4 -0
+                        {{333.75,341.25},{348.75,356.25}},   //Iclock_5 330
+                        {{303.75,311.25},{318.75,326.25}},   //Iclock_6 300
+                        {{273.75,281.25},{288.75,296.25}},   //Iclock_7 270
+                        {{243.75,251.25},{258.75,266.25}},   //Iclock_8 240
+                        {{213.75,221.25},{228.75,236.25}},   //Iclock_9 210
+                        {{183.75,191.25},{198.75,206.25}},   //Iclock_10 180
+                        {{153.75,161.25},{168.75,176.25}},   //Iclock_11 150
+	                {{123.75,131.25},{138.75,146.25}}};  //Iclock_12 120*/
   double phiCh16[12]={60,30,0,330,300,270,240,210,180,150,120,90};
 
 
@@ -106,11 +144,11 @@ class Det_ClusterCsI:public Plugin{
   TH1D* h1pi0px, *h1pi0py, *h1pi0pz, *h1clust, *h1sclus;
   TH1D* h1vertpx, *h1vertpy, *h1vertpz;
   TH2D* h2clus, *h2Ene, *h2ang, *h2deg;
-  TH2D* h2corrAng;
+  TH2D* h2corrAng, *h2theta, *h2phi, *h2Ang;
   TH1D* E_cut, *cosTheta, *vertOp;
-  TLine *hbox1[22], *hline1[23];
+  TLine *hbox1[25], *hline1[25];
   TLine *hbox2[2], *hline2[26];
-  TLine *vbox1[22], *hline3[22];
+  TLine *vbox1[25], *hline3[25];
   TLine *vbox2[4];
   Int_t clock;
   Int_t fb;
@@ -137,6 +175,7 @@ class Det_ClusterCsI:public Plugin{
   Long_t startup();
   Long_t process();
   Long_t finalize();
+  Long_t angleCsI(int id, int module, int channel, int yy, int zz);
   void empty();
   // clustering methods
   Long_t histos_clus();

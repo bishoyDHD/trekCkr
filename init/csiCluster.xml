@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<museinit
+   xml:base="/${HOME}/.cooker/shared/"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:noNamespaceSchemaLocation='demo.xsd'
+   xmlns:xi="http://www.w3.org/2001/XInclude">
+
+ <xi:include href="init/ClusterCsI.xml" parse="xml"/> <!-- include ClusterCsI config -->
+
+</museinit>

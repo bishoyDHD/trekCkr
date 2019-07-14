@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cookerinit
+    xml:base="homedir/.cooker/shared/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xsi:noNamespaceSchemaLocation='demo.xsd'>
+
+
+ <xi:include href="init/ClusterCsI.xml" parse="xml"/> 
+ <!--
+ <xi:include href="init/Copy.xml" parse="xml"/>
+ <xi:include href="init/covfefe.xml" parse="xml"/>
+ <xi:include href="init/CsI.xml" parse="xml"/>
+ -->
+
+
+</cookerinit>
