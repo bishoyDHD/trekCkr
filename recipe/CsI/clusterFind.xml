@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <cooker xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:noNamespaceSchemaLocation='recipe.xsd'>
-
-<init>/${HOME}/.cooker/shared/init/ClusterCsI.xml</init>
+	xsi:noNamespaceSchemaLocation='recipe.xsd'>
+  <!-- Testing -->
+  <init>init/trekAll.xml</init>
 
 <source>vf48_hdw:trackingVar</source> <!-- the source tree name-->
 <destination>csi_cali</destination> <!-- the destination tree name-->
