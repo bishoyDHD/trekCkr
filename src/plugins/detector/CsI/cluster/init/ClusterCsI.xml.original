@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<ClusterCsI>
+  <config>
+    <angles>angleCsI</angles>
+  </config>
+  <!-- Default values -->
+  <date time="2019-01-01T00:00:00">
+    <angles id="0">1,1,1,1</angles>
+ </date>
+</ClusterCsI>
