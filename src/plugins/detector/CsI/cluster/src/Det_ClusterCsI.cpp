@@ -152,6 +152,8 @@ Long_t Det_ClusterCsI::histos(){
   title<<"CsI(Tl) clusters";
   //h2clus=dH2("h2clust",title.str().c_str(), 30,-15,15,50,0,50);
   h2clus=dH2("h2clust",title.str().c_str(), 24,0.0,180,48,0,360.); //<-- Mapped angles
+  h2clus->GetXaxis()->SetTitle("#theta [deg]");
+  h2clus->GetYaxis()->SetTitle("#phi [deg]");
   c1= new TCanvas("c1","",900,800);
   c1->cd();
   c1->Update();
@@ -493,8 +495,11 @@ Long_t Det_ClusterCsI::process(){
 	      }
 	      int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	      int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	      otheta=mapTheta[20-thetaIndex];
-	      ophi=2*180*(phiIndex-0.5)/48.;
+	      otheta=mapTheta[thetaIndex];
+	      //otheta=mapTheta[20-thetaIndex];
+	      mapPhi=2*180*(phiIndex-0.5)/48.;
+	      ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	      if(ophi < 0.) ophi=360.+ophi; // loop around the clock
               cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
               cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	      h2Ang->Fill(otheta,ophi);
@@ -703,8 +708,11 @@ Long_t Det_ClusterCsI::process(){
 	        }
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[20-thetaIndex];
-	        ophi=2*180*(phiIndex-0.5)/48.;
+	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[20-thetaIndex];
+	        mapPhi=2*180*(phiIndex-0.5)/48.;
+	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
@@ -820,8 +828,12 @@ Long_t Det_ClusterCsI::process(){
 	        }
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[20-thetaIndex];
-	        ophi=2*180*(phiIndex-0.5)/48.;
+	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[20-thetaIndex];
+	        //ophi=2*180*(phiIndex-0.5)/48.;
+	        mapPhi=2*180*(phiIndex-0.5)/48.;
+	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
@@ -972,8 +984,12 @@ Long_t Det_ClusterCsI::process(){
                 cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[20-thetaIndex];
-	        ophi=2*180*(phiIndex-0.5)/48.;
+	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[20-thetaIndex];
+	        //ophi=2*180*(phiIndex-0.5)/48.;
+	        mapPhi=2*180*(phiIndex-0.5)/48.;
+	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
       	        auto angles=std::make_pair(otheta,ophi);
