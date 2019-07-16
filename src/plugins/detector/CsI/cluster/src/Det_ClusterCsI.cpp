@@ -93,6 +93,13 @@ void Det_ClusterCsI::readFiles(){
   }
 }
 
+double Det_ClusterCsI::round(double var){
+  // type cast to int in order to obtain integer var
+  // then divide by 100 or the value is set to correct decimal points
+  // Useful upto 1e4 higher than this is basically a no-no
+  double value=(int)(var*100+.5);
+  return (double)value/100;
+}
 Long_t Det_ClusterCsI::angleCsI(int id, int module, int channel, int yy, int zz){
   //std::cout<<"\n --- "<<id<<"-"<<module<<"-"<<channel<<"-"<<yy<<"-"<<zz<<" ---\n";
   phiCsI[module][channel]=yy;
@@ -169,6 +176,9 @@ Long_t Det_ClusterCsI::startup(){
   makeBranch("treeClus",(TObject **) &treeClus);
   gStyle->SetOptStat(0);
   //outFile.open("kpi2evtList.dat");
+  string fileN="mapping.txt";
+  //mapfile.open(fileN);
+  //mapfile<<"module"<<"\t"<<"channel"<<"\t"<<"iyy"<<"\t"<<"izz"<<"\t"<<"TKO"<<"\t"<<"label"<<"\t"<<"U/D"<<"\t"<<"F/B"<<"\t"<<"theta(izz)"<<"\t"<<"theta(Bishoy)"<<std::endl;
 
   return 0;
 }
@@ -229,8 +239,8 @@ Long_t Det_ClusterCsI::process(){
   }*/
   ppip=tracktree->pVertpi0;
   if(ppip<0.195 || ppip>0.215) goto exitLoop;
-  if(resetH)
-    h2clus->Reset(); //need to reset stats in cluster event viewer
+  //if(resetH)
+    //h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -495,11 +505,18 @@ Long_t Det_ClusterCsI::process(){
 	      }
 	      int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	      int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	      otheta=mapTheta[thetaIndex];
+	      //otheta=mapTheta[thetaIndex];
 	      //otheta=mapTheta[20-thetaIndex];
-	      mapPhi=2*180*(phiIndex-0.5)/48.;
-	      ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
-	      if(ophi < 0.) ophi=360.+ophi; // loop around the clock
+	      //reading from Osaka map as is: otheta and ophi angles
+	      double cosTheta=crysZ[20-thetaIndex]/std::sqrt(std::pow(crysZ[20-thetaIndex],2)+
+			      std::pow(crysr[20-thetaIndex],2));
+	      double acosTheta=TMath::ACos(cosTheta);
+	      otheta=TMath::RadToDeg()*acosTheta; // convert to deg.
+	      otheta=round(otheta); // make sure to obtain 2 dp
+	      mapPhi=2*180*(phiIndex-0.5)/48.; // from mapping init file
+	      ophi=mapPhi; // convert to global scheme: gap3=+xaxis
+	      //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	      //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
               cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
               cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	      h2Ang->Fill(otheta,ophi);
@@ -512,6 +529,8 @@ Long_t Det_ClusterCsI::process(){
               csiClus[angles]=true;
               //h2clus->Fill(csimod,igap,diff);
               h2clus->Fill(otheta,ophi,diff);
+              // writing to check mapping file
+              //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
 	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
@@ -708,11 +727,18 @@ Long_t Det_ClusterCsI::process(){
 	        }
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[thetaIndex];
 	        //otheta=mapTheta[20-thetaIndex];
+	        //reading from Osaka map as is: otheta and ophi angles
+	        double cosTheta=crysZ[20-thetaIndex]/std::sqrt(std::pow(crysZ[20-thetaIndex],2)+
+	          	      std::pow(crysr[20-thetaIndex],2));
+	        double acosTheta=TMath::ACos(cosTheta);
+	        otheta=TMath::RadToDeg()*acosTheta; // convert to deg.
+	        otheta=round(otheta); // make sure to obtain 2 dp
 	        mapPhi=2*180*(phiIndex-0.5)/48.;
-	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
-	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
+	        ophi=mapPhi; // convert to global scheme: gap3=+xaxis
+	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
@@ -720,6 +746,8 @@ Long_t Det_ClusterCsI::process(){
 	        h2phi->Fill(ophi,csiphi);
                 auto angles=std::make_pair(otheta,ophi);
                 csThet.push_back(otheta), csPhi.push_back(ophi);
+		// writing to check mapping file
+                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
                 //thetaPhi.push_back(angles);
                 csiph[angles]=diff;
                 csiClus[angles]=true;
@@ -828,12 +856,19 @@ Long_t Det_ClusterCsI::process(){
 	        }
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[thetaIndex];
 	        //otheta=mapTheta[20-thetaIndex];
 	        //ophi=2*180*(phiIndex-0.5)/48.;
+	        //reading from Osaka map as is: otheta and ophi angles
+	        double cosTheta=crysZ[20-thetaIndex]/std::sqrt(std::pow(crysZ[20-thetaIndex],2)+
+	          	      std::pow(crysr[20-thetaIndex],2));
+	        double acosTheta=TMath::ACos(cosTheta);
+	        otheta=TMath::RadToDeg()*acosTheta; // convert to deg.
+	        otheta=round(otheta); // make sure to obtain 2 dp
 	        mapPhi=2*180*(phiIndex-0.5)/48.;
-	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
-	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
+	        ophi=mapPhi; // convert to global scheme: gap3=+xaxis
+	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
@@ -844,6 +879,8 @@ Long_t Det_ClusterCsI::process(){
       	        csThet.push_back(otheta), csPhi.push_back(ophi);
       	        csiph[angles]=diff;
       	        csiClus[angles]=true;
+		// writing to check mapping file
+                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
       	        //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
 	        //std::cout<< "\n\n  ======> "<<clock<<" peaks>=2 <========\n\n";
                 if(p[0]=='d' || p[0]=='D'){
@@ -984,12 +1021,20 @@ Long_t Det_ClusterCsI::process(){
                 cout<< " *********** theta, phi "<<csitheta<<"  "<<csiphi<<endl;
 	        int thetaIndex=thetaCsI[moduleNo-1][treeRaw->indexChannel[i]];
 	        int phiIndex=phiCsI[moduleNo-1][treeRaw->indexChannel[i]];
-	        otheta=mapTheta[thetaIndex];
+	        //otheta=mapTheta[thetaIndex];
 	        //otheta=mapTheta[20-thetaIndex];
-	        //ophi=2*180*(phiIndex-0.5)/48.;
+	        //reading from Osaka map as is: otheta and ophi angles
+	        double cosTheta=crysZ[20-thetaIndex]/std::sqrt(std::pow(crysZ[20-thetaIndex],2)+
+	          	      std::pow(crysr[20-thetaIndex],2));
+	        double acosTheta=TMath::ACos(cosTheta);
+	        otheta=TMath::RadToDeg()*acosTheta; // convert to deg.
+	        otheta=round(otheta); // make sure to obtain 2 dp
 	        mapPhi=2*180*(phiIndex-0.5)/48.;
-	        ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
-	        if(ophi < 0.) ophi=360.+ophi; // loop around the clock
+	        ophi=mapPhi; // convert to global scheme: gap3=+xaxis
+	        //ophi=2*180*(phiIndex-0.5)/48.;
+	        //mapPhi=2*180*(phiIndex-0.5)/48.;
+	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
+	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
                 cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
                 cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
       	        auto angles=std::make_pair(otheta,ophi);
@@ -1003,6 +1048,8 @@ Long_t Det_ClusterCsI::process(){
 	        h2Ang->Fill(otheta,ophi);
 	        h2theta->Fill(otheta,csitheta);
 	        h2phi->Fill(ophi,csiphi);
+		// writing to check mapping file
+                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
       	        int imod=0, igap=4*indexClock+2;  // igapU=4*indexClock+3;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
 		//indexClock=0;
@@ -1650,6 +1697,8 @@ void Det_ClusterCsI::empty(){
 }
 
 Long_t Det_ClusterCsI::finalize(){
+  //mapfile.close();
+
   return 0;
 }
 

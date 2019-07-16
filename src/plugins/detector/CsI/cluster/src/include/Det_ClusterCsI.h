@@ -28,6 +28,7 @@
 #include <numeric>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
+#include <TMath.h>
 #define _USE_MATH_DEFINES
 
 typedef std::pair<UInt_t,UInt_t> IdCsI;
@@ -143,7 +144,7 @@ class Det_ClusterCsI:public Plugin{
   char* pName;
   TSpectrum *s;
   Int_t nfound;
-  std::ofstream outFile;
+  std::ofstream outFile, mapfile;
   std::ifstream parfile;
   TH1D* h1Mnft[12][2][2][16];
   TH1D* h1Diff[12][2][2][16];
@@ -192,6 +193,7 @@ class Det_ClusterCsI:public Plugin{
   Long_t startup_clus();
   Long_t process_clus();
   Long_t finalize_clus();
+  double round(double var); // round to 2 decimal places
   Long_t setIdCsI(std::map<IdCsI,UInt_t>& mapCsI);
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
