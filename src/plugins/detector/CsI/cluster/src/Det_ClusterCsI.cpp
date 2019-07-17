@@ -319,16 +319,16 @@ Long_t Det_ClusterCsI::process(){
 	  if(nameModule=="TK36") moduleNo=3;
 	  if(nameModule=="TK37") moduleNo=4;
 	  if(nameModule=="TK38") moduleNo=5;
-	  if(nameModule=="TK40") moduleNo=6;
-	  if(nameModule=="TK08") moduleNo=7;
-	  if(nameModule=="TK50") moduleNo=8;
-	  if(nameModule=="TK09") moduleNo=9;
-	  if(nameModule=="TK54") moduleNo=10;
-	  if(nameModule=="TK31") moduleNo=11;
-	  if(nameModule=="TK04") moduleNo=12;
-	  if(nameModule=="TK45") moduleNo=13;
-	  if(nameModule=="TK33") moduleNo=14;
-	  if(nameModule=="TK39") moduleNo=15;
+	  if(nameModule=="TK08") moduleNo=6;
+	  if(nameModule=="TK50") moduleNo=7;
+	  if(nameModule=="TK09") moduleNo=8;
+	  if(nameModule=="TK54") moduleNo=9;
+	  if(nameModule=="TK31") moduleNo=10;
+	  if(nameModule=="TK04") moduleNo=11;
+	  if(nameModule=="TK45") moduleNo=12;
+	  if(nameModule=="TK33") moduleNo=13;
+	  if(nameModule=="TK39") moduleNo=14;
+	  if(nameModule=="TK40") moduleNo=15;
 	  if(nameModule=="TK41") moduleNo=16;
 
 	  std::cout<< " CsI module Nmber is : "<<moduleNo<<std::endl;
@@ -1541,27 +1541,24 @@ Long_t Det_ClusterCsI::process(){
       }else{
         clusCrys=0;//clusCrys+1;
         std::cout<<" Single cluster crystals here \n"; //<<clusCrys<<std::endl;
-        /*if(std::find(thetaPhi.begin(), thetaPhi.end(), angP2) != thetaPhi.end()){
-          std::cout<<"  Checking DeMorgan's laws in C++ \n";
-        }*/
       }
       if(csiClus[tppair]){
         clusCrys=clusCrys+1;
 	Eclus=Eclus+csiph[tppair];
 	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
 	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
-	// perform energy-weighting and convert from deg-->rad
-	rtheta=(thetaE/Eclus)*(M_PI/180);
-	rphi=(phiE/Eclus)*(M_PI/180);
-	// Fill the theta, phi distributions in rad
-	treeClus->thetaE=rtheta;
-	treeClus->phiE=rphi;
 	std::cout<<" -->  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
 	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [GeV]";
       }
       if(clusCrys>=2){
         numOfClus++;
+	// perform energy-weighting and convert from deg-->rad
+	rtheta=TMath::DegToRad()*(thetaE/Eclus);
+	rphi=TMath::DegToRad()*(phiE/Eclus);
+	// Fill the theta, phi distributions in rad
+	treeClus->thetaE=rtheta;
+	treeClus->phiE=rphi;
 	clusEne.push_back(Eclus);
 	treeClus->Ncrys=clusCrys;
 	treeClus->ClustCrys=clusCrys;
