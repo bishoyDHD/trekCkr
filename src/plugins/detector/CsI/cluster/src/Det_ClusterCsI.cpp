@@ -178,7 +178,7 @@ Long_t Det_ClusterCsI::startup(){
   //outFile.open("kpi2evtList.dat");
   string fileN="mapping.txt";
   //mapfile.open(fileN);
-  //mapfile<<"module"<<"\t"<<"channel"<<"\t"<<"iyy"<<"\t"<<"izz"<<"\t"<<"TKO"<<"\t"<<"label"<<"\t"<<"U/D"<<"\t"<<"F/B"<<"\t"<<"theta(izz)"<<"\t"<<"theta(Bishoy)"<<std::endl;
+  //mapfile<<"module"<<"\t"<<"channel"<<"\t"<<"iyy"<<"\t"<<"izz"<<"\t"<<"TKO"<<"\t"<<"label"<<"\t"<<"U/D"<<"\t"<<"F/B"<<"\t"<<"theta(izz)"<<"\t"<<"theta(Bishoy)"<<"\t"<<"wiki(theta)"<<"\t"<<"Crystal No."<<std::endl;
 
   return 0;
 }
@@ -239,8 +239,8 @@ Long_t Det_ClusterCsI::process(){
   }*/
   ppip=tracktree->pVertpi0;
   if(ppip<0.195 || ppip>0.215) goto exitLoop;
-  //if(resetH)
-    //h2clus->Reset(); //need to reset stats in cluster event viewer
+  if(resetH)
+    h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
   for(UInt_t i=0;i<treeRaw->nChannel;i++){ // loop over fired crystals
     char* p=(char*)&(treeRaw->nameModule[i]);
@@ -305,11 +305,11 @@ Long_t Det_ClusterCsI::process(){
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
 	  //if(treeRaw->indexCsI[i]==16){
             std::cout<< "\n\n ****************************************** "<<endl;
-            std::cout<< " Index clock: "<<indexClock<<endl;
-            std::cout<< " Gap config FB is  : " <<p[1]<<endl;
-            std::cout<< " Gap config UD is  : " <<p[0]<<endl;
-	    std::cout<< " TKO Module Name   : "<<nameModule<<std::endl;
-            std::cout<< " Channel number is : " <<treeRaw->indexChannel[i]<<endl;
+            std::cout<< " Index clock         : "<<indexClock<<endl;
+            std::cout<< " Gap config FB is    : " <<p[1]<<endl;
+            std::cout<< " Gap config UD is    : " <<p[0]<<endl;
+	    std::cout<< " TKO Module Name     : "<<nameModule<<std::endl;
+            std::cout<< " Channel number is   : " <<treeRaw->indexChannel[i]<<endl;
             std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<endl;
             std::cout<< "\n   ** Event Number ------> "<<treeRaw->eventNo<<"\n\n";
 	  //}
@@ -508,6 +508,7 @@ Long_t Det_ClusterCsI::process(){
 	      //otheta=mapTheta[thetaIndex];
 	      //otheta=mapTheta[20-thetaIndex];
 	      //reading from Osaka map as is: otheta and ophi angles
+	      // calculate cosTheta from z/([z^2+r^2]^.5)
 	      double cosTheta=crysZ[20-thetaIndex]/std::sqrt(std::pow(crysZ[20-thetaIndex],2)+
 			      std::pow(crysr[20-thetaIndex],2));
 	      double acosTheta=TMath::ACos(cosTheta);
@@ -1169,14 +1170,22 @@ Long_t Det_ClusterCsI::process(){
       //erpair.clear();
       auto tppair=std::make_pair(ntheta,nphi);
       std::cout<<"   ==>  theta and phi "<<ntheta<<"  "<<nphi<<endl;
-      auto angP1=std::make_pair(ntheta+7.5,nphi);      auto angP2=std::make_pair(ntheta-7.5,nphi);
-      auto angP3=std::make_pair(ntheta,nphi+7.5);      auto angP4=std::make_pair(ntheta,nphi-7.5);
-      auto angP5=std::make_pair(ntheta+7.5,nphi+7.5);  auto angP6=std::make_pair(ntheta-7.5,nphi-7.5);
-      auto angP7=std::make_pair(ntheta-7.5,nphi+7.5);  auto angP8=std::make_pair(ntheta+7.5,nphi-7.5);
-      // accounting for the complicated case of Crystal No. 10 (index=16)
-      // This is strange because they are 2X larger in phi
+      std::pair<double,double> angP1, angP2, angP3, angP4;
+      std::pair<double,double> angP5, angP6, angP7, angP8;
       std::pair<double,double> angE1, angE2, angE3, angE4, angE5;
       std::pair<double,double> angE6, angE7, angE8, angE9, angE10;
+      double posTheta, negTheta, posPhi, negPhi; // addiing or subtracting 7.5*deg
+      negTheta=ntheta-7.5;    posTheta=ntheta+7.5;
+      negPhi=nphi-7.5;        posPhi=nphi+7.5;
+      // Revolution case
+      if(nphi==3.75) negPhi=356.25;
+      // Performing search for non-edge case:
+      angP1=std::make_pair(posTheta,nphi);        angP2=std::make_pair(negTheta,nphi);
+      angP3=std::make_pair(ntheta,posPhi);        angP4=std::make_pair(ntheta,negPhi);
+      angP5=std::make_pair(posTheta,posPhi);      angP6=std::make_pair(negTheta,negPhi);
+      angP7=std::make_pair(negTheta,negPhi);      angP8=std::make_pair(posTheta,negPhi);
+      // accounting for the complicated case of Crystal No. 10 (index=16)
+      // This is strange because they are 2X larger in phi
       // from chan16 -> chan15: Back
       if(ntheta==161.25){
         angE1=std::make_pair(ntheta-7.5,nphi-7.50);  angE2=std::make_pair(ntheta-7.5,nphi+15.0);
@@ -1200,22 +1209,31 @@ Long_t Det_ClusterCsI::process(){
         angE5=std::make_pair(ntheta-7.5,nphi-7.50);  angE6=std::make_pair(ntheta-7.5,nphi+7.50);
         angE7=std::make_pair(ntheta-7.5,nphi);       //angE8=std::make_pair(ntheta-7.5,nphi+3.75);
       }
-      // dealing with the revolution case
+      /******************************************************** 
+       * 
+       * Dealing with the revolution case
+       *
+       * *******************************************************/
       std::pair<double,double> angR1, angR2, angR3, angR4, angR5, angR6;
-      if(nphi==348.75 || nphi==356.25){
-        // only phi angle of chan16 changes
-        angR1=std::make_pair(ntheta, 3.75);       angR2=std::make_pair(ntheta+7.5,3.75);
-        angR3=std::make_pair(ntheta-7.5, 3.75);   //angR4=std::make_pair(ntheta+7.5,3.75);
-      }
       if(nphi==3.75){
         // only phi angle of chan16 changes
         angR1=std::make_pair(ntheta, 348.75);       angR2=std::make_pair(ntheta,356.25);
         angR3=std::make_pair(ntheta-7.5, 348.75);   angR4=std::make_pair(ntheta+7.5,356.25);
         angR5=std::make_pair(ntheta-7.5, 356.25);   angR6=std::make_pair(ntheta+7.5,348.75);
       }
+      if(nphi==348.75 || nphi==356.25){
+        // only phi angle of chan16 changes
+        angR1=std::make_pair(ntheta, 3.75);       angR2=std::make_pair(ntheta+7.5,3.75);
+        angR3=std::make_pair(ntheta-7.5, 3.75);   //angR4=std::make_pair(ntheta+7.5,3.75);
+      }
       clusCrys=0;
       Eclus=0.;
       thetaE=0; phiE=0;
+      // For backward double counting elimination
+      if(!csiClus[tppair]){
+        std::cout<<" Already checked this Crystal... moving on \n";
+        goto checkedCrys;
+      }
       if(csiph[angP1] > 0 &&  csiph[angP2] > 0 &&  csiph[angP3] > 0 && csiph[angP4] > 0 &&
         csiph[angP5] > 0 && csiph[angP6] > 0 && csiph[angP7] > 0 &&
         csiph[angP8] > 0){
@@ -1575,6 +1593,7 @@ Long_t Det_ClusterCsI::process(){
       }
       csiClus[tppair]=false; // mute central crystal
       cout<<"  Number of crystals is:  "<<clusCrys<<endl;
+      checkedCrys:
       std::cout<<"\n --------------------------------------------------------------------->\n\n";
     }
     for(UInt_t idc=0;idc<csThet.size();idc++){
@@ -1600,11 +1619,11 @@ Long_t Det_ClusterCsI::process(){
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
     if(numOfClus==2){
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
-      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
-      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
       g1pz=clusEne[0]*std::cos(clusThetaE[0]);
-      g2px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
-      g2py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+      g2px=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+      g2py=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
       g2pz=clusEne[1]*std::cos(clusThetaE[1]);
       // calculate pi0 invariant mass from above info.
       TLorentzVector gamma1;
@@ -1659,7 +1678,7 @@ Long_t Det_ClusterCsI::process(){
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
       std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
-      std::cout<<"\n  Checking cos(theta):       "<<pi0.CosTheta()<<endl;
+      std::cout<<"\n  Checking cos(theta):       "<<std::cos(gv1.Angle(gv2))<<std::endl;
       std::cout<<"\n  Checking vertex opening    "<<piPv.Angle(pi0v)<<endl;
     }
     if(numOfClus>0){
