@@ -26,6 +26,7 @@ Det_ClusterCsI::Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_,
   h1vertpx=NULL; h1vertpy=NULL; h1vertpz=NULL;
   vertOp=NULL;
   h2corrAng=NULL;
+  h3csi=NULL;
   //paramFile.open("kpi2evenlist.txt");
   //parfile.open("calibPar.txt");
   std::cout<<"....checking this shit \n";
@@ -133,6 +134,7 @@ Long_t Det_ClusterCsI::histos(){
   vertOp=dH1("vertOp", "Opening angle between #pi^{+} and #pi^{0}", 50.,-1.1,1.1);
   h1clust=dH1("h1clust", "Cluster multiplicity", 12, 0., 12.);
   h1sclus=dH1("h1sclust", "Single cluster multiplicity", 12, 0., 12.);
+  h3csi=dH3("h3csi","CsI Barrel",24,-35,35,24,-35,35,24,-50,50);
   for(int iClock=0;iClock<12;iClock++){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
@@ -177,8 +179,8 @@ Long_t Det_ClusterCsI::startup(){
   gStyle->SetOptStat(0);
   //outFile.open("kpi2evtList.dat");
   string fileN="mapping.txt";
-  //mapfile.open(fileN);
-  //mapfile<<"module"<<"\t"<<"channel"<<"\t"<<"iyy"<<"\t"<<"izz"<<"\t"<<"TKO"<<"\t"<<"label"<<"\t"<<"U/D"<<"\t"<<"F/B"<<"\t"<<"theta(izz)"<<"\t"<<"theta(Bishoy)"<<"\t"<<"wiki(theta)"<<"\t"<<"Crystal No."<<std::endl;
+  mapfile.open(fileN);
+  mapfile<<"module"<<"\t"<<"channel"<<"\t"<<"iyy"<<"\t"<<"izz"<<"\t"<<"TKO"<<"\t"<<"label"<<"\t"<<"U/D"<<"\t"<<"F/B"<<"\t"<<"theta"<<"\t"<<"wiki(T)"<<"\t"<<"z(izz)"<<"\t"<<"r(izz)"<<"\t"<<"CrNo."<<"\t"<<"phi"<<"\t"<<"Wiki(Phi)"<<std::endl;
 
   return 0;
 }
@@ -224,9 +226,11 @@ Long_t Det_ClusterCsI::process(){
   typeAB.clear(),  gud.clear(),      gno.clear();
   csThet.clear(),  csPhi.clear();
   csiph.clear();   phval->clear();   csiClus.clear();
+  csiR.clear();    csiZ.clear();
   clusth->clear(); clusphi->clear(); clusEne.clear();
   singleEne.clear();
   clusThetaE.clear(); clusPhiE.clear();
+  clusEz.clear();  clusEr.clear();
   int evtNum=treeRaw->eventNo;
   treeClus->evtNo=evtNum;
   initVar(); // make sure variables are initialized V events
@@ -238,7 +242,7 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<< "<<>> "<<tracktree->evtNum<<std::endl;
   }*/
   ppip=tracktree->pVertpi0;
-  if(ppip<0.195 || ppip>0.215) goto exitLoop;
+  if(ppip<0.185 || ppip>0.215) goto exitLoop;
   if(resetH)
     h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
@@ -331,8 +335,8 @@ Long_t Det_ClusterCsI::process(){
 	  if(nameModule=="TK40") moduleNo=15;
 	  if(nameModule=="TK41") moduleNo=16;
 
-	  std::cout<< " CsI module Nmber is : "<<moduleNo<<std::endl;
-	  std::cout<<" ---- Checking XML Parameter --> "<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<", "<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<std::endl;
+	  //std::cout<< " CsI module Nmber is : "<<moduleNo<<std::endl;
+	  //std::cout<<" ---- Checking XML Parameter --> "<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<", "<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<std::endl;
           double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
           	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
           y1 = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -516,22 +520,39 @@ Long_t Det_ClusterCsI::process(){
 	      otheta=round(otheta); // make sure to obtain 2 dp
 	      mapPhi=2*180*(phiIndex-0.5)/48.; // from mapping init file
 	      ophi=mapPhi; // convert to global scheme: gap3=+xaxis
-	      //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
-	      //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
-              cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
-              cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	      /*******************************************************
+	       *                WORLD COORDINATES
+	       ******************************************************/
+	      wz=crysZ[thetaIndex-1];
+	      wr=crysr[thetaIndex-1];
+	      double Theta=crysZ[thetaIndex-1]/std::sqrt(std::pow(crysZ[thetaIndex-1],2)+
+                              std::pow(crysr[thetaIndex-1],2));
+              double acos=TMath::ACos(Theta);
+              wtheta=TMath::RadToDeg()*acos; // convert to deg.
+	      wtheta=round(wtheta); // make sure to obtain 2 dp
+	      wphi=90.-mapPhi; // world phi
+	      if(wphi<0) wphi=360.+wphi;
+              cout<< " *** World Angles  "<<wtheta<<", "<<wphi<<endl;
+              cout<< " ***  Osaka Angles "<<otheta<<", "<<ophi<<endl;
 	      h2Ang->Fill(otheta,ophi);
 	      h2theta->Fill(otheta,csitheta);
 	      h2phi->Fill(ophi,csiphi);
-              auto angles=std::make_pair(otheta,ophi);
-              csThet.push_back(otheta), csPhi.push_back(ophi);
-              //thetaPhi.push_back(angles);
+              auto angles=std::make_pair(wtheta,wphi);
+              csThet.push_back(wtheta), csPhi.push_back(wphi);
               csiph[angles]=diff;
               csiClus[angles]=true;
-              //h2clus->Fill(csimod,igap,diff);
-              h2clus->Fill(otheta,ophi,diff);
+	      csiR[angles]=wr;
+	      csiZ[angles]=wz;
+              h2clus->Fill(wtheta,wphi,diff);
+	      h3csi->Fill(wr*std::cos(wphi),wr*std::sin(wphi),wz);
               // writing to check mapping file
-              //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
+              mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1
+	      <<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	      <<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	      <<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]
+	      <<"\t"<<wtheta<<"\t"<<otheta<<"\t"<<round(crysZ[thetaIndex-1])
+	      <<"\t"<<round(crysr[thetaIndex-1])<<"\t"<<indexModule+1
+	      <<"\t"<<wphi<<"\t"<<ophi<<std::endl;
 	      treeClus->waveID=5;
             }// <--- Use this to get rid of double and single fitting functions * /
           } //<-- end of overrange if loop
@@ -740,21 +761,42 @@ Long_t Det_ClusterCsI::process(){
 	        ophi=mapPhi; // convert to global scheme: gap3=+xaxis
 	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
 	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
-                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
-                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	        /*******************************************************
+	         *                WORLD COORDINATES
+	         ******************************************************/
+	        wz=crysZ[thetaIndex-1];
+	        wr=crysr[thetaIndex-1];
+	        double Theta=crysZ[thetaIndex-1]/std::sqrt(std::pow(crysZ[thetaIndex-1],2)+
+                                std::pow(crysr[thetaIndex-1],2));
+                double acos=TMath::ACos(Theta);
+                wtheta=TMath::RadToDeg()*acos; // convert to deg.
+	        wtheta=round(wtheta); // make sure to obtain 2 dp
+	        wphi=90.-mapPhi; // world phi 
+	        if(wphi<0) wphi=360.+wphi;
+                cout<< " *** World Angles  "<<wtheta<<", "<<wphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<", "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
 	        h2theta->Fill(otheta,csitheta);
 	        h2phi->Fill(ophi,csiphi);
-                auto angles=std::make_pair(otheta,ophi);
-                csThet.push_back(otheta), csPhi.push_back(ophi);
+                auto angles=std::make_pair(wtheta,wphi);
+                csThet.push_back(wtheta), csPhi.push_back(wphi);
 		// writing to check mapping file
-                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
+                mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1
+	        <<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]
+	        <<"\t"<<wtheta<<"\t"<<otheta<<"\t"<<round(crysZ[thetaIndex-1])
+	        <<"\t"<<round(crysr[thetaIndex-1])<<"\t"<<indexModule+1
+		<<"\t"<<wphi<<"\t"<<ophi<<std::endl;
                 //thetaPhi.push_back(angles);
                 csiph[angles]=diff;
                 csiClus[angles]=true;
+	        csiR[angles]=wr;
+	        csiZ[angles]=wz;
                 //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
                 //h2clus->Fill(csimod,igap,diff);
-                h2clus->Fill(otheta,ophi,diff);
+                h2clus->Fill(wtheta,wphi,diff);
+		h3csi->Fill(wr*std::cos(wphi),wr*std::sin(wphi),wz);
 		delete f1;
               } // <-- End of K+ decay time if loop
             } //<-- Use to get rid of 3 peaks functions here * /
@@ -870,18 +912,38 @@ Long_t Det_ClusterCsI::process(){
 	        ophi=mapPhi; // convert to global scheme: gap3=+xaxis
 	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
 	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
-                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
-                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
+	        /*******************************************************
+	         *                WORLD COORDINATES
+	         ******************************************************/
+	        wz=crysZ[thetaIndex-1];
+	        wr=crysr[thetaIndex-1];
+	        double Theta=crysZ[thetaIndex-1]/std::sqrt(std::pow(crysZ[thetaIndex-1],2)+
+                                std::pow(crysr[thetaIndex-1],2));
+                double acos=TMath::ACos(Theta);
+                wtheta=TMath::RadToDeg()*acos; // convert to deg.
+	        wtheta=round(wtheta); // make sure to obtain 2 dp
+	        wphi=90.-mapPhi; // world phi 
+	        if(wphi<0) wphi=360.+wphi;
+                cout<< " *** World Angles  "<<wtheta<<", "<<wphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<", "<<ophi<<endl;
 	        h2Ang->Fill(otheta,ophi);
 	        h2theta->Fill(otheta,csitheta);
 	        h2phi->Fill(ophi,csiphi);
-      	        auto angles=std::make_pair(otheta,ophi);
+      	        auto angles=std::make_pair(wtheta,wphi);
       	        //thetaPhi.push_back(angles);
-      	        csThet.push_back(otheta), csPhi.push_back(ophi);
+      	        csThet.push_back(wtheta), csPhi.push_back(wphi);
       	        csiph[angles]=diff;
       	        csiClus[angles]=true;
+	        csiR[angles]=wr;
+	        csiZ[angles]=wz;
 		// writing to check mapping file
-                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
+                mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1
+	        <<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]
+	        <<"\t"<<wtheta<<"\t"<<otheta<<"\t"<<round(crysZ[thetaIndex-1])
+	        <<"\t"<<round(crysr[thetaIndex-1])<<"\t"<<indexModule+1
+		<<"\t"<<wphi<<"\t"<<ophi<<std::endl;
       	        //cout<< " *********** theta "<<csitheta<<"  "<<csiphi<<endl;
 	        //std::cout<< "\n\n  ======> "<<clock<<" peaks>=2 <========\n\n";
                 if(p[0]=='d' || p[0]=='D'){
@@ -920,7 +982,8 @@ Long_t Det_ClusterCsI::process(){
       	          }
       	        } 
                 //h2clus->Fill(csimod,igap,diff);
-                h2clus->Fill(otheta,ophi,diff);
+                h2clus->Fill(wtheta,wphi,diff);
+		h3csi->Fill(wr*std::cos(wphi),wr*std::sin(wphi),wz);
               }
 	      delete f1;
             } //<-- Use to get rid of 2 peaks functions here * /
@@ -1036,11 +1099,23 @@ Long_t Det_ClusterCsI::process(){
 	        //mapPhi=2*180*(phiIndex-0.5)/48.;
 	        //ophi=90.-mapPhi; // convert to global scheme: gap3=+xaxis
 	        //if(ophi < 0.) ophi=360.+ophi; // loop around the clock
-                cout<< " *** Regular Angle "<<csitheta<<"  "<<csiphi<<endl;
-                cout<< " ***  Osaka Angles "<<otheta<<"  "<<ophi<<endl;
-      	        auto angles=std::make_pair(otheta,ophi);
+	        /*******************************************************
+	         *                WORLD COORDINATES
+	         ******************************************************/
+	        wz=crysZ[thetaIndex-1];
+	        wr=crysr[thetaIndex-1];
+	        double Theta=crysZ[thetaIndex-1]/std::sqrt(std::pow(crysZ[thetaIndex-1],2)+
+                                std::pow(crysr[thetaIndex-1],2));
+                double acos=TMath::ACos(Theta);
+                wtheta=TMath::RadToDeg()*acos; // convert to deg.
+	        wtheta=round(wtheta); // make sure to obtain 2 dp
+	        wphi=90.-mapPhi; // world phi
+	        if(wphi<0) wphi=360.+wphi;
+                cout<< " *** World Angles  "<<wtheta<<", "<<wphi<<endl;
+                cout<< " ***  Osaka Angles "<<otheta<<", "<<ophi<<endl;
+      	        auto angles=std::make_pair(wtheta,wphi);
       	        //thetaPhi.push_back(angles);
-      	        csThet.push_back(otheta), csPhi.push_back(ophi);
+      	        csThet.push_back(wtheta), csPhi.push_back(wphi);
 		//h2ang->Fill(csitheta*M_PI/180,csiphi*M_PI/180);
 		//h2deg->Fill(csitheta,csiphi);
       	        csiph[angles]=diff;
@@ -1049,8 +1124,16 @@ Long_t Det_ClusterCsI::process(){
 	        h2Ang->Fill(otheta,ophi);
 	        h2theta->Fill(otheta,csitheta);
 	        h2phi->Fill(ophi,csiphi);
+	        csiR[angles]=wr;
+	        csiZ[angles]=wz;
 		// writing to check mapping file
-                //mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1<<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]<<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]<<std::endl;
+                mapfile<<moduleNo<<"\t"<<treeRaw->indexChannel[i]+1
+	        <<"\t"<<phiCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<thetaCsI[moduleNo-1][treeRaw->indexChannel[i]]
+	        <<"\t"<<nameModule<<"\t"<<indexClock+1<<"\t"<<p[0]<<"\t"<<p[1]
+	        <<"\t"<<wtheta<<"\t"<<otheta<<"\t"<<round(crysZ[thetaIndex-1])
+	        <<"\t"<<round(crysr[thetaIndex-1])<<"\t"<<indexModule+1
+		<<"\t"<<wphi<<"\t"<<ophi<<std::endl;
       	        int imod=0, igap=4*indexClock+2;  // igapU=4*indexClock+3;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;  //default
 		//indexClock=0;
@@ -1090,7 +1173,8 @@ Long_t Det_ClusterCsI::process(){
 	            }
       	          }
       	        } 
-                h2clus->Fill(otheta,ophi,diff);
+                h2clus->Fill(wtheta,wphi,diff);
+		h3csi->Fill(wr*std::cos(wphi),wr*std::sin(wphi),wz);
                 //h2clus->Fill(csimod,igap,diff);
 	        treeClus->waveID=nfound;
               } // <--- Use this to get rid of double and single fitting functions * /
@@ -1152,7 +1236,10 @@ Long_t Det_ClusterCsI::process(){
 
   if(clus_csi){
     std::cout<<"\n ***************************************************************************\n";
-	  std::cout<<" -------------->  || "<<tracktree->pVertpi0<<" || <------------------\n";
+    std::cout<<" -------------->  || "<<tracktree->pVertpi0<<" || <------------------\n";
+    clusEne.clear(); singleEne.clear(); clusEz.clear(); clusEr.clear();
+    clusThetaE.clear(); clusPhiE.clear(); singZ.clear(); singR.clear();
+    singTheta.clear(); singPhi.clear();
     for(UInt_t cr=0;cr<phval->size();cr++){
       std::cout<<" angles of corr. pulse heigh["<<cr<<"] = "<<(*phval)[cr]<<endl;
     }/*
@@ -1183,7 +1270,7 @@ Long_t Det_ClusterCsI::process(){
       angP1=std::make_pair(posTheta,nphi);        angP2=std::make_pair(negTheta,nphi);
       angP3=std::make_pair(ntheta,posPhi);        angP4=std::make_pair(ntheta,negPhi);
       angP5=std::make_pair(posTheta,posPhi);      angP6=std::make_pair(negTheta,negPhi);
-      angP7=std::make_pair(negTheta,negPhi);      angP8=std::make_pair(posTheta,negPhi);
+      angP7=std::make_pair(negTheta,posPhi);      angP8=std::make_pair(posTheta,negPhi);
       // accounting for the complicated case of Crystal No. 10 (index=16)
       // This is strange because they are 2X larger in phi
       // from chan16 -> chan15: Back
@@ -1226,9 +1313,13 @@ Long_t Det_ClusterCsI::process(){
         angR1=std::make_pair(ntheta, 3.75);       angR2=std::make_pair(ntheta+7.5,3.75);
         angR3=std::make_pair(ntheta-7.5, 3.75);   //angR4=std::make_pair(ntheta+7.5,3.75);
       }
+      // need to set critial variables to zero at the start of each iteration
       clusCrys=0;
       Eclus=0.;
+      clusZ=0.; clusR=0.;
       thetaE=0; phiE=0;
+      z_w=0; r_w=0;
+      rtheta=0; rphi=0;
       // For backward double counting elimination
       if(!csiClus[tppair]){
         std::cout<<" Already checked this Crystal... moving on \n";
@@ -1242,7 +1333,8 @@ Long_t Det_ClusterCsI::process(){
         csiph[angP5]>0 || csiph[angP6]>0 || csiph[angP7]>0 || csiph[angP8]>0 ||
 	csiph[angE1]>0 || csiph[angE2]>0 || csiph[angE3]>0 || csiph[angE4]>0 ||
 	csiph[angE5]>0 || csiph[angE6]>0 || csiph[angE7]>0 || csiph[angE8]>0 ||
-	csiph[angE9]>0 || csiph[angE10]>0 || csiph[angR1]>0 || csiph[angR2]>0){
+	csiph[angE9]>0 || csiph[angE10]>0 || csiph[angR1]>0 || csiph[angR2]>0 ||
+	csiph[angR3]>0 || csiph[angR4]>0 || csiph[angR5]>0 || csiph[angR6]>0){
         //clusCrys=clusCrys+1;
         if(csiph[angP1]>0){
           std::cout<<" This crystal Cluster pulse-height P1: "<<csiph[angP1];
@@ -1252,6 +1344,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP1];
 	    thetaE=thetaE+csiph[angP1]*(std::get<0>(angP1));
 	    phiE  =phiE  +csiph[angP1]*(std::get<1>(angP1));
+	    clusZ=clusZ  +csiph[angP1]*csiZ[angP1];
+	    clusR=clusR  +csiph[angP1]*csiR[angP1];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP1]=false;
           }else{
@@ -1266,6 +1360,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP2];
 	    thetaE=thetaE+csiph[angP2]*(std::get<0>(angP2));
 	    phiE  =phiE  +csiph[angP2]*(std::get<1>(angP2));
+	    clusZ=clusZ  +csiph[angP2]*csiZ[angP2];
+	    clusR=clusR  +csiph[angP2]*csiR[angP2];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP2]=false;
           }else{
@@ -1280,6 +1376,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP3];
 	    thetaE=thetaE+csiph[angP3]*(std::get<0>(angP3));
 	    phiE  =phiE  +csiph[angP3]*(std::get<1>(angP3));
+	    clusZ=clusZ  +csiph[angP3]*csiZ[angP3];
+	    clusR=clusR  +csiph[angP3]*csiR[angP3];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP3]=false;
           }else{
@@ -1294,6 +1392,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP4];
 	    thetaE=thetaE+csiph[angP4]*(std::get<0>(angP4));
 	    phiE  =phiE  +csiph[angP4]*(std::get<1>(angP4));
+	    clusZ=clusZ  +csiph[angP4]*csiZ[angP4];
+	    clusR=clusR  +csiph[angP4]*csiR[angP4];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP4]=false;
           }else{
@@ -1308,6 +1408,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP5];
 	    thetaE=thetaE+csiph[angP5]*(std::get<0>(angP5));
 	    phiE  =phiE  +csiph[angP5]*(std::get<1>(angP5));
+	    clusZ=clusZ  +csiph[angP5]*csiZ[angP5];
+	    clusR=clusR  +csiph[angP5]*csiR[angP5];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP5]=false;
           }else{
@@ -1322,6 +1424,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP6];
 	    thetaE=thetaE+csiph[angP6]*(std::get<0>(angP6));
 	    phiE  =phiE  +csiph[angP6]*(std::get<1>(angP6));
+	    clusZ=clusZ  +csiph[angP6]*csiZ[angP6];
+	    clusR=clusR  +csiph[angP6]*csiR[angP6];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP6]=false;
           }else{
@@ -1336,6 +1440,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP7];
 	    thetaE=thetaE+csiph[angP7]*(std::get<0>(angP7));
 	    phiE  =phiE  +csiph[angP7]*(std::get<1>(angP7));
+	    clusZ=clusZ  +csiph[angP7]*csiZ[angP7];
+	    clusR=clusR  +csiph[angP7]*csiR[angP7];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP7]=false;
           }else{
@@ -1350,6 +1456,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angP8];
 	    thetaE=thetaE+csiph[angP8]*(std::get<0>(angP8));
 	    phiE  =phiE  +csiph[angP8]*(std::get<1>(angP8));
+	    clusZ=clusZ  +csiph[angP8]*csiZ[angP8];
+	    clusR=clusR  +csiph[angP8]*csiR[angP8];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angP8]=false;
           }else{
@@ -1364,6 +1472,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE1];
 	    thetaE=thetaE+csiph[angE1]*(std::get<0>(angE1));
 	    phiE  =phiE  +csiph[angE1]*(std::get<1>(angE1));
+	    clusZ=clusZ  +csiph[angE1]*csiZ[angE1];
+	    clusR=clusR  +csiph[angE1]*csiR[angE1];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE1]=false;
           }else{
@@ -1378,6 +1488,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE2];
 	    thetaE=thetaE+csiph[angE2]*(std::get<0>(angE2));
 	    phiE  =phiE  +csiph[angE2]*(std::get<1>(angE2));
+	    clusZ=clusZ  +csiph[angE2]*csiZ[angE2];
+	    clusR=clusR  +csiph[angE2]*csiR[angE2];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE2]=false;
           }else{
@@ -1392,6 +1504,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE3];
 	    thetaE=thetaE+csiph[angE3]*(std::get<0>(angE3));
 	    phiE  =phiE  +csiph[angE3]*(std::get<1>(angE3));
+	    clusZ=clusZ  +csiph[angE3]*csiZ[angE3];
+	    clusR=clusR  +csiph[angE3]*csiR[angE3];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE3]=false;
           }else{
@@ -1408,6 +1522,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE5];
 	    thetaE=thetaE+csiph[angE5]*(std::get<0>(angE5));
 	    phiE  =phiE  +csiph[angE5]*(std::get<1>(angE5));
+	    clusZ=clusZ  +csiph[angE5]*csiZ[angE5];
+	    clusR=clusR  +csiph[angE5]*csiR[angE5];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE5]=false;
           }else{
@@ -1422,6 +1538,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE6];
 	    thetaE=thetaE+csiph[angE6]*(std::get<0>(angE6));
 	    phiE  =phiE  +csiph[angE6]*(std::get<1>(angE6));
+	    clusZ=clusZ  +csiph[angE6]*csiZ[angE6];
+	    clusR=clusR  +csiph[angE6]*csiR[angE6];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE6]=false;
           }else{
@@ -1436,6 +1554,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE7];
 	    thetaE=thetaE+csiph[angE7]*(std::get<0>(angE7));
 	    phiE  =phiE  +csiph[angE7]*(std::get<1>(angE7));
+	    clusZ=clusZ  +csiph[angE7]*csiZ[angE7];
+	    clusR=clusR  +csiph[angE7]*csiR[angE7];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE7]=false;
           }else{
@@ -1450,6 +1570,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE9];
 	    thetaE=thetaE+csiph[angE9]*(std::get<0>(angE9));
 	    phiE  =phiE  +csiph[angE9]*(std::get<1>(angE9));
+	    clusZ=clusZ  +csiph[angE9]*csiZ[angE9];
+	    clusR=clusR  +csiph[angE9]*csiR[angE9];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE9]=false;
           }else{
@@ -1464,6 +1586,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angE10];
 	    thetaE=thetaE+csiph[angE10]*(std::get<0>(angE10));
 	    phiE  =phiE  +csiph[angE10]*(std::get<1>(angE10));
+	    clusZ=clusZ  +csiph[angE10]*csiZ[angE10];
+	    clusR=clusR  +csiph[angE10]*csiR[angE10];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angE10]=false;
           }else{
@@ -1479,6 +1603,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR1];
 	    thetaE=thetaE+csiph[angR1]*(std::get<0>(angR1));
 	    phiE  =phiE  +csiph[angR1]*(std::get<1>(angR1));
+	    clusZ=clusZ  +csiph[angR1]*csiZ[angR1];
+	    clusR=clusR  +csiph[angR1]*csiR[angR1];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR1]=false;
           }else{
@@ -1493,6 +1619,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR2];
 	    thetaE=thetaE+csiph[angR2]*(std::get<0>(angR2));
 	    phiE  =phiE  +csiph[angR2]*(std::get<1>(angR2));
+	    clusZ=clusZ  +csiph[angR2]*csiZ[angR2];
+	    clusR=clusR  +csiph[angR2]*csiR[angR2];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR2]=false;
           }else{
@@ -1507,6 +1635,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR3];
 	    thetaE=thetaE+csiph[angR3]*(std::get<0>(angR3));
 	    phiE  =phiE  +csiph[angR3]*(std::get<1>(angR3));
+	    clusZ=clusZ  +csiph[angR3]*csiZ[angR3];
+	    clusR=clusR  +csiph[angR3]*csiR[angR3];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR3]=false;
           }else{
@@ -1521,6 +1651,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR4];
 	    thetaE=thetaE+csiph[angR4]*(std::get<0>(angR4));
 	    phiE  =phiE  +csiph[angR4]*(std::get<1>(angR4));
+	    clusZ=clusZ  +csiph[angR4]*csiZ[angR4];
+	    clusR=clusR  +csiph[angR4]*csiR[angR4];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR4]=false;
           }else{
@@ -1535,6 +1667,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR5];
 	    thetaE=thetaE+csiph[angR5]*(std::get<0>(angR5));
 	    phiE  =phiE  +csiph[angR5]*(std::get<1>(angR5));
+	    clusZ=clusZ  +csiph[angR5]*csiZ[angR5];
+	    clusR=clusR  +csiph[angR5]*csiR[angR5];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR5]=false;
           }else{
@@ -1549,6 +1683,8 @@ Long_t Det_ClusterCsI::process(){
 	    Eclus=Eclus+csiph[angR6];
 	    thetaE=thetaE+csiph[angR6]*(std::get<0>(angR6));
 	    phiE  =phiE  +csiph[angR6]*(std::get<1>(angR6));
+	    clusZ=clusZ  +csiph[angR6]*csiZ[angR6];
+	    clusR=clusR  +csiph[angR6]*csiR[angR6];
             std::cout<<" This crystal is now removed from the list: "<<std::endl;
             csiClus[angR6]=false;
           }else{
@@ -1565,6 +1701,8 @@ Long_t Det_ClusterCsI::process(){
 	Eclus=Eclus+csiph[tppair];
 	thetaE=thetaE+csiph[tppair]*(std::get<0>(tppair));
 	phiE  =phiE  +csiph[tppair]*(std::get<1>(tppair));
+	clusZ=clusZ  +csiph[tppair]*csiZ[tppair];
+	clusR=clusR  +csiph[tppair]*csiR[tppair];
 	std::cout<<" -->  pulse-heignt for central crystal: "<<csiph[tppair];
 	std::cout<<" ["<<std::get<0>(tppair)<<", "<<std::get<1>(tppair)<<"] \n";
 	std::cout<<" >>>  Cluster energy is ------------->: "<<Eclus<<" [GeV]";
@@ -1574,6 +1712,8 @@ Long_t Det_ClusterCsI::process(){
 	// perform energy-weighting and convert from deg-->rad
 	rtheta=TMath::DegToRad()*(thetaE/Eclus);
 	rphi=TMath::DegToRad()*(phiE/Eclus);
+	z_w=clusZ/Eclus;
+	r_w=clusR/Eclus;
 	// Fill the theta, phi distributions in rad
 	treeClus->thetaE=rtheta;
 	treeClus->phiE=rphi;
@@ -1582,11 +1722,26 @@ Long_t Det_ClusterCsI::process(){
 	treeClus->ClustCrys=clusCrys;
 	clusThetaE.push_back(rtheta);
 	clusPhiE.push_back(rphi);
+	clusEz.push_back(z_w);
+	clusEr.push_back(r_w);
         h2ang->Fill(rtheta,rphi);
         h2deg->Fill(rtheta*180./M_PI,rphi*180/M_PI);
       }
       if(clusCrys==1){
         numOfsingleClus++;
+	rtheta=TMath::DegToRad()*(thetaE/Eclus);
+	rphi=TMath::DegToRad()*(phiE/Eclus);
+	z_w=clusZ/Eclus;
+	r_w=clusR/Eclus;
+	// Fill the theta, phi distributions in rad
+	treeClus->thetaE=rtheta;
+	treeClus->phiE=rphi;
+	singTheta.push_back(rtheta);
+	singPhi.push_back(rphi);
+	singZ.push_back(z_w);
+	singR.push_back(r_w);
+        h2ang->Fill(rtheta,rphi);
+        h2deg->Fill(rtheta*180./M_PI,rphi*180/M_PI);
         h1sclus->Fill(1);
 	treeClus->Ncrys=1;
 	singleEne.push_back(Eclus);
@@ -1618,13 +1773,26 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
     if(numOfClus==2){
+      // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
-      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
-      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+      double E2gamma=(clusEne[0]+clusEne[1]);
+      if(E2gamma >.300 || E2gamma < .105) goto exitFilltree;
+      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
       g1pz=clusEne[0]*std::cos(clusThetaE[0]);
-      g2px=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
-      g2py=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+      g2px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+      g2py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
       g2pz=clusEne[1]*std::cos(clusThetaE[1]);
+      // calculate x and y:
+      g1x=clusEr[0]*std::cos(clusPhiE[0]);
+      g1y=clusEr[0]*std::sin(clusPhiE[0]);
+      g1z=clusEz[0];
+      g1r=clusEr[0];
+      // gamma2
+      g2x=clusEr[1]*std::cos(clusPhiE[1]);
+      g2y=clusEr[1]*std::sin(clusPhiE[1]);
+      g2z=clusEz[1];
+      g2r=clusEr[1];
       // calculate pi0 invariant mass from above info.
       TLorentzVector gamma1;
       TLorentzVector gamma2;
@@ -1661,6 +1829,12 @@ Long_t Det_ClusterCsI::process(){
       treeClus->g1Px=g1px;       treeClus->g2Px=g2px;      treeClus->pi0vx=pi0v.X();
       treeClus->g1Py=g1py;       treeClus->g2Py=g2py;      treeClus->pi0vy=pi0v.Y();
       treeClus->g1Pz=g1pz;       treeClus->g2Pz=g2pz;      treeClus->pi0vz=pi0v.Z();
+      // position variables:
+      treeClus->g1x=g1x;       treeClus->g2x=g2x;
+      treeClus->g1y=g1y;       treeClus->g2y=g2y;
+      treeClus->g1z=g1z;       treeClus->g2z=g2z;
+      treeClus->g1r=g1r;       treeClus->g2r=g2r;
+      // pi+ pi0
       treeClus->piPpx=piPpx;     treeClus->pi0px=pi0.Px();
       treeClus->piPpy=piPpy;     treeClus->pi0py=pi0.Py();
       treeClus->piPpz=piPpz;     treeClus->pi0pz=pi0.Pz();
@@ -1680,12 +1854,175 @@ Long_t Det_ClusterCsI::process(){
       std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
       std::cout<<"\n  Checking cos(theta):       "<<std::cos(gv1.Angle(gv2))<<std::endl;
       std::cout<<"\n  Checking vertex opening    "<<piPv.Angle(pi0v)<<endl;
+    }else if(numOfClus==1 && numOfsingleClus==1){
+      // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
+      // Make sure that a single crystal cluster has E > 25. MeV/c
+      double E2gamma=(clusEne[0]+singleEne[0]);
+      if(E2gamma>.300 || singleEne[0]<.025) goto exitFilltree;
+      g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+      g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+      g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+      g2px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+      g2py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+      g2pz=singleEne[0]*std::cos(singTheta[0]);
+      // calculate x and y:
+      g1x=clusEr[0]*std::cos(clusPhiE[0]);
+      g1y=clusEr[0]*std::sin(clusPhiE[0]);
+      g1z=clusEz[0];
+      g1r=clusEr[0];
+      // gamma2
+      g2x=singR[0]*std::cos(singPhi[0]);
+      g2y=singR[0]*std::sin(singPhi[0]);
+      g2z=singZ[0];
+      g2r=singZ[0];
+      // calculate pi0 invariant mass from above info.
+      TLorentzVector gamma1;
+      TLorentzVector gamma2;
+      gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+      gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+      TLorentzVector pi0=gamma1+gamma2;
+      // K+ Lorentz vector info. from pi+ and pi0
+      TLorentzVector piPl;
+      piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
+      TLorentzVector kaon=piPl+pi0;
+      //ThreeVector for angular analysis
+      TVector3 piPv(piPpx, piPpy,piPpz);
+      TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
+      TVector3 gv1(g1px, g1py, g1pz);
+      TVector3 gv2(g2px, g2py, g2pz);
+      // Fill histos
+      E2g->Fill(clusEne[0]+singleEne[0]);
+      pi0Etot->Fill(T_pi0);
+      h1Mpi0->Fill(pi0.M());
+      h1Mpi02->Fill(pi0.M2());
+      h1pi0px->Fill(piPpx);
+      h1pi0py->Fill(piPpy);
+      h1pi0pz->Fill(piPpz);
+      //vertex info.
+      h1vertpx->Fill(pi0.Px());
+      h1vertpy->Fill(pi0.Py());
+      h1vertpz->Fill(pi0.Pz());
+      vertOp->Fill(std::cos(piPv.Angle(pi0v)));
+      h2Ene->Fill(clusEne[0]+singleEne[0]+pipEtot,pipEtot+T_pi0);
+      // Fill tree var
+      treeClus->E_pi0=clusEne[0]+clusEne[1];
+      treeClus->g1Px=g1px;       treeClus->g2Px=g2px;      treeClus->pi0vx=pi0v.X();
+      treeClus->g1Py=g1py;       treeClus->g2Py=g2py;      treeClus->pi0vy=pi0v.Y();
+      treeClus->g1Pz=g1pz;       treeClus->g2Pz=g2pz;      treeClus->pi0vz=pi0v.Z();
+      // position variables:
+      treeClus->g1x=g1x;       treeClus->g2x=g2x;
+      treeClus->g1y=g1y;       treeClus->g2y=g2y;
+      treeClus->g1z=g1z;       treeClus->g2z=g2z;
+      treeClus->g1r=g1r;       treeClus->g2r=g2r;
+      // pi+ pi0
+      treeClus->piPpx=piPpx;     treeClus->pi0px=pi0.Px();
+      treeClus->piPpy=piPpy;     treeClus->pi0py=pi0.Py();
+      treeClus->piPpz=piPpz;     treeClus->pi0pz=pi0.Pz();
+      treeClus->ggCosTheta=pi0.CosTheta();
+      treeClus->piCosTheta=pi0.CosTheta();
+      treeClus->piP2g=clusEne[0]+singleEne[0]+pipEtot;
+      treeClus->piPpi0=T_pi0+pipEtot;
+      treeClus->M_pi0=pi0.M();
+      treeClus->pi0M2=pi0.M2();
+      treeClus->M_k=kaon.M();
+      treeClus->kM2=kaon.M2();
+      treeClus->g1E=clusEne[0];
+      treeClus->g2E=singleEne[0];
+      std::cout<<"\n ------------| Single cluster and Single Crystal |----------- "<<std::endl;
+      std::cout<<"\n  piPecking total Cluster Energy: "<<clusEne[0]+singleEne[0]<<endl;
+      std::cout<<"\n  Angular1 checking (centriod)    ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
+      std::cout<<"\n  Angular2 single (centriod)      ("<<singTheta[0]<<", "<<singPhi[0]<<")\n";
+      std::cout<<"\n  Checking pi0 InvMass:           "<<pi0.M()<<endl;
+      std::cout<<"\n  Checking cos(theta):            "<<std::cos(gv1.Angle(gv2))<<std::endl;
+      std::cout<<"\n  Checking vertex opening         "<<piPv.Angle(pi0v)<<endl;
+    }else if(numOfClus==0 && numOfsingleClus==2){
+      // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
+      // FIXME: Apply timing cut for clusters > 2
+      double E2gamma=(singleEne[0]+singleEne[1]);
+      if(E2gamma >.300 || E2gamma < .095) goto exitFilltree;
+      //if((singleEne[0]+singleEne[1])>.300) goto exitFilltree;
+      g1px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+      g1py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+      g1pz=singleEne[0]*std::cos(singTheta[0]);
+      g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+      g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+      g2pz=singleEne[1]*std::cos(singTheta[1]);
+      // calculate x and y:
+      g1x=singR[0]*std::cos(singPhi[0]);
+      g1y=singR[0]*std::sin(singPhi[0]);
+      g1z=singZ[0];
+      g1r=singZ[0];
+      // gamma2
+      g2x=singR[1]*std::cos(singPhi[1]);
+      g2y=singR[1]*std::sin(singPhi[1]);
+      g2z=singZ[1];
+      g2r=singZ[1];
+      // calculate pi0 invariant mass from above info.
+      TLorentzVector gamma1;
+      TLorentzVector gamma2;
+      gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[0]);
+      gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+      TLorentzVector pi0=gamma1+gamma2;
+      // K+ Lorentz vector info. from pi+ and pi0
+      TLorentzVector piPl;
+      piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
+      TLorentzVector kaon=piPl+pi0;
+      //ThreeVector for angular analysis
+      TVector3 piPv(piPpx, piPpy,piPpz);
+      TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
+      TVector3 gv1(g1px, g1py, g1pz);
+      TVector3 gv2(g2px, g2py, g2pz);
+      // Fill histos
+      E2g->Fill(singleEne[0]+singleEne[1]);
+      pi0Etot->Fill(T_pi0);
+      h1Mpi0->Fill(pi0.M());
+      h1Mpi02->Fill(pi0.M2());
+      h1pi0px->Fill(piPpx);
+      h1pi0py->Fill(piPpy);
+      h1pi0pz->Fill(piPpz);
+      //vertex info.
+      h1vertpx->Fill(pi0.Px());
+      h1vertpy->Fill(pi0.Py());
+      h1vertpz->Fill(pi0.Pz());
+      vertOp->Fill(std::cos(piPv.Angle(pi0v)));
+      // Fill tree var
+      treeClus->E_pi0=singleEne[0]+singleEne[1];
+      treeClus->g1Px=g1px;       treeClus->g2Px=g2px;      treeClus->pi0vx=pi0v.X();
+      treeClus->g1Py=g1py;       treeClus->g2Py=g2py;      treeClus->pi0vy=pi0v.Y();
+      treeClus->g1Pz=g1pz;       treeClus->g2Pz=g2pz;      treeClus->pi0vz=pi0v.Z();
+      // position variables:
+      treeClus->g1x=g1x;       treeClus->g2x=g2x;
+      treeClus->g1y=g1y;       treeClus->g2y=g2y;
+      treeClus->g1z=g1z;       treeClus->g2z=g2z;
+      treeClus->g1r=g1r;       treeClus->g2r=g2r;
+      // pi+ pi0
+      treeClus->piPpx=piPpx;     treeClus->pi0px=pi0.Px();
+      treeClus->piPpy=piPpy;     treeClus->pi0py=pi0.Py();
+      treeClus->piPpz=piPpz;     treeClus->pi0pz=pi0.Pz();
+      treeClus->ggCosTheta=pi0.CosTheta();
+      treeClus->piCosTheta=pi0.CosTheta();
+      treeClus->piP2g=singleEne[0]+singleEne[1]+pipEtot;
+      treeClus->piPpi0=T_pi0+pipEtot;
+      treeClus->M_pi0=pi0.M();
+      treeClus->pi0M2=pi0.M2();
+      treeClus->M_k=kaon.M();
+      treeClus->kM2=kaon.M2();
+      treeClus->g1E=singleEne[0];
+      treeClus->g2E=singleEne[1];
+      std::cout<<"\n ------------| Only 2 Single Crystal Clusters |----------- "<<std::endl;
+      std::cout<<"\n  piPecking total Cluster Energy: "<<singleEne[0]+singleEne[1]<<endl;
+      std::cout<<"\n  Angular1 checking (centriod)    ("<<singTheta[0]<<", "<<singPhi[0]<<")\n";
+      std::cout<<"\n  Angular2 single (centriod)      ("<<singTheta[1]<<", "<<singPhi[1]<<")\n";
+      std::cout<<"\n  Checking pi0 InvMass:           "<<pi0.M()<<endl;
+      std::cout<<"\n  Checking cos(theta):            "<<std::cos(gv1.Angle(gv2))<<std::endl;
+      std::cout<<"\n  Checking vertex opening         "<<piPv.Angle(pi0v)<<endl;
     }
     if(numOfClus>0){
       h1clust->Fill(numOfClus);
       treeClus->clusterM=numOfClus;
     }
     treeClus->channel=(numOfClus+numOfsingleClus);
+exitFilltree:
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;
     std::cout<<"  Number of single clusters is:  "<<numOfsingleClus<<endl;
     std::cout<<" ***************************************************************************\n";
@@ -1713,7 +2050,7 @@ void Det_ClusterCsI::empty(){
 }
 
 Long_t Det_ClusterCsI::finalize(){
-  //mapfile.close();
+  mapfile.close();
 
   return 0;
 }

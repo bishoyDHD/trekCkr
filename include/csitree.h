@@ -83,6 +83,11 @@ class CRTClusterCsI:public CRTBase{
   Double_t g1Px, g1Py, g1Pz;
   Double_t g2Px, g2Py, g2Pz;
   Double_t g1E, g2E;
+  Double_t g1theta, g2theta, g1phi, g2phi;
+  // position of 2gammas
+  Double_t g1x, g1y, g1z;
+  Double_t g2x, g2y, g2z;
+  Double_t g1r, g2r;
   // state vector information for pions
   Double_t pi0px, pi0py, pi0pz;
   Double_t pi0vx, pi0vy, pi0vz;

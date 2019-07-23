@@ -7,6 +7,7 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TH3D.h"
 #include "TF1.h"
 #include <fstream>
 #include "TSpectrum.h"
@@ -47,7 +48,8 @@ class Det_ClusterCsI:public Plugin{
   const double E_kpi2=0.2455612; //total energy for Kpi2
   double px[4], py[4], pz[4];
   double T_pi0, ppip, thetaE, phiE;
-  double rtheta, rphi;
+  double clusZ, clusR;
+  double rtheta, rphi, z_w, r_w;
   //double masses[3];
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
@@ -59,6 +61,8 @@ class Det_ClusterCsI:public Plugin{
   
   int clusCrys;
   boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiph;
+  boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiR;
+  boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiZ;
   boost::unordered_map<std::pair<double,double>,bool, boost::hash<std::pair<double,double>>> csiClus;
   //enum tk {TK34,TK32,TK36,TK37,TK38,TK40,TK08,TK50,TK09,TK54,TK31,TK04,TK45,TK33,TK39,TK41};
   int moduleNo;
@@ -70,7 +74,7 @@ class Det_ClusterCsI:public Plugin{
 	               93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,161.25};
   double mapPhi;
   // angles to be used by the clusterFinder table
-  double otheta, ophi;
+  double otheta, ophi, wtheta, wphi, wz, wr;
   // crystal center Z:
   double crysZ[20]={-48.3449, -42.0302, -36.5676, -31.5834, -26.851,
                     -20.9203, -15.7210, -10.9616, -6.46940, -2.1341,
@@ -157,6 +161,7 @@ class Det_ClusterCsI:public Plugin{
   TH2D* h2clus, *h2Ene, *h2ang, *h2deg;
   TH2D* h2corrAng, *h2theta, *h2phi, *h2Ang;
   TH1D* E_cut, *cosTheta, *vertOp;
+  TH3D* h3csi;
   TLine *hbox1[25], *hline1[25];
   TLine *hbox2[2], *hline2[26];
   TLine *vbox1[25], *hline3[25];
@@ -171,6 +176,8 @@ class Det_ClusterCsI:public Plugin{
   double pi0px, pi0py, pi0pz;
   double g1px, g1py, g1pz;
   double g2px, g2py, g2pz;
+  double g1x, g1y, g1z, g1r;
+  double g2x, g2y, g2z, g2r;
   double piPpx, piPpy, piPpz;
   double pi0x, pi0y, pi0z;
   double pipEtot;
@@ -178,8 +185,8 @@ class Det_ClusterCsI:public Plugin{
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;
-  std::vector<double> clusEne,singleEne;
-  std::vector<double> clusThetaE, clusPhiE;
+  std::vector<double> clusEne,singleEne,singZ,singR,singTheta,singPhi;
+  std::vector<double> clusThetaE, clusPhiE, clusEz, clusEr;
   double Eclus;
   bool clus_csi;
   Long_t histos();
