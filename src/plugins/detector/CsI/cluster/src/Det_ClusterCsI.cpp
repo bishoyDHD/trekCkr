@@ -1772,11 +1772,21 @@ Long_t Det_ClusterCsI::process(){
     pipEtot=std::sqrt(std::pow(ppip,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
-    if(numOfClus==2){
+    if(numOfClus==2 || numOfClus==3){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
-      double E2gamma=(clusEne[0]+clusEne[1]);
-      if(E2gamma >.300 || E2gamma < .105) goto exitFilltree;
+      double E2gamma;
+      TLorentzVector gamma1;
+      TLorentzVector gamma2;
+      TLorentzVector pi0;
+      TVector3 gv1;
+      TVector3 gv2;
+      double opAngle;
+      // =======================================
+      // Common condition for this section:
+      // Involves at least 2 many crysClusters
+      // ========================================
+      E2gamma=(clusEne[0]+clusEne[1]);
       g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
       g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
       g1pz=clusEne[0]*std::cos(clusThetaE[0]);
@@ -1793,12 +1803,287 @@ Long_t Det_ClusterCsI::process(){
       g2y=clusEr[1]*std::sin(clusPhiE[1]);
       g2z=clusEz[1];
       g2r=clusEr[1];
-      // calculate pi0 invariant mass from above info.
-      TLorentzVector gamma1;
-      TLorentzVector gamma2;
-      gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
-      gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
-      TLorentzVector pi0=gamma1+gamma2;
+      if(numOfClus==2 && numOfsingleClus==0){
+	// =======================================================
+	// case of only 2 many Cryscluster
+	// =======================================================
+        if(E2gamma >.300 && E2gamma < .105) goto exitFilltree;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
+        pi0=gamma1+gamma2;
+      }else if(numOfClus==2 && numOfsingleClus<=2 && numOfsingleClus>0){
+	// =======================================================
+	// case of 1st many crysCluster and 2nd many Cryscluster
+	// =======================================================
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+	opAngle=std::cos(gv1.Angle(gv2));
+	if(pi0.M()>=0.09 && pi0.M()<=.140){
+	  // Want to make sure the angle are within allowable physical region
+	  if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- Good mass and angle found for 1st and 2nd many CrysCluster \n";
+	    goto InvM_pi0Good;
+	  }
+	}
+	// =======================================================
+	// case of 1st many crysCluster and 1 single Cryscluster
+	// =======================================================
+        E2gamma=(clusEne[0]+singleEne[0]);
+        g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+        g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+        g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+        g2px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+        g2py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+        g2pz=singleEne[0]*std::cos(singTheta[0]);
+        // calculate x and y:
+        g1x=clusEr[0]*std::cos(clusPhiE[0]);
+        g1y=clusEr[0]*std::sin(clusPhiE[0]);
+        g1z=clusEz[0];
+        g1r=clusEr[0];
+        // gamma2
+        g2x=singR[0]*std::cos(singPhi[0]);
+        g2y=singR[0]*std::sin(singPhi[0]);
+        g2z=singZ[0];
+        g2r=singR[0];
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+	opAngle=std::cos(gv1.Angle(gv2));
+	if(pi0.M()>=0.09 && pi0.M()<=.140){
+	  // Want to make sure the angle are within allowable physical region
+	  if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- Good mass/Angle found for 1st many CrysCluster and single Cluster \n";
+	    goto InvM_pi0Good;
+	  }
+	}
+	// =======================================================
+	// case of 2nd many crysCluster and 1 single Cryscluster
+	// =======================================================
+        E2gamma=(clusEne[1]+singleEne[0]);
+        g1px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+        g1py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+        g1pz=clusEne[1]*std::cos(clusThetaE[1]);
+        g2px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+        g2py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+        g2pz=singleEne[0]*std::cos(singTheta[0]);
+        // calculate x and y:
+        g1x=clusEr[1]*std::cos(clusPhiE[1]);
+        g1y=clusEr[1]*std::sin(clusPhiE[1]);
+        g1z=clusEz[1];
+        g1r=clusEr[1];
+        // gamma2
+        g2x=singR[0]*std::cos(singPhi[0]);
+        g2y=singR[0]*std::sin(singPhi[0]);
+        g2z=singZ[0];
+        g2r=singR[0];
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[1]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+	opAngle=std::cos(gv1.Angle(gv2));
+	if(pi0.M()>=0.09 && pi0.M()<=.140){
+	  // Want to make sure the angle are within allowable physical region
+	  if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- Good mass/Angle found for 2nd many CrysCluster and single Cluster \n";
+	    goto InvM_pi0Good;
+	  }
+	}
+	if(numOfsingleClus==2){
+          // =======================================================
+          // case of 1st many crysCluster and 2nd single Cryscluster
+          // =======================================================
+          E2gamma=(clusEne[0]+singleEne[1]);
+          g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+          g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+          g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+          g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+          g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+          g2pz=singleEne[1]*std::cos(singTheta[1]);
+          // calculate x and y:
+          g1x=clusEr[0]*std::cos(clusPhiE[0]);
+          g1y=clusEr[0]*std::sin(clusPhiE[0]);
+          g1z=clusEz[0];
+          g1r=clusEr[0];
+          // gamma2
+          g2x=singR[1]*std::cos(singPhi[1]);
+          g2y=singR[1]*std::sin(singPhi[1]);
+          g2z=singZ[1];
+          g2r=singR[1];
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+          pi0=gamma1+gamma2;
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            std::cout<<" --- Good mass found for 1st many CrysCluster and 2nd single Cluster \n";
+            goto InvM_pi0Good;
+          }
+          // =======================================================
+          // case of 2nd many crysCluster and 2nd single Cryscluster
+          // =======================================================
+          E2gamma=(clusEne[1]+singleEne[1]);
+          g1px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+          g1py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+          g1pz=clusEne[1]*std::cos(clusThetaE[1]);
+          g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+          g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+          g2pz=singleEne[1]*std::cos(singTheta[1]);
+          // calculate x and y:
+          g1x=clusEr[1]*std::cos(clusPhiE[1]);
+          g1y=clusEr[1]*std::sin(clusPhiE[1]);
+          g1z=clusEz[1];
+          g1r=clusEr[1];
+          // gamma2
+          g2x=singR[1]*std::cos(singPhi[1]);
+          g2y=singR[1]*std::sin(singPhi[1]);
+          g2z=singZ[1];
+          g2r=singR[1];
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[1]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+          pi0=gamma1+gamma2;
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            std::cout<<" --- Good mass found for 2nd many CrysCluster and 2nd single Cluster \n";
+            goto InvM_pi0Good;
+          }
+          // ==========================================================
+          // case of 1st single crysCluster and 2nd single Cryscluster
+          // ===========================================================
+          E2gamma=(singleEne[0]+singleEne[1]);
+          g1px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+          g1py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+          g1pz=singleEne[0]*std::cos(singTheta[0]);
+          g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+          g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+          g2pz=singleEne[1]*std::cos(singTheta[1]);
+          // calculate x and y:
+          g1x=singR[0]*std::cos(singPhi[0]);
+          g1y=singR[0]*std::sin(singPhi[0]);
+          g1z=singZ[0];
+          g1r=singR[0];
+          // gamma2
+          g2x=singR[1]*std::cos(singPhi[1]);
+          g2y=singR[1]*std::sin(singPhi[1]);
+          g2z=singZ[1];
+          g2r=singR[1];
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[0]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+          pi0=gamma1+gamma2;
+          gv1.SetXYZ(g1px, g1py, g1pz);
+          gv2.SetXYZ(g2px, g2py, g2pz);
+          opAngle=std::cos(gv1.Angle(gv2));
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            // Want to make sure the angle are within allowable physical region
+            if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+              std::cout<<" --- Many Cluster Crys: Good/Angle mass found for 1st single";
+              std::cout<<" CrysCluster and 2nd single Cluster \n";
+              goto InvM_pi0Good;
+            }
+          }
+	}
+      }else if(numOfClus==3){
+	// =======================================================
+	// case of 1st many crysCluster and 2nd many Cryscluster
+	// =======================================================
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 3 Cluster case: Good/Angle mass found for 1st and 2nd many CrysCluster \n";
+            goto InvM_pi0Good;
+          }
+        }
+	// =======================================================
+	// case of 1st many crysCluster and 3rd many CrysCluster
+	// =======================================================
+        E2gamma=(clusEne[0]+clusEne[2]);
+        g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+        g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+        g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+        g2px=clusEne[2]*std::sin(clusThetaE[2])*std::cos(clusPhiE[2]);
+        g2py=clusEne[2]*std::sin(clusThetaE[2])*std::sin(clusPhiE[2]);
+        g2pz=clusEne[2]*std::cos(clusThetaE[2]);
+        // calculate x and y:
+        g1x=clusEr[0]*std::cos(clusPhiE[0]);
+        g1y=clusEr[0]*std::sin(clusPhiE[0]);
+        g1z=clusEz[0];
+        g1r=clusEr[0];
+        // gamma2
+        g2x=clusEr[2]*std::cos(clusPhiE[2]);
+        g2y=clusEr[2]*std::sin(clusPhiE[2]);
+        g2z=clusEz[2];
+        g2r=clusEr[2];
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[2]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 3 Cluster case: Good/Angle mass found for 1st and 3rd many CrysCluster \n";
+            goto InvM_pi0Good;
+          }
+        }
+	// =======================================================
+	// case of 2nd many crysCluster and 3rd many CrysCluster
+	// =======================================================
+        E2gamma=(clusEne[1]+clusEne[2]);
+        g1px=clusEne[1]*std::sin(clusThetaE[1])*std::cos(clusPhiE[1]);
+        g1py=clusEne[1]*std::sin(clusThetaE[1])*std::sin(clusPhiE[1]);
+        g1pz=clusEne[1]*std::cos(clusThetaE[1]);
+        g2px=clusEne[2]*std::sin(clusThetaE[2])*std::cos(clusPhiE[2]);
+        g2py=clusEne[2]*std::sin(clusThetaE[2])*std::sin(clusPhiE[2]);
+        g2pz=clusEne[2]*std::cos(clusThetaE[2]);
+        // calculate x and y:
+        g1x=clusEr[1]*std::cos(clusPhiE[1]);
+        g1y=clusEr[1]*std::sin(clusPhiE[1]);
+        g1z=clusEz[1];
+        g1r=clusEr[1];
+        // gamma2
+        g2x=clusEr[2]*std::cos(clusPhiE[2]);
+        g2y=clusEr[2]*std::sin(clusPhiE[2]);
+        g2z=clusEz[2];
+        g2r=clusEr[2];
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[1]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[2]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 3 Cluster case: Good/Angle mass found for 2nd and 3rd many CrysCluster \n";
+            goto InvM_pi0Good;
+          }
+        }
+      }else{
+        std::cout<<" --- Cannot find good pi0 Inv. Mass... bailing out \n";
+	goto exitFilltree;
+      }
+      InvM_pi0Good:
       // K+ Lorentz vector info. from pi+ and pi0
       TLorentzVector piPl;
       piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
@@ -1806,8 +2091,6 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
       TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
-      TVector3 gv1(g1px, g1py, g1pz);
-      TVector3 gv2(g2px, g2py, g2pz);
       // Fill histos
       E2g->Fill(clusEne[0]+clusEne[1]);
       pi0Etot->Fill(T_pi0);
@@ -1848,17 +2131,24 @@ Long_t Det_ClusterCsI::process(){
       treeClus->kM2=kaon.M2();
       treeClus->g1E=clusEne[0];
       treeClus->g2E=clusEne[1];
-      std::cout<<"\n  piPecking total Cluster Energy:  "<<clusEne[0]+clusEne[1]<<endl;
+      std::cout<<"\n  piPecking total Cluster Energy:  "<<E2gamma<<endl;
       std::cout<<"\n  Angular1 checking (centriod)   ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 checking (centriod)   ("<<clusThetaE[1]<<", "<<clusPhiE[1]<<")\n";
       std::cout<<"\n  Checking pi0 InvMass:      "<<pi0.M()<<endl;
-      std::cout<<"\n  Checking cos(theta):       "<<std::cos(gv1.Angle(gv2))<<std::endl;
+      std::cout<<"\n  Checking cos(theta):       "<<std::cos(opAngle)<<std::endl;
       std::cout<<"\n  Checking vertex opening    "<<piPv.Angle(pi0v)<<endl;
-    }else if(numOfClus==1 && numOfsingleClus==1){
+    }else if(numOfClus==1 && numOfsingleClus<=3 && numOfsingleClus>0){
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // Make sure that a single crystal cluster has E > 25. MeV/c
-      double E2gamma=(clusEne[0]+singleEne[0]);
-      if(E2gamma>.300 || singleEne[0]<.025) goto exitFilltree;
+      // Check different combinations of clusters b/n 90 and 140 MeV M_pi0
+      double E2gamma; // define Total energy for 2gamma
+      TLorentzVector gamma1;
+      TLorentzVector gamma2;
+      TLorentzVector pi0;
+      TVector3 gv1;
+      TVector3 gv2;
+      double opAngle;
+      // Common condition: to avoid repetition
       g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
       g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
       g1pz=clusEne[0]*std::cos(clusThetaE[0]);
@@ -1875,12 +2165,226 @@ Long_t Det_ClusterCsI::process(){
       g2y=singR[0]*std::sin(singPhi[0]);
       g2z=singZ[0];
       g2r=singZ[0];
-      // calculate pi0 invariant mass from above info.
-      TLorentzVector gamma1;
-      TLorentzVector gamma2;
-      gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
-      gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
-      TLorentzVector pi0=gamma1+gamma2;
+      if(numOfClus==1 && numOfsingleClus==1){
+        E2gamma=(clusEne[0]+singleEne[0]);
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 1 ManyCluster: Good/Angle mass found for 1 many CrysCluster";
+	    std::cout<<" and 1st single Cluster \n";
+            goto goodMass;
+          }
+        }
+      }
+      if(numOfClus==1 && numOfsingleClus>=2){
+	// =======================================================
+	// case of 1st single crysCluster and 1 many Cryscluster
+	// =======================================================
+        E2gamma=(clusEne[0]+singleEne[0]);
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+        pi0=gamma1+gamma2;
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 1 ManyCluster and 2 singles: Good/Angle mass found for 1 many CrysCluster";
+	    std::cout<<" and 1st single Cluster \n";
+            goto goodMass;
+          }
+        }
+	// =======================================================
+	// case of 2nd single crysCluster and 1 many Cryscluster
+	// =======================================================
+        E2gamma=(clusEne[0]+singleEne[1]);
+        g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+        g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+        g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+        g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+        g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+        g2pz=singleEne[1]*std::cos(singTheta[1]);
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+        pi0=gamma1+gamma2;
+        // calculate x and y:
+        g1x=clusEr[0]*std::cos(clusPhiE[0]);
+        g1y=clusEr[0]*std::sin(clusPhiE[0]);
+        g1z=clusEz[0];
+        g1r=clusEr[0];
+        // gamma2
+        g2x=singR[1]*std::cos(singPhi[1]);
+        g2y=singR[1]*std::sin(singPhi[1]);
+        g2z=singZ[1];
+        g2r=singZ[1];
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 1 ManyCluster and 2 singles: Good/Angle mass found for 1 many CrysCluster";
+	    std::cout<<" and 2nd single Cluster \n";
+            goto goodMass;
+          }
+        }
+	// =======================================================
+	// case of 1st single crysCluster and 2nd singleCluster
+	// =======================================================
+        E2gamma=(singleEne[0]+singleEne[1]);
+        g1px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+        g1py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+        g1pz=singleEne[0]*std::cos(singTheta[0]);
+        g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+        g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+        g2pz=singleEne[1]*std::cos(singTheta[1]);
+        // calculate pi0 invariant mass from above info.
+        gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[0]);
+        gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+        pi0=gamma1+gamma2;
+        // calculate x and y:
+        g1x=singR[0]*std::cos(singPhi[0]);
+        g1y=singR[0]*std::sin(singPhi[0]);
+        g1z=singZ[0];
+        g1r=singR[0];
+        // gamma2
+        g2x=singR[1]*std::cos(singPhi[1]);
+        g2y=singR[1]*std::sin(singPhi[1]);
+        g2z=singZ[1];
+        g2r=singZ[1];
+        gv1.SetXYZ(g1px, g1py, g1pz);
+        gv2.SetXYZ(g2px, g2py, g2pz);
+        opAngle=std::cos(gv1.Angle(gv2));
+        if(pi0.M()>=0.09 && pi0.M()<=.140){
+          // Want to make sure the angle are within allowable physical region
+          if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+	    std::cout<<" --- 1 ManyCluster and 2 singles: Good/Angle mass found for 1st single cluster";
+	    std::cout<<" and 2nd single Cluster \n";
+            goto goodMass;
+          }
+        }
+        if(numOfClus==1 && numOfsingleClus==3){
+          // =======================================================
+          // case of 3rd single crysCluster and 1 many CrysCluster
+          // =======================================================
+          E2gamma=(clusEne[0]+singleEne[2]);
+          g1px=clusEne[0]*std::sin(clusThetaE[0])*std::cos(clusPhiE[0]);
+          g1py=clusEne[0]*std::sin(clusThetaE[0])*std::sin(clusPhiE[0]);
+          g1pz=clusEne[0]*std::cos(clusThetaE[0]);
+          g2px=singleEne[2]*std::sin(singTheta[2])*std::cos(singPhi[2]);
+          g2py=singleEne[2]*std::sin(singTheta[2])*std::sin(singPhi[2]);
+          g2pz=singleEne[2]*std::cos(singTheta[2]);
+          // calculate x and y:
+          g1x=clusEr[0]*std::cos(clusPhiE[0]);
+          g1y=clusEr[0]*std::sin(clusPhiE[0]);
+          g1z=clusEz[0];
+          g1r=clusEr[0];
+          // gamma2
+          g2x=singR[2]*std::cos(singPhi[2]);
+          g2y=singR[2]*std::sin(singPhi[2]);
+          g2z=singZ[2];
+          g2r=singZ[2];
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[2]);
+          pi0=gamma1+gamma2;
+          gv1.SetXYZ(g1px, g1py, g1pz);
+          gv2.SetXYZ(g2px, g2py, g2pz);
+          opAngle=std::cos(gv1.Angle(gv2));
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            // Want to make sure the angle are within allowable physical region
+            if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+              std::cout<<" --- 1 ManyCluster and 3 singles: Good/Angle mass found for 1 many crysCluster";
+              std::cout<<" and 3rd single Cluster \n";
+              goto goodMass;
+            }
+          }
+          // =======================================================
+          // case of 3rd single crysCluster and 2nd singleCluster
+          // =======================================================
+          E2gamma=(singleEne[2]+singleEne[1]);
+          g1px=singleEne[2]*std::sin(singTheta[2])*std::cos(singPhi[2]);
+          g1py=singleEne[2]*std::sin(singTheta[2])*std::sin(singPhi[2]);
+          g1pz=singleEne[2]*std::cos(singTheta[2]);
+          g2px=singleEne[1]*std::sin(singTheta[1])*std::cos(singPhi[1]);
+          g2py=singleEne[1]*std::sin(singTheta[1])*std::sin(singPhi[1]);
+          g2pz=singleEne[1]*std::cos(singTheta[1]);
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[2]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
+          pi0=gamma1+gamma2;
+          // calculate x and y:
+          g1x=singR[2]*std::cos(singPhi[2]);
+          g1y=singR[2]*std::sin(singPhi[2]);
+          g1z=singZ[2];
+          g1r=singR[2];
+          // gamma2
+          g2x=singR[1]*std::cos(singPhi[1]);
+          g2y=singR[1]*std::sin(singPhi[1]);
+          g2z=singZ[1];
+          g2r=singZ[1];
+          gv1.SetXYZ(g1px, g1py, g1pz);
+          gv2.SetXYZ(g2px, g2py, g2pz);
+          opAngle=std::cos(gv1.Angle(gv2));
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            // Want to make sure the angle are within allowable physical region
+            if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+              std::cout<<" --- 1 ManyCluster and 3 singles: Good/Angle mass found for 2nd single cluster";
+              std::cout<<" and 3rd single Cluster \n";
+              goto goodMass;
+            }
+          }
+          // =======================================================
+          // case of 3rd single crysCluster and 1st singleCluster
+          // =======================================================
+          E2gamma=(singleEne[2]+singleEne[0]);
+          g1px=singleEne[2]*std::sin(singTheta[2])*std::cos(singPhi[2]);
+          g1py=singleEne[2]*std::sin(singTheta[2])*std::sin(singPhi[2]);
+          g1pz=singleEne[2]*std::cos(singTheta[2]);
+          g2px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
+          g2py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
+          g2pz=singleEne[0]*std::cos(singTheta[0]);
+          // calculate pi0 invariant mass from above info.
+          gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[2]);
+          gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
+          pi0=gamma1+gamma2;
+          // calculate x and y:
+          g1x=singR[2]*std::cos(singPhi[2]);
+          g1y=singR[2]*std::sin(singPhi[2]);
+          g1z=singZ[2];
+          g1r=singR[2];
+          // gamma2
+          g2x=singR[0]*std::cos(singPhi[0]);
+          g2y=singR[0]*std::sin(singPhi[0]);
+          g2z=singZ[0];
+          g2r=singZ[0];
+          gv1.SetXYZ(g1px, g1py, g1pz);
+          gv2.SetXYZ(g2px, g2py, g2pz);
+          opAngle=std::cos(gv1.Angle(gv2));
+          if(pi0.M()>=0.09 && pi0.M()<=.140){
+            // Want to make sure the angle are within allowable physical region
+            if(std::cos(opAngle)>-.65 && std::cos(opAngle)<.7){
+              std::cout<<" --- 1 ManyCluster and 3 singles: Good/Angle mass found for 1st single cluster";
+              std::cout<<" and 3rd single Cluster \n";
+              goto goodMass;
+            }
+          }
+        }
+      }else{
+        std::cout<<" --- Mix of Single and Many CrysClus: Cannot find good pi0 Inv. Mass... bailing \n";
+	goto exitFilltree;
+      }
+      goodMass: // means cluster has reasonable pi0 inv mass
       // K+ Lorentz vector info. from pi+ and pi0
       TLorentzVector piPl;
       piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
@@ -1888,8 +2392,6 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
       TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
-      TVector3 gv1(g1px, g1py, g1pz);
-      TVector3 gv2(g2px, g2py, g2pz);
       // Fill histos
       E2g->Fill(clusEne[0]+singleEne[0]);
       pi0Etot->Fill(T_pi0);
@@ -1929,17 +2431,17 @@ Long_t Det_ClusterCsI::process(){
       treeClus->g1E=clusEne[0];
       treeClus->g2E=singleEne[0];
       std::cout<<"\n ------------| Single cluster and Single Crystal |----------- "<<std::endl;
-      std::cout<<"\n  piPecking total Cluster Energy: "<<clusEne[0]+singleEne[0]<<endl;
+      std::cout<<"\n  piPecking total Cluster Energy: "<<E2gamma<<endl;
       std::cout<<"\n  Angular1 checking (centriod)    ("<<clusThetaE[0]<<", "<<clusPhiE[0]<<")\n";
       std::cout<<"\n  Angular2 single (centriod)      ("<<singTheta[0]<<", "<<singPhi[0]<<")\n";
       std::cout<<"\n  Checking pi0 InvMass:           "<<pi0.M()<<endl;
-      std::cout<<"\n  Checking cos(theta):            "<<std::cos(gv1.Angle(gv2))<<std::endl;
+      std::cout<<"\n  Checking cos(theta):            "<<std::cos(opAngle)<<std::endl;
       std::cout<<"\n  Checking vertex opening         "<<piPv.Angle(pi0v)<<endl;
     }else if(numOfClus==0 && numOfsingleClus==2){
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // FIXME: Apply timing cut for clusters > 2
       double E2gamma=(singleEne[0]+singleEne[1]);
-      if(E2gamma >.300 || E2gamma < .095) goto exitFilltree;
+      //if(E2gamma >.300 && E2gamma < .095) goto exitFilltree;
       //if((singleEne[0]+singleEne[1])>.300) goto exitFilltree;
       g1px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
       g1py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
@@ -1963,6 +2465,7 @@ Long_t Det_ClusterCsI::process(){
       gamma1.SetPxPyPzE(g1px, g1py, g1pz, singleEne[0]);
       gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[1]);
       TLorentzVector pi0=gamma1+gamma2;
+      if(pi0.M()<0.09 || pi0.M()>.140) goto exitFilltree;
       // K+ Lorentz vector info. from pi+ and pi0
       TLorentzVector piPl;
       piPl.SetPxPyPzE(piPpx, piPpy, piPpz,pipEtot);
