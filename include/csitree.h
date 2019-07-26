@@ -79,6 +79,8 @@ class CRTClusterCsI:public CRTBase{
   Int_t Ncrys; // number of fired crystals
   Int_t ClustCrys; // number of crystals within cluster
   Double_t piPpi0, piP2g;
+  Double_t Clus2M, Clus2E, Clus2gAng, Clus2piAng, Clus2;
+  Double_t Clus1M, Clus1E, Clus1gAng, Clus1piAng, Clus1;
   // state vector information for 2 gammas
   Double_t g1Px, g1Py, g1Pz;
   Double_t g2Px, g2Py, g2Pz;
