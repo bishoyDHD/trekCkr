@@ -1772,7 +1772,7 @@ Long_t Det_ClusterCsI::process(){
     pipEtot=std::sqrt(std::pow(ppip,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
       std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
-    if(numOfClus==2 && numOfsingleClus<3){
+    if(numOfClus==2 && numOfsingleClus<=2){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       double E2gamma;
@@ -1807,7 +1807,10 @@ Long_t Det_ClusterCsI::process(){
 	// =======================================================
 	// case of only 2 many Cryscluster
 	// =======================================================
-        if(E2gamma >.300 && E2gamma < .105) goto exitFilltree;
+        if(E2gamma >.300 || E2gamma < .105){
+          std::cout<<" Unphysical total energy ...bailing!!";
+          goto exitFilltree;
+	}
         gv1.SetXYZ(g1px, g1py, g1pz);
         gv2.SetXYZ(g2px, g2py, g2pz);
         // calculate pi0 invariant mass from above info.
@@ -1815,6 +1818,11 @@ Long_t Det_ClusterCsI::process(){
         gamma2.SetPxPyPzE(g2px, g2py, g2pz, clusEne[1]);
 	opAngle=std::cos(gv1.Angle(gv2));
         pi0=gamma1+gamma2;
+        if(pi0.M()<0.09 || pi0.M()>.140){
+	  std::cout<<" Could not find good Inv. Mass for pi0:";
+	  std::cout<<" 2 Many crysCluster ...bailing! \n";
+	  goto exitFilltree;
+	}
 	// Fill tree variables specific to this condition:
 	TVector3 piPlus(piPpx,piPpy,piPpz);
 	TVector3 pi0V3(pi0.Px(),pi0.Py(),pi0.Pz());
@@ -1823,6 +1831,8 @@ Long_t Det_ClusterCsI::process(){
         treeClus->Clus2E=pi0.E();
         treeClus->Clus2gAng=std::cos(opAngle);
         treeClus->Clus2piAng=std::cos(piPlus.Angle(pi0V3));
+	// ---------- End fill tree for special case -----------
+	// ------------------------------------------------------
       }else if(numOfClus==2 && numOfsingleClus<=2 && numOfsingleClus>0){
 	// =======================================================
 	// case of 1st many crysCluster and 2nd many Cryscluster
@@ -1896,6 +1906,10 @@ Long_t Det_ClusterCsI::process(){
         gv1.SetXYZ(g1px, g1py, g1pz);
         gv2.SetXYZ(g2px, g2py, g2pz);
 	opAngle=std::cos(gv1.Angle(gv2));
+        if(E2gamma >.300 || E2gamma < .095){
+          std::cout<<" Unphysical total energy ...bailing!!";
+          goto exitFilltree;
+	}
 	if(pi0.M()>=0.09 && pi0.M()<=.140){
 	  std::cout<<" --- Good mass/Angle found for 2nd many CrysCluster and single Cluster \n";
 	  goto InvM_pi0Good;
@@ -1996,6 +2010,10 @@ Long_t Det_ClusterCsI::process(){
           gv1.SetXYZ(g1px, g1py, g1pz);
           gv2.SetXYZ(g2px, g2py, g2pz);
           opAngle=std::cos(gv1.Angle(gv2));
+          if(E2gamma >.300 || E2gamma < .095){
+            std::cout<<" Unphysical total energy ...bailing!!";
+            goto exitFilltree;
+          }
           if(pi0.M()>=0.09 && pi0.M()<=.140){
             std::cout<<" --- Many Cluster Crys: Good mass found for 1st single";
             std::cout<<" CrysCluster and 2nd single Cluster \n";
@@ -2019,6 +2037,7 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
       TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
+      if(pi0.M()<0.09 || pi0.M()>.140) goto exitFilltree;
       // Fill histos
       E2g->Fill(clusEne[0]+clusEne[1]);
       pi0Etot->Fill(T_pi0);
@@ -2097,6 +2116,10 @@ Long_t Det_ClusterCsI::process(){
       g2r=singZ[0];
       if(numOfClus==1 && numOfsingleClus==1){
         E2gamma=(clusEne[0]+singleEne[0]);
+        if(E2gamma >.300 || E2gamma < .095){
+          std::cout<<" Unphysical total energy ...bailing!!";
+          goto exitFilltree;
+        }
         // calculate pi0 invariant mass from above info.
         gamma1.SetPxPyPzE(g1px, g1py, g1pz, clusEne[0]);
         gamma2.SetPxPyPzE(g2px, g2py, g2pz, singleEne[0]);
@@ -2108,7 +2131,7 @@ Long_t Det_ClusterCsI::process(){
 	  std::cout<<" --- 1 ManyCluster: Good mass found for 1 many CrysCluster";
 	  std::cout<<" and 1st single Cluster \n";
           goto goodMass;
-        }else{
+        }else if(pi0.M()<.09 || pi0.M()>.140){
 	  std::cout<<"  Cannot find good pi0 Inv. mass for 1 many crystal cluster and";
 	  std::cout<<" 1 single crystal cluster ...bailing! \n";
 	  goto exitFilltree;
@@ -2190,11 +2213,16 @@ Long_t Det_ClusterCsI::process(){
         gv1.SetXYZ(g1px, g1py, g1pz);
         gv2.SetXYZ(g2px, g2py, g2pz);
         opAngle=std::cos(gv1.Angle(gv2));
+        if(E2gamma >.300 || E2gamma < .095){
+          std::cout<<" Unphysical total energy ...bailing!!";
+          goto exitFilltree;
+        }
         if(pi0.M()>=0.09 && pi0.M()<=.140){
 	  std::cout<<" --- 1 ManyCluster and 2 singles: Good mass found for 1st single cluster";
 	  std::cout<<" and 2nd single Cluster \n";
           goto goodMass;
-        }else{
+        }
+	if(pi0.M()<0.09 || pi0.M()>.140){
 	  std::cout<<"  Cannot find good pi0 Inv. mass for 1 many crystal cluster and";
 	  std::cout<<" 2 single crystal cluster ...bailing! \n";
 	  goto exitFilltree;
@@ -2298,6 +2326,10 @@ Long_t Det_ClusterCsI::process(){
           gv1.SetXYZ(g1px, g1py, g1pz);
           gv2.SetXYZ(g2px, g2py, g2pz);
           opAngle=std::cos(gv1.Angle(gv2));
+          if(E2gamma >.300 || E2gamma < .095){
+            std::cout<<" Unphysical total energy ...bailing!!";
+            goto exitFilltree;
+          }
           if(pi0.M()>=0.09 && pi0.M()<=.140){
             // Want to make sure the angle are within allowable physical region
             if(std::cos(opAngle)>-.85 && std::cos(opAngle)<.8){
@@ -2306,7 +2338,6 @@ Long_t Det_ClusterCsI::process(){
               goto goodMass;
             }
           }
-	  if(E2gamma>.300 || E2gamma<.08) goto exitFilltree;
           if(pi0.M()<0.09 || pi0.M()>.140){
             std::cout<<" Unphysical pi0 mass: 2 Many Crys and at least 2 single";
             std::cout<<" ...bailing! \n";
@@ -2335,6 +2366,7 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       TVector3 piPv(piPpx, piPpy,piPpz);
       TVector3 pi0v=-1*piPv; //(pi0.Px(), pi0.Py(),pi0.Pz());
+      if(pi0.M()<0.09 || pi0.M()>.140) goto exitFilltree;
       // Fill histos
       E2g->Fill(clusEne[0]+singleEne[0]);
       pi0Etot->Fill(T_pi0);
@@ -2384,7 +2416,10 @@ Long_t Det_ClusterCsI::process(){
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // FIXME: Apply timing cut for clusters > 2
       double E2gamma=(singleEne[0]+singleEne[1]);
-      //if(E2gamma >.300 && E2gamma < .095) goto exitFilltree;
+      if(E2gamma >.300 || E2gamma < .095){
+        std::cout<<" Unphysical total energy ...bailing!!";
+        goto exitFilltree;
+      }
       //if((singleEne[0]+singleEne[1])>.300) goto exitFilltree;
       g1px=singleEne[0]*std::sin(singTheta[0])*std::cos(singPhi[0]);
       g1py=singleEne[0]*std::sin(singTheta[0])*std::sin(singPhi[0]);
