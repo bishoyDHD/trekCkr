@@ -4,5 +4,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class Det_ClusterCsI+;
+#pragma link C++ class clusterScore+;
+#pragma link C++ class clusterVar+;
 
 #endif

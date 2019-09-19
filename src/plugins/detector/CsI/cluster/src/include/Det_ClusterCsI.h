@@ -4,6 +4,7 @@
 #include "csitree.h"
 #include "multiTree.h"
 #include "Plugin.h"
+#include "clusterScore.h"
 #include "TTree.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -42,6 +43,7 @@ class Det_ClusterCsI:public Plugin{
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTClusterCsI *treeClus;  // Output branch for CSI single hit var
   TCanvas* c1;
+  clusterScore* scoring;
   bool resetH, notfire;
   const double M_pi0=0.1349766;
   const double M_piP=0.13957018;
