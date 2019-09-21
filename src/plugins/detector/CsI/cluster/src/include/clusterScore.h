@@ -68,6 +68,8 @@ public:
   double getclPx();
   double getclPy();
   double getclPz();
+
+
   double getclE();
   inline double getE(){return Etot;} //return total energy
   void init(); // initialize
@@ -77,29 +79,44 @@ protected:
   double px,py,pz,E;
   double x,y,z,t,r;
   double theta,phi;
+  TLorentzVector particlelv;
+  TVector3 particle3v;
 private:
-  const double mpi0=0.1349766;
+  int clustEvalNo;
+  const int dummy=-1000;
+  double particleM;
   double mass; // will deterine scoring scale
+  double diffMass;
   std::vector<clusterVar> cvars;
   clusterVar clustvar;
+
   std::vector<double> mdiff;
   std::map<double,double> clustE;
   std::map<double,double> InvMass;
   // Scoring variable storage for 1st 2 clusters
-  std::map<double,std::pair<double,double>> Px;
-  std::map<double,std::pair<double,double>> Py;
-  std::map<double,std::pair<double,double>> Pz;
-  std::map<double,std::pair<double,double>> Eclust;
-  std::map<double,std::pair<double,double>> cltheta;
-  std::map<double,std::pair<double,double>> clphi;
-  std::map<double,std::pair<double,double>> cltime;
+  std::map<double,std::pair<double,double>> csipx;
+  std::map<double,std::pair<double,double>> csipy;
+  std::map<double,std::pair<double,double>> csipz;
+  std::map<double,std::pair<double,double>> csix;
+  std::map<double,std::pair<double,double>> csiy;
+  std::map<double,std::pair<double,double>> csiz;
+  std::map<double,std::pair<double,double>> csir;
+  std::map<double,std::pair<double,double>> csiE;
+  std::map<double,std::pair<double,double>> csitheta;
+  std::map<double,std::pair<double,double>> csiphi;
+  std::map<double,std::pair<double,double>> csitime;
   // Scoring variable storage for additional clusters
-  std::map<double,std::pair<double,double>> px_;
-  std::map<double,std::pair<double,double>> py_;
-  std::map<double,std::pair<double,double>> pz_;
-  std::map<double,std::pair<double,double>> theta_;
-  std::map<double,std::pair<double,double>> phi_;
-  std::map<double,std::pair<double,double>> time_;
+  std::map<double,std::pair<double,double>> csipx_;
+  std::map<double,std::pair<double,double>> csipy_;
+  std::map<double,std::pair<double,double>> csipz_;
+  std::map<double,std::pair<double,double>> csiE_;
+  std::map<double,std::pair<double,double>> csitheta_;
+  std::map<double,std::pair<double,double>> csiphi_;
+  std::map<double,std::pair<double,double>> csitime_;
+  std::map<double,std::pair<double,double>> csix_;
+  std::map<double,std::pair<double,double>> csiy_;
+  std::map<double,std::pair<double,double>> csiz_;
+  std::map<double,std::pair<double,double>> csir_;
   int index, ival;
   double invMass;
   double clprpx;

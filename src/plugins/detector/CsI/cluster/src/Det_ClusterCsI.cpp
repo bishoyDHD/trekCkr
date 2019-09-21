@@ -1805,11 +1805,11 @@ Long_t Det_ClusterCsI::process(){
       g2y=clusEr[1]*std::sin(clusPhiE[1]);
       g2z=clusEz[1];
       g2r=clusEr[1];
-      std::cout<<" ... top level x: "<<g1x<<"\t"<<g2x<<std::endl;
-      std::cout<<" ... top level y: "<<g1y<<"\t"<<g2y<<std::endl;
-      std::cout<<" ... top level z: "<<g1z<<"\t"<<g2z<<std::endl;
+      std::cout<<" ... top level px: "<<g1px<<"\t"<<g2px<<std::endl;
+      std::cout<<" ... top level py: "<<g1py<<"\t"<<g2py<<std::endl;
+      std::cout<<" ... top level pz: "<<g1pz<<"\t"<<g2pz<<std::endl;
       std::cout<<" Entering new cluster eval...\n";
-      //scoring->init();
+      scoring->init();
       scoring->clusterEval(clusEne,clusEr,clusEz,clusThetaE,clusPhiE);
       if(numOfClus==2 && numOfsingleClus==0){
 	// =======================================================
