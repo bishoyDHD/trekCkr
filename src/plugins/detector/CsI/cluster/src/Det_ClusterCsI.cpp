@@ -1887,9 +1887,15 @@ Long_t Det_ClusterCsI::process(){
         std::cout<<"\n ... top level px: "<<g1px<<"\t"<<g2px<<std::endl;
         std::cout<<" ... top level py: "<<g1py<<"\t"<<g2py<<std::endl;
         std::cout<<" ... top level pz: "<<g1pz<<"\t"<<g2pz<<std::endl;
+	std::cout<<" --- top open Ang: "<<opAngle<<std::endl;
         std::cout<<" Entering new cluster eval...\n";
         scoring->init();
         scoring->clusterEval(clusEne,singleEne,clusEr,clusEz,clusThetaE,clusPhiE,singR,singZ,singTheta,singPhi);
+	std::cout<<" ... best scored inv. mass => "<<scoring->getInvMass()<<std::endl;
+	std::cout<<" **** g1px is => "<<scoring->getclPx()<<"\n";
+	scoring->setCpid(2);
+	std::cout<<" **** g1px is => "<<scoring->getclPx()<<"\n";
+	std::abort();
 	if(pi0.M()>=0.09 && pi0.M()<=.140){
 	  std::cout<<" --- Good mass found for 1st many CrysCluster and single Cluster \n";
 	  goto InvM_pi0Good;

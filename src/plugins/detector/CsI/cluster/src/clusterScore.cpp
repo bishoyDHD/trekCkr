@@ -2,7 +2,7 @@
 
 //clusterVar::clusterVar(){}
 
-clusterScore::clusterScore():mass(0.1349766),clustEvalNo(2){
+clusterScore::clusterScore():mass(0.1349766),cpid(1),clustEvalNo(2){
  
 }
 clusterScore::~clusterScore(){
@@ -80,6 +80,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
     clustvar.clr=r;
     // evaluate 4-momenta and corresponding vectors
     clustvar.cpidlv.SetPxPyPzE(px,py,pz,mCrys[i]);
+    clustvar.cpidv3.SetXYZ(px,py,pz);
     cvars.push_back(clustvar);
   }
   // cluster evaluation and scoring
@@ -95,12 +96,15 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
           std::cout<<" we have: "<<i<<" + "<<n<<"\n";
           energy=(mCrys[i]+mCrys[n]);
           particlelv=cvars[i].cpidlv+cvars[n].cpidlv;
+          opAngle=std::cos(cvars[i].cpidv3.Angle(cvars[n].cpidv3));
           invMass=particlelv.M();
           diffMass=std::abs(mass-invMass);
           // fill vars for scoring:
           mdiff.push_back(diffMass);
           InvMass[diffMass]=invMass;
           clustE[diffMass]=energy;
+	  openAng[diffMass]=opAngle;
+	  primLV[diffMass]=particlelv;
           csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
           csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
           csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
@@ -112,6 +116,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
           csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
           csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
           std::cout<<" ... Inv. Mass of pi0 is: "<<diffMass<<std::endl;
+	  std::cout<<" ... opening Ang: "<<openAng[diffMass]<<" - "<<opAngle<<std::endl;
           std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
           std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
           std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
@@ -138,6 +143,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
             mdiff.push_back(diffMass);
             InvMass[diffMass]=invMass;
             clustE[diffMass]=energy;
+	    primLV[diffMass]=particlelv;
 	    // fill scoring vars for first 2 hist
             csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
             csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
@@ -179,7 +185,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
   //std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
   //std::cout<<" ..... new Inv. mass eval: "<<cvars[0].pi0lv.M()<<std::endl;
   std::cout<<" ..... new Inv. mass scored return: "<<InvMass[diffMass]<<std::endl;
-  std::abort();
+  //std::abort();
 }
 // single and many crystal cluster
 void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vector<double> Wr,const std::vector<double> Wz,const std::vector<double> &theta,const std::vector<double> &phi){
@@ -205,8 +211,10 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
     clustvar.clr=r;
     // evaluate 4-momenta and corresponding vectors
     clustvar.cpidlv.SetPxPyPzE(px,py,pz,eneCrys[i]);
+    clustvar.cpidv3.SetXYZ(px,py,pz);
     cvars.push_back(clustvar);
   }
+  // cluster evaluation prodcedure
   switch(clustEvalNo){
     case 2:
       // =========================================
@@ -219,12 +227,14 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
           std::cout<<" we have: "<<i<<" + "<<n<<"\n";
           energy=(eneCrys[i]+eneCrys[n]);
           particlelv=cvars[i].cpidlv+cvars[n].cpidlv;
+          opAngle=std::cos(cvars[i].cpidv3.Angle(cvars[n].cpidv3));
           invMass=particlelv.M();
           diffMass=std::abs(mass-invMass);
           // fill vars for scoring:
           mdiff.push_back(diffMass);
           InvMass[diffMass]=invMass;
           clustE[diffMass]=energy;
+	  primLV[diffMass]=particlelv;
           csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
           csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
           csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
@@ -259,6 +269,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
             mdiff.push_back(diffMass);
             InvMass[diffMass]=invMass;
             clustE[diffMass]=energy;
+	    primLV[diffMass]=particlelv;
 	    // fill scoring vars for first 2 hist
             csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
             csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
@@ -304,7 +315,7 @@ void clusterScore::scoring(std::vector<double> &invmass){
   std::vector<double>::iterator min=std::min_element(invmass.begin(),invmass.end());
   ival=std::distance(invmass.begin(),min);
   setKey(*min);
-  std::cout<<" ---- best Invariant mass diff: "<<*min<<" corresponding to "<<InvMass[*min]<<"\n";
+  std::cout<<" ---- best Invariant mass diff: "<<*min<<" corresponding to "<<InvMass[*min]<<" & "<<clustE[*min]<<"\n";
 }
 void clusterScore::scoring(UInt_t size, std::vector<double> &invmass,std::map<double,double> mass){
   // obtain the index of the lowest entry of the invMass 
@@ -318,37 +329,133 @@ void clusterScore::scoring(UInt_t size, std::vector<double> &invmass,std::map<do
 void clusterScore::setE(const std::vector<double> &totE){
   Etot=totE[mkey];
 }
-
+// obtain map key corresponding to distance of closest approach
 void clusterScore::setKey(double key){
   mkey=key;
 }
-void clusterScore::setOpangClus(const std::vector<double> &theta,const std::vector<double> &phi){
-
+TLorentzVector clusterScore::getprimLV(){
+  return primLV[mkey];
 }
-void clusterScore::setOpangPrimary(const std::vector<double> &theta,const std::vector<double> &phi){
-
+// get methods for cluster variables
+double clusterScore::getInvMass(){
+  return InvMass[mkey];
 }
-void clusterScore::setprPx(std::vector<clusterVar> &px){
-
+double clusterScore::getclPx(){
+  switch(cpid){
+    case 1:
+      return csipx[mkey].first;
+      break;
+    case 2:
+      return csipx[mkey].second;
+      break;
+    case 3:
+      return csipx_[mkey].first;
+      break;
+    case 4:
+      return csipx_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setprPy(std::vector<clusterVar> &py){
-
+double clusterScore::getclPy(){
+  switch(cpid){
+    case 1:
+      return csipy[mkey].first;
+      break;
+    case 2:
+      return csipy[mkey].second;
+      break;
+    case 3:
+      return csipy_[mkey].first;
+      break;
+    case 4:
+      return csipy_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setprPz(std::vector<clusterVar> &pz){
-
+double clusterScore::getclPz(){
+  switch(cpid){
+    case 1:
+      return csipz[mkey].first;
+      break;
+    case 2:
+      return csipz[mkey].second;
+      break;
+    case 3:
+      return csipz_[mkey].first;
+      break;
+    case 4:
+      return csipz_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setprE(std::vector<clusterVar> &Energy){
-
+double clusterScore::getclR(){
+  switch(cpid){
+    case 1:
+      return csir[mkey].first;
+      break;
+    case 2:
+      return csir[mkey].second;
+      break;
+    case 3:
+      return csir_[mkey].first;
+      break;
+    case 4:
+      return csir_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setclPx(std::vector<clusterVar> &px){
-
+double clusterScore::getclZ(){
+  switch(cpid){
+    case 1:
+      return csiz[mkey].first;
+      break;
+    case 2:
+      return csiz[mkey].second;
+      break;
+    case 3:
+      return csiz_[mkey].first;
+      break;
+    case 4:
+      return csiz_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setclPy(std::vector<clusterVar> &py){
-
+double clusterScore::getclTime(){
+  switch(cpid){
+    case 1:
+      return csitime[mkey].first;
+      break;
+    case 2:
+      return csitime[mkey].second;
+      break;
+    case 3:
+      return csitime_[mkey].first;
+      break;
+    case 4:
+      return csitime_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }
-void clusterScore::setclPz(std::vector<clusterVar> &pz){
-
-}
-void clusterScore::setclE(std::vector<clusterVar> &Energy){
-
+double clusterScore::getclE(){
+  switch(cpid){
+    case 1:
+      return csiE[mkey].first;
+      break;
+    case 2:
+      return csiE[mkey].second;
+      break;
+    case 3:
+      return csiE_[mkey].first;
+      break;
+    case 4:
+      return csiE_[mkey].second;
+      break;
+  }
+  return 0; // non void function
 }

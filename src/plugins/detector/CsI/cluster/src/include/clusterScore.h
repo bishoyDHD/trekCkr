@@ -54,6 +54,8 @@ public:
   void clusterEval(const std::vector<double> &mCrys,const std::vector<double> r,const std::vector<double> z,const std::vector<double> &mtheta,const std::vector<double> &mphi);
   void setOpangClus(const std::vector<double> &theta,const std::vector<double> &phi);
   void setOpangPrimary(const std::vector<double> &theta,const std::vector<double> &phi);
+  // set cluster PID
+  void setCpid(int clustPID){cpid=clustPID;};
   // set methods for various cluster variables
   // this if for tracked particle as well as cluster variables
   void setprPx(std::vector<clusterVar> &px);
@@ -64,19 +66,25 @@ public:
   void setclPy(std::vector<clusterVar> &py);
   void setclPz(std::vector<clusterVar> &pz);
   void setclE(std::vector<clusterVar> &Energy);
+  void setclAngle(const std::map<double,double> angle); 
   void setScoreMass(double);
   // get methods for various variables
+  double getInvMass();
+  inline double getE(){return Etot;} //return total energy
+  double getOpAngleClust();
+  double getOpAnglePrimary();
   double getprPx();
   double getprPy();
   double getprPz();
+  TLorentzVector getprimLV();
   double getprE();
   double getclPx();
   double getclPy();
   double getclPz();
-
-
+  double getclR();
+  double getclZ();
+  double getclTime();
   double getclE();
-  inline double getE(){return Etot;} //return total energy
   void init(); // initialize
   void reset(); // reset container
 protected:
@@ -88,6 +96,7 @@ protected:
   TVector3 particle3v;
 private:
   int clustEvalNo;
+  int cpid; // determines which value std::map returns
   const int dummy=-1000;
   double particleM;
   double mass; // will deterine scoring scale
@@ -100,6 +109,8 @@ private:
   std::vector<double> mergeclust;
   std::map<double,double> clustE;
   std::map<double,double> InvMass;
+  std::map<double,double> openAng;
+  std::map<double,TLorentzVector> primLV;
   // Scoring variable storage for 1st 2 clusters
   std::map<double,std::pair<double,double>> csipx;
   std::map<double,std::pair<double,double>> csipy;
@@ -142,6 +153,6 @@ private:
   double mcTheta;
   double scPhi;
   double mcPhi;
-  double Etot, energy;
+  double Etot, energy,opAngle;
 };
 #endif
