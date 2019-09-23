@@ -38,12 +38,17 @@ public:
   // Really the scoring function could be effective with taking only the vector
   // I really wanted to try a pass by map function,
   // hence the slight complication
-  double scoring(UInt_t size,std::vector<double> &invmass, std::map<double,double> mass);
-  void setIndex(int ind);
+  void scoring(std::vector<double> &invmass);
+  void scoring(UInt_t size,std::vector<double> &invmass);
+  void scoring(UInt_t size,std::vector<double> &invmass, std::map<double,double> mass);
+  // funtion to merge 2 different vectors
+  // will be used for heterogeneous cluster types
+  void mergeVect(std::vector<double>& clust1,std::vector<double>& clust2);
+  void setKey(double key);
   void setE(const std::vector<double> &totE);
-  // calculate the Energy of given combination of clusters
-  // returns combination sum of cluster configurations
-  void clusterEval(const std::vector<double> &mcCrys,const std::vector<double> &scCrys,const std::vector<double> r,const std::vector<double> z,const std::vector<double> &theta,const std::vector<double> &phi);
+  // calculate the Energy, inv. mass, angles, position, momentum etc.
+  //  from given configuration of clusters
+  void clusterEval(std::vector<double> &mcCrys,std::vector<double> &scCrys,std::vector<double> r1,std::vector<double> z1,std::vector<double> &theta1,std::vector<double> &phi1,std::vector<double>& r2,std::vector<double>& z2,std::vector<double>& th2,std::vector<double>& phi2);
   // function for many crystal cluster case:
   // function for single crystal cluster case:
   void clusterEval(const std::vector<double> &mCrys,const std::vector<double> r,const std::vector<double> z,const std::vector<double> &mtheta,const std::vector<double> &mphi);
@@ -91,6 +96,8 @@ private:
   clusterVar clustvar;
 
   std::vector<double> mdiff;
+  // merge manyCrys and singleCrys clusters into single vector
+  std::vector<double> mergeclust;
   std::map<double,double> clustE;
   std::map<double,double> InvMass;
   // Scoring variable storage for 1st 2 clusters
@@ -117,7 +124,7 @@ private:
   std::map<double,std::pair<double,double>> csiy_;
   std::map<double,std::pair<double,double>> csiz_;
   std::map<double,std::pair<double,double>> csir_;
-  int index, ival;
+  double mkey, ival;
   double invMass;
   double clprpx;
   double clprpy;

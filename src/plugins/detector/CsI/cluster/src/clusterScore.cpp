@@ -8,7 +8,7 @@ clusterScore::clusterScore():mass(0.1349766),clustEvalNo(2){
 clusterScore::~clusterScore(){
 
 }
-// called for each valid clustering event
+// called at the begining of each valid clustering event
 // must empty bucket before filling 
 // with new entries
 void clusterScore::init(){
@@ -45,9 +45,141 @@ void clusterScore::reset(){
 }
 // combination clusters
 // evaluate cluster variables for different channels
-void clusterScore::clusterEval(const std::vector<double> &mCrys,const std::vector<double> &sCrys,const std::vector<double> r, const std::vector<double> z,const std::vector<double> &theta,const std::vector<double> &phi){
-
-  
+//   ------ This function has the sole purpose of appending 2 std::vector's
+void clusterScore::mergeVect(std::vector<double>& clust1,std::vector<double>& clust2){
+  clust1.insert(
+         clust1.end(),
+         std::make_move_iterator(clust2.begin()),
+         std::make_move_iterator(clust2.end())
+         );
+};
+void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &sCrys,std::vector<double> Wr,std::vector<double> Wz,std::vector<double> &theta,std::vector<double> &phi,std::vector<double> &r2,std::vector<double> &z2,std::vector<double> &theta2,std::vector<double> &phi2){
+  // this is the case for single and many crysCluster;
+  // =======================================
+  // Case for mixed clusters
+  // ========================================
+  // manyCrysE and singleCrysE        // manyCrysR and singleCrysR
+  mergeVect(mCrys,sCrys);             mergeVect(Wr,r2);
+  // manyCrysZ and singleCrysZ        // manyCrysTheta and singleCrysTheta
+  mergeVect(Wz,z2);                   mergeVect(theta,theta2);
+  // manyCrysPhi and singleCrysPhi
+  mergeVect(phi,phi2);
+  // push cluster variables to container
+  for(UInt_t i=0; i<mCrys.size(); i++){
+    // cluster storage:
+    px=mCrys[i]*std::sin(theta[i])*std::cos(phi[i]);
+    py=mCrys[i]*std::sin(theta[i])*std::sin(phi[i]);
+    pz=mCrys[i]*std::cos(theta[i]);
+    x=Wr[i]*std::cos(phi[i]);
+    y=Wr[i]*std::sin(phi[i]);
+    z=Wz[i];
+    r=Wr[i];
+    clustvar.clpx=px;      clustvar.clx=x;
+    clustvar.clpy=py;      clustvar.cly=y;
+    clustvar.clpz=pz;      clustvar.clz=z;
+    clustvar.clr=r;
+    // evaluate 4-momenta and corresponding vectors
+    clustvar.cpidlv.SetPxPyPzE(px,py,pz,mCrys[i]);
+    cvars.push_back(clustvar);
+  }
+  // cluster evaluation and scoring
+  switch(clustEvalNo){
+    case 2:
+      // =========================================
+      // Calculate the combinatorial sum assuming
+      // 2 clusters. 
+      // ==========================================
+      for(UInt_t i=0; i<cvars.size()-1; i++){
+        UInt_t m=i+1;
+        for(UInt_t n=m; n<cvars.size(); n++){
+          std::cout<<" we have: "<<i<<" + "<<n<<"\n";
+          energy=(mCrys[i]+mCrys[n]);
+          particlelv=cvars[i].cpidlv+cvars[n].cpidlv;
+          invMass=particlelv.M();
+          diffMass=std::abs(mass-invMass);
+          // fill vars for scoring:
+          mdiff.push_back(diffMass);
+          InvMass[diffMass]=invMass;
+          clustE[diffMass]=energy;
+          csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
+          csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
+          csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
+          csir[diffMass]=std::make_pair(cvars[i].clr,cvars[n].clr);
+          csipx[diffMass]=std::make_pair(cvars[i].clpx,cvars[n].clpx);
+          csipy[diffMass]=std::make_pair(cvars[i].clpy,cvars[n].clpy);
+          csipz[diffMass]=std::make_pair(cvars[i].clpz,cvars[n].clpz);
+          csiE[diffMass]=std::make_pair(mCrys[i],mCrys[n]);
+          csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
+          csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
+          std::cout<<" ... Inv. Mass of pi0 is: "<<diffMass<<std::endl;
+          std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
+          std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
+          std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
+        }
+      }
+      break;
+    case 3:
+      // case for evaluation of and scoring of 3 different cluster
+      // =========================================
+      // Calculate the combinatorial sum assuming
+      // 3 clusters. 
+      // ==========================================
+      for(UInt_t i=0; i<cvars.size()-2; i++){
+        UInt_t m=i+1;
+        for(UInt_t n=m; n<cvars.size()-1; n++){
+          UInt_t s=n+1;
+          for(UInt_t a=s; a<cvars.size(); a++){
+            std::cout<<" we have: "<<i<<" + "<<n<<" + "<<a<<"\n";
+            energy=(mCrys[i]+mCrys[n]+mCrys[a]);
+            particlelv=cvars[i].cpidlv+cvars[n].cpidlv+cvars[a].cpidlv;
+            invMass=particlelv.M();
+            diffMass=std::abs(mass-invMass);
+            // fill vars for scoring:
+            mdiff.push_back(diffMass);
+            InvMass[diffMass]=invMass;
+            clustE[diffMass]=energy;
+	    // fill scoring vars for first 2 hist
+            csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
+            csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
+            csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
+            csir[diffMass]=std::make_pair(cvars[i].clr,cvars[n].clr);
+            csipx[diffMass]=std::make_pair(cvars[i].clpx,cvars[n].clpx);
+            csipy[diffMass]=std::make_pair(cvars[i].clpy,cvars[n].clpy);
+            csipz[diffMass]=std::make_pair(cvars[i].clpz,cvars[n].clpz);
+            csiE[diffMass]=std::make_pair(mCrys[i],mCrys[n]);
+            csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
+            csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
+	    // fill scoring vars for first 2 hist
+            csix_[diffMass]=std::make_pair(cvars[a].clx,dummy);
+            csiy_[diffMass]=std::make_pair(cvars[a].cly,dummy);
+            csiz_[diffMass]=std::make_pair(cvars[a].clz,dummy);
+            csir_[diffMass]=std::make_pair(cvars[a].clr,dummy);
+            csipx_[diffMass]=std::make_pair(cvars[a].clpx,dummy);
+            csipy_[diffMass]=std::make_pair(cvars[a].clpy,dummy);
+            csipz_[diffMass]=std::make_pair(cvars[a].clpz,dummy);
+            csiE_[diffMass]=std::make_pair(mCrys[a],dummy);
+            csitheta_[diffMass]=std::make_pair(theta[a],dummy);
+            csiphi_[diffMass]=std::make_pair(phi[a],dummy);
+            std::cout<<" ... Inv. Mass of pi0 is: "<<diffMass<<std::endl;
+            std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
+            std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
+            std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
+          }
+	}
+      }
+      break;
+  } // end of switch statement
+  scoring(mdiff);
+  std::cout<<" ... Merged vector size: "<<mCrys.size()<<std::endl;
+  std::cout<<" ... Merged ang/rz size: "<<theta.size()<<" "<<phi.size()<<" "<<Wr.size()<<Wz.size()<<std::endl;
+  std::cout<<" ... new energy eval.: "<<clustE[diffMass]<<std::endl;
+  //std::cout<<" ..... size of cvars: "<<cvars.size()<<std::endl;
+  //std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
+  //std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
+  //std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
+  //std::cout<<" ..... new Inv. mass eval: "<<cvars[0].pi0lv.M()<<std::endl;
+  std::cout<<" ..... new Inv. mass scored return: "<<InvMass[diffMass]<<std::endl;
+  std::abort();
 }
 // single and many crystal cluster
 void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vector<double> Wr,const std::vector<double> Wz,const std::vector<double> &theta,const std::vector<double> &phi){
@@ -155,7 +287,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
       }
       break;
   } // end of switch statement
-
+  scoring(mdiff);
   std::cout<<" ... new energy eval.: "<<clustE[diffMass]<<std::endl;
   //std::cout<<" ..... size of cvars: "<<cvars.size()<<std::endl;
   //std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
@@ -163,25 +295,32 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
   //std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
   //std::cout<<" ..... new Inv. mass eval: "<<cvars[0].pi0lv.M()<<std::endl;
   std::cout<<" ..... new Inv. mass scored return: "<<InvMass[diffMass]<<std::endl;
-  std::abort();
+  //std::abort();
 }
 // cluster scoring
-double clusterScore::scoring(UInt_t size, std::vector<double> &invmass,std::map<double,double> mass){
+void clusterScore::scoring(std::vector<double> &invmass){
   // obtain the index of the lowest entry of the invMass 
   // new size of vector to determine scoring
   std::vector<double>::iterator min=std::min_element(invmass.begin(),invmass.end());
   ival=std::distance(invmass.begin(),min);
+  setKey(*min);
+  std::cout<<" ---- best Invariant mass diff: "<<*min<<" corresponding to "<<InvMass[*min]<<"\n";
+}
+void clusterScore::scoring(UInt_t size, std::vector<double> &invmass,std::map<double,double> mass){
+  // obtain the index of the lowest entry of the invMass 
+  // new size of vector to determine scoring
+  auto min=std::min_element(invmass.begin(),invmass.end());
+  ival=std::distance(invmass.begin(),min);
   invMass=mass[*min];
-  setIndex(ival);
+  setKey(*min);
   std::cout<<" ---- Invariant mass is: "<<invMass<<"\n";
-  return invMass;
 }
 void clusterScore::setE(const std::vector<double> &totE){
-  Etot=totE[index];
+  Etot=totE[mkey];
 }
 
-void clusterScore::setIndex(int I){
-  index=I;
+void clusterScore::setKey(double key){
+  mkey=key;
 }
 void clusterScore::setOpangClus(const std::vector<double> &theta,const std::vector<double> &phi){
 

@@ -1883,6 +1883,13 @@ Long_t Det_ClusterCsI::process(){
         gv1.SetXYZ(g1px, g1py, g1pz);
         gv2.SetXYZ(g2px, g2py, g2pz);
 	opAngle=std::cos(gv1.Angle(gv2));
+	std::cout<<" ... size of manyCrys ("<<clusEne.size()<<") + singleCrys ("<<singleEne.size()<<") = "<<clusEne.size()+singleEne.size();
+        std::cout<<"\n ... top level px: "<<g1px<<"\t"<<g2px<<std::endl;
+        std::cout<<" ... top level py: "<<g1py<<"\t"<<g2py<<std::endl;
+        std::cout<<" ... top level pz: "<<g1pz<<"\t"<<g2pz<<std::endl;
+        std::cout<<" Entering new cluster eval...\n";
+        scoring->init();
+        scoring->clusterEval(clusEne,singleEne,clusEr,clusEz,clusThetaE,clusPhiE,singR,singZ,singTheta,singPhi);
 	if(pi0.M()>=0.09 && pi0.M()<=.140){
 	  std::cout<<" --- Good mass found for 1st many CrysCluster and single Cluster \n";
 	  goto InvM_pi0Good;
