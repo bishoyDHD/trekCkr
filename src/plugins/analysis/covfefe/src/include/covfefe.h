@@ -23,6 +23,8 @@ class covfefe:public Plugin{
   CATClusterCsI* clsmar;
   CATCaliCsI* calibcsi;
   const double dE=143.5;
+  const double mpi0=0.1349766;
+  const double mpip=0.13957018;
   double sigdE=3.25;
   double theta[20]={18.75, 26.25, 33.75, 41.25, 48.75, 56.25, 63.75, 71.25, 78.75, 86.25,
                     93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
@@ -67,8 +69,8 @@ class covfefe:public Plugin{
   Long_t process_clust();
   Long_t finalize_clust();
   // histograms for cluster analysis
-  TH1D* E_pi0[2], *M_pi0[2]; // pi0 total energy
-  TH1D* waveID[2], *clustM[2], *id1;
+  TH1D* E_pi0[3], *M_pi0[3]; // pi0 total energy
+  TH1D* waveID[2], *clustM[3], *id1;
   TH1D* g1px[2], *g1py[2], *g1pz[2];
   TH1D* g2px[2], *g2py[2], *g2pz[2];
   TH1D* pi0px[2], *pi0py[2], *pi0pz[2];

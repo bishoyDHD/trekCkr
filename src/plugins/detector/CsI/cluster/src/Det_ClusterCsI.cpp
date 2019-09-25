@@ -1844,7 +1844,7 @@ Long_t Det_ClusterCsI::process(){
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
     }else
-    if(((numOfClus>=1 && numOfClus<=3)||(numOfsingleClus>=1 && numOfsingleClus<=3))){
+    if(numOfClus<=3 && numOfsingleClus<=3){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // =======================================
@@ -1853,13 +1853,15 @@ Long_t Det_ClusterCsI::process(){
       // ========================================
       if(((numOfClus==1 && numOfsingleClus==0)||(numOfClus==0 && numOfsingleClus==1)))
         goto exitFilltree;
-      scoring->init();
       if(numOfClus==3 && numOfsingleClus==0){
+        scoring->init();
         scoring->clusterEval(clusEne,clusEr,clusEz,clusThetaE,clusPhiE);
       }else
       if(numOfClus==0 && numOfsingleClus==3){
+        scoring->init();
         scoring->clusterEval(singleEne,singR,singZ,singTheta,singPhi);
       }else{
+        scoring->init();
         scoring->clusterEval(clusEne,singleEne,clusEr,clusEz,clusThetaE,clusPhiE,singR,singZ,singTheta,singPhi);
       }
       pr2px=scoring->getprPx();   pr2py=scoring->getprPy();  pr2pz=scoring->getprPz();
@@ -1899,7 +1901,7 @@ Long_t Det_ClusterCsI::process(){
     // Fill histos
     E2g->Fill(E2clust);
     // Fill tree var
-    treeClus->E_prim1=cl1E+cl2E;
+    treeClus->E_prim2=cl1E+cl2E;
     treeClus->cpid1Px=cl1px;       treeClus->cpid2Px=cl2px;      treeClus->prim2px=prim2lv.Px();
     treeClus->cpid1Py=cl1py;       treeClus->cpid2Py=cl2py;      treeClus->prim2py=prim2lv.Py();
     treeClus->cpid1Pz=cl1pz;       treeClus->cpid2Pz=cl2pz;      treeClus->prim2pz=prim2lv.Pz();
@@ -1915,8 +1917,8 @@ Long_t Det_ClusterCsI::process(){
     treeClus->prim1pz=pr1pz;
     treeClus->clCosTheta=opAngle;
     treeClus->prCosTheta=std::cos(prim1vec3.Angle(prim2vec3));
-    treeClus->M_prim1=prim2lv.M();
-    treeClus->prim1M2=prim2lv.M2();
+    treeClus->M_prim2=prim2lv.M();
+    treeClus->prim2M2=prim2lv.M2();
     treeClus->M_k=kaon.M();
     treeClus->kM2=kaon.M2();
     treeClus->cpid1E=cl1E;

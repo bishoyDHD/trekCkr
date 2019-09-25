@@ -236,6 +236,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
           mdiff.push_back(diffMass);
           InvMass[diffMass]=invMass;
           clustE[diffMass]=energy;
+	  openAng[diffMass]=opAngle;
 	  primLV[diffMass]=particlelv;
           csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
           csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
@@ -302,6 +303,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
   } // end of switch statement
   scoring(mdiff);
   std::cout<<" ... new energy eval.: "<<clustE[diffMass]<<std::endl;
+  std::cout<<" ... new angle eval. : "<<openAng[mkey]<<std::endl;
   //std::cout<<" ..... size of cvars: "<<cvars.size()<<std::endl;
   //std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
   //std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
