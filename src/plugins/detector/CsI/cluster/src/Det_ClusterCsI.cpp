@@ -190,9 +190,9 @@ Long_t Det_ClusterCsI::startup(){
 void Det_ClusterCsI::initVar(){
   int dummy=-1000;
   // init 2 gamma variables
-  treeClus->cpid1Px=dummy;       treeClus->cpid2Px=dummy;
-  treeClus->cpid1Py=dummy;       treeClus->cpid2Py=dummy;
-  treeClus->cpid1Pz=dummy;       treeClus->cpid2Pz=dummy;
+  treeClus->cpid1Px=dummy;   treeClus->cpid2Px=dummy;  treeClus->cpid1x=dummy;   treeClus->cpid2x=dummy;
+  treeClus->cpid1Py=dummy;   treeClus->cpid2Py=dummy;  treeClus->cpid1y=dummy;   treeClus->cpid2y=dummy;
+  treeClus->cpid1Pz=dummy;   treeClus->cpid2Pz=dummy;  treeClus->cpid1z=dummy;   treeClus->cpid2z=dummy;
   // init pion vars
   treeClus->prim1px=dummy;       treeClus->prim1px=dummy;
   treeClus->prim1py=dummy;       treeClus->prim1py=dummy;
@@ -203,21 +203,13 @@ void Det_ClusterCsI::initVar(){
   treeClus->dubP_1=dummy;
   treeClus->channel=dummy;
   // initialize some vector variables 
-  treeClus->clusterM=dummy;
-  treeClus->ClustCrys=dummy;
-  treeClus->Ncrys=dummy;
-  treeClus->cpid1thetaE=dummy;
-  treeClus->cpid1phiE=dummy;
-  treeClus->cpid2thetaE=dummy;
-  treeClus->cpid2phiE=dummy;
-
-  treeClus->E_prim2=dummy;
-  treeClus->M_prim2=dummy;
-  treeClus->prim2M2=dummy;
-  treeClus->M_k=dummy;
-  treeClus->kM2=dummy;
-  treeClus->cpid1E=dummy;
-  treeClus->cpid2E=dummy;
+  treeClus->clusterM=dummy;      treeClus->E_prim2=dummy;
+  treeClus->ClustCrys=dummy;     treeClus->M_prim2=dummy;
+  treeClus->Ncrys=dummy;         treeClus->prim2M2=dummy;
+  treeClus->cpid1thetaE=dummy;   treeClus->M_k=dummy;    
+  treeClus->cpid1phiE=dummy;     treeClus->kM2=dummy;    
+  treeClus->cpid2thetaE=dummy;   treeClus->cpid1E=dummy; 
+  treeClus->cpid2phiE=dummy;     treeClus->cpid2E=dummy; 
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -1775,7 +1767,7 @@ Long_t Det_ClusterCsI::process(){
     pr1Etot=std::sqrt(std::pow(pr1p,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
     std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
-    double E2clust,E2gamma;
+    double E2clust=-1000;
     TLorentzVector prim1lv,prim2lv;
     TLorentzVector kaon;
     TVector3 prim1vec3,prim2vec3,gv1;
@@ -1848,8 +1840,8 @@ Long_t Det_ClusterCsI::process(){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // =======================================
-      // Common condition for this section:
-      // Involves only 2 single crysClusters
+      // Involves at least 1 single crysCluster
+      // and 1 many crysCluster
       // ========================================
       if(((numOfClus==1 && numOfsingleClus==0)||(numOfClus==0 && numOfsingleClus==1)))
         goto exitFilltree;
@@ -1896,8 +1888,8 @@ Long_t Det_ClusterCsI::process(){
     //ThreeVector for angular analysis
     prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
     prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-    if(prim2lv.M()<0.09 || prim2lv.M()>.140) goto exitFilltree;
-    if(E2clust<0.195 || E2clust>.30) goto exitFilltree;
+    if(prim2lv.M()<0.09 || prim2lv.M()>.150) goto exitFilltree;
+    if(E2clust<0.100 || E2clust>.30) goto exitFilltree;
     // Fill histos
     E2g->Fill(E2clust);
     // Fill tree var
@@ -1905,12 +1897,11 @@ Long_t Det_ClusterCsI::process(){
     treeClus->cpid1Px=cl1px;       treeClus->cpid2Px=cl2px;      treeClus->prim2px=prim2lv.Px();
     treeClus->cpid1Py=cl1py;       treeClus->cpid2Py=cl2py;      treeClus->prim2py=prim2lv.Py();
     treeClus->cpid1Pz=cl1pz;       treeClus->cpid2Pz=cl2pz;      treeClus->prim2pz=prim2lv.Pz();
-    /*
     // position variables:
-    treeClus->g1x=g1x;       treeClus->g2x=g2x;
-    treeClus->g1y=g1y;       treeClus->g2y=g2y;
-    treeClus->g1z=g1z;       treeClus->g2z=g2z;
-    treeClus->g1r=g1r;       treeClus->g2r=g2r;*/
+    treeClus->cpid1x=cl1x;       treeClus->cpid2x=cl2x;
+    treeClus->cpid1y=cl1y;       treeClus->cpid2y=cl2y;
+    treeClus->cpid1z=cl1z;       treeClus->cpid2z=cl2z;
+    treeClus->cpid1r=cl1r;       treeClus->cpid2r=cl2r;
     // pi+ pi0
     treeClus->prim1px=pr1px;
     treeClus->prim1py=pr1py;
