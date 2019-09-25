@@ -71,29 +71,31 @@ class CRTClusterCsI:public CRTBase{
   Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak
-  Double_t E_pi0, M_pi0, pi0M2;
+  Double_t E_prim1, M_prim1, prim1M2;
+  Double_t E_prim2, M_prim2, prim2M2;
   Double_t M_k, kM2;
-  double thetaE, phiE;
-  Double_t ggCosTheta, piCosTheta;
+  double cpid1thetaE, cpid1phiE;
+  double cpid2thetaE, cpid2phiE;
+  Double_t clCosTheta, prCosTheta;
   Int_t clusterM; // cluster multiplicity
   Int_t Ncrys; // number of fired crystals
   Int_t ClustCrys; // number of crystals within cluster
-  Double_t piPpi0, piP2g;
   Double_t Clus2M, Clus2E, Clus2gAng, Clus2piAng, Clus2;
   Double_t Clus1M, Clus1E, Clus1gAng, Clus1piAng, Clus1;
   // state vector information for 2 gammas
-  Double_t g1Px, g1Py, g1Pz;
-  Double_t g2Px, g2Py, g2Pz;
-  Double_t g1E, g2E;
-  Double_t g1theta, g2theta, g1phi, g2phi;
-  // position of 2gammas
-  Double_t g1x, g1y, g1z;
-  Double_t g2x, g2y, g2z;
-  Double_t g1r, g2r;
-  // state vector information for pions
-  Double_t pi0px, pi0py, pi0pz;
-  Double_t pi0vx, pi0vy, pi0vz;
-  Double_t piPpx, piPpy, piPpz;/*
+  Double_t cpid1Px, cpid1Py, cpid1Pz;
+  Double_t cpid2Px, cpid2Py, cpid2Pz;
+  Double_t cpid1E, cpid2E;
+  Double_t cpid1theta, cpid2theta, cpid1phi, cpid2phi;
+  // position of cluster particles
+  Double_t cpid1x, cpid1y, cpid1z;
+  Double_t cpid2x, cpid2y, cpid2z;
+  Double_t cpid1r, cpid2r;
+  // state vector information for primary particles
+  // ---> i.e the tracked charged particle & reconstructed particle
+  Double_t prim1px, prim1py, prim1pz;
+  Double_t prim2px, prim2py, prim2pz;
+  /*
   std::vector<double> xpos, val;
   std::vector<double> csThet, csPhi;
   std::vector<std::pair<double,double>> pos;

@@ -70,14 +70,15 @@ public:
   void setScoreMass(double);
   // get methods for various variables
   double getInvMass();
-  inline double getE(){return Etot;} //return total energy
-  double getOpAngleClust();
+  double getE(); //return total energy
+  double getOpAngleClust(); // only valid for 2 clusters
   double getOpAnglePrimary();
   double getprPx();
   double getprPy();
   double getprPz();
   TLorentzVector getprimLV();
   double getprE();
+  double getprM();
   double getclPx();
   double getclPy();
   double getclPz();
@@ -85,6 +86,8 @@ public:
   double getclZ();
   double getclTime();
   double getclE();
+  double getclTheta();
+  double getclPhi();
   void init(); // initialize
   void reset(); // reset container
 protected:

@@ -49,7 +49,7 @@ class Det_ClusterCsI:public Plugin{
   const double M_piP=0.13957018;
   const double E_kpi2=0.2455612; //total energy for Kpi2
   double px[4], py[4], pz[4];
-  double T_pi0, ppip, thetaE, phiE;
+  double T_pi0, pr1p, thetaE, phiE;
   double clusZ, clusR;
   double rtheta, rphi, z_w, r_w;
   //double masses[3];
@@ -146,7 +146,6 @@ class Det_ClusterCsI:public Plugin{
 	                {{123.75,131.25},{138.75,146.25}}};  //Iclock_12 120*/
   double phiCh16[12]={60,30,0,330,300,270,240,210,180,150,120,90};
 
-
   char* pName;
   TSpectrum *s;
   Int_t nfound;
@@ -175,14 +174,16 @@ class Det_ClusterCsI:public Plugin{
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
   Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
-  double pi0px, pi0py, pi0pz;
-  double g1px, g1py, g1pz;
-  double g2px, g2py, g2pz;
-  double g1x, g1y, g1z, g1r;
-  double g2x, g2y, g2z, g2r;
-  double piPpx, piPpy, piPpz;
-  double pi0x, pi0y, pi0z;
-  double pipEtot;
+  double pr2px, pr2py, pr2pz;
+  double cl1px, cl1py, cl1pz;
+  double cl2px, cl2py, cl2pz;
+  double cl1x,  cl1y,  cl1z, cl1r;
+  double cl2x,  cl2y,  cl2z, cl2r;
+  double cl1E,cl2E,cl1theta, cl2theta;
+  double cl1phi, cl2phi;
+  double pr1px, pr1py, pr1pz;
+  double pr2x, pr2y, pr2z;
+  double pr1Etot;
   int evtNum; 
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;

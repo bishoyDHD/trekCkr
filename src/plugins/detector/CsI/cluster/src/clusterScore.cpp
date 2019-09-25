@@ -116,7 +116,9 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
           csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
           csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
           std::cout<<" ... Inv. Mass of pi0 is: "<<diffMass<<std::endl;
+	  std::cout<<" ... primpidLV().Px() "<<primLV[diffMass].Px()<<std::endl;
 	  std::cout<<" ... opening Ang: "<<openAng[diffMass]<<" - "<<opAngle<<std::endl;
+          std::cout<<" ... new energy eval.: "<<clustE[diffMass]<<std::endl;
           std::cout<<" ..... new x eval: "<<csipx[diffMass].first<<"\t"<<csipx[diffMass].second<<std::endl;
           std::cout<<" ..... new y eval: "<<csipy[diffMass].first<<"\t"<<csipy[diffMass].second<<std::endl;
           std::cout<<" ..... new z eval: "<<csipz[diffMass].first<<"\t"<<csipz[diffMass].second<<std::endl;
@@ -144,7 +146,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
             InvMass[diffMass]=invMass;
             clustE[diffMass]=energy;
 	    primLV[diffMass]=particlelv;
-	    // fill scoring vars for first 2 hist
+	    // fill scoring vars for first 2 hits
             csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
             csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
             csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
@@ -155,7 +157,7 @@ void clusterScore::clusterEval(std::vector<double> &mCrys,std::vector<double> &s
             csiE[diffMass]=std::make_pair(mCrys[i],mCrys[n]);
             csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
             csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
-	    // fill scoring vars for first 2 hist
+	    // fill scoring vars for 3rd cluster
             csix_[diffMass]=std::make_pair(cvars[a].clx,dummy);
             csiy_[diffMass]=std::make_pair(cvars[a].cly,dummy);
             csiz_[diffMass]=std::make_pair(cvars[a].clz,dummy);
@@ -270,7 +272,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
             InvMass[diffMass]=invMass;
             clustE[diffMass]=energy;
 	    primLV[diffMass]=particlelv;
-	    // fill scoring vars for first 2 hist
+	    // fill scoring vars for first 2 hits
             csix[diffMass]=std::make_pair(cvars[i].clx,cvars[n].clx);
             csiy[diffMass]=std::make_pair(cvars[i].cly,cvars[n].cly);
             csiz[diffMass]=std::make_pair(cvars[i].clz,cvars[n].clz);
@@ -281,7 +283,7 @@ void clusterScore::clusterEval(const std::vector<double> &eneCrys,const std::vec
             csiE[diffMass]=std::make_pair(eneCrys[i],eneCrys[n]);
             csitheta[diffMass]=std::make_pair(theta[i],theta[n]);
             csiphi[diffMass]=std::make_pair(phi[i],phi[n]);
-	    // fill scoring vars for first 2 hist
+	    // fill scoring vars for 3rd cluster
             csix_[diffMass]=std::make_pair(cvars[a].clx,dummy);
             csiy_[diffMass]=std::make_pair(cvars[a].cly,dummy);
             csiz_[diffMass]=std::make_pair(cvars[a].clz,dummy);
@@ -326,8 +328,8 @@ void clusterScore::scoring(UInt_t size, std::vector<double> &invmass,std::map<do
   setKey(*min);
   std::cout<<" ---- Invariant mass is: "<<invMass<<"\n";
 }
-void clusterScore::setE(const std::vector<double> &totE){
-  Etot=totE[mkey];
+double clusterScore::getE(){
+  return clustE[mkey];
 }
 // obtain map key corresponding to distance of closest approach
 void clusterScore::setKey(double key){
@@ -337,8 +339,31 @@ TLorentzVector clusterScore::getprimLV(){
   return primLV[mkey];
 }
 // get methods for cluster variables
+double clusterScore::getprE(){
+  // return the total energy of recontructed particle
+  return primLV[mkey].E();
+}
+double clusterScore::getprM(){
+  // return the invariant mass of recontructed particle
+  return primLV[mkey].M();
+}
+double clusterScore::getprPx(){
+  // return the px of recontructed particle
+  return primLV[mkey].Px();
+}
+double clusterScore::getprPy(){
+  // return the py of recontructed particle
+  return primLV[mkey].Py();
+}
+double clusterScore::getprPz(){
+  // return the pz of recontructed particle
+  return primLV[mkey].Pz();
+}
 double clusterScore::getInvMass(){
   return InvMass[mkey];
+}
+double clusterScore::getOpAngleClust(){
+  return openAng[mkey];
 }
 double clusterScore::getclPx(){
   switch(cpid){
@@ -455,6 +480,40 @@ double clusterScore::getclE(){
       break;
     case 4:
       return csiE_[mkey].second;
+      break;
+  }
+  return 0; // non void function
+}
+double clusterScore::getclTheta(){
+  switch(cpid){
+    case 1:
+      return csitheta[mkey].first;
+      break;
+    case 2:
+      return csitheta[mkey].second;
+      break;
+    case 3:
+      return csitheta_[mkey].first;
+      break;
+    case 4:
+      return csitheta_[mkey].second;
+      break;
+  }
+  return 0; // non void function
+}
+double clusterScore::getclPhi(){
+  switch(cpid){
+    case 1:
+      return csiphi[mkey].first;
+      break;
+    case 2:
+      return csiphi[mkey].second;
+      break;
+    case 3:
+      return csiphi_[mkey].first;
+      break;
+    case 4:
+      return csiphi_[mkey].second;
       break;
   }
   return 0; // non void function
