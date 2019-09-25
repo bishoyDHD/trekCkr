@@ -1777,6 +1777,7 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
     double E2clust,E2gamma;
     TLorentzVector prim1lv,prim2lv;
+    TLorentzVector kaon;
     TVector3 prim1vec3,prim2vec3,gv1;
     double opAngle,prim2px,prim2py,prim2pz;
     if(numOfClus==2 && numOfsingleClus==0){
@@ -1843,16 +1844,24 @@ Long_t Det_ClusterCsI::process(){
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
     }else
-    if(((numOfClus>=1 && numOfClus<=3)||(numOfsingleClus>=1 && numOfsingleClus<=3))
-		    &&(numOfClus>0 && numOfsingleClus>0)){
+    if(((numOfClus>=1 && numOfClus<=3)||(numOfsingleClus>=1 && numOfsingleClus<=3))){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // =======================================
       // Common condition for this section:
       // Involves only 2 single crysClusters
       // ========================================
+      if(((numOfClus==1 && numOfsingleClus==0)||(numOfClus==0 && numOfsingleClus==1)))
+        goto exitFilltree;
       scoring->init();
-      scoring->clusterEval(clusEne,singleEne,clusEr,clusEz,clusThetaE,clusPhiE,singR,singZ,singTheta,singPhi);
+      if(numOfClus==3 && numOfsingleClus==0){
+        scoring->clusterEval(clusEne,clusEr,clusEz,clusThetaE,clusPhiE);
+      }else
+      if(numOfClus==0 && numOfsingleClus==3){
+        scoring->clusterEval(singleEne,singR,singZ,singTheta,singPhi);
+      }else{
+        scoring->clusterEval(clusEne,singleEne,clusEr,clusEz,clusThetaE,clusPhiE,singR,singZ,singTheta,singPhi);
+      }
       pr2px=scoring->getprPx();   pr2py=scoring->getprPy();  pr2pz=scoring->getprPz();
       E2clust=scoring->getE();
       // cluster PID 1:
@@ -1881,7 +1890,7 @@ Long_t Det_ClusterCsI::process(){
      ****************************************************/
     // K+ Lorentz vector info. from pi+ and pi0
     prim1lv.SetPxPyPzE(pr1px, pr1py, pr1pz,pr1Etot);
-    TLorentzVector kaon=prim1lv+prim2lv;
+    kaon=prim1lv+prim2lv;
     //ThreeVector for angular analysis
     prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
     prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
