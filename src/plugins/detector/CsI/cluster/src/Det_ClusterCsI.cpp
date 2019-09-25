@@ -1843,7 +1843,8 @@ Long_t Det_ClusterCsI::process(){
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
     }else
-    if((numOfClus>=1 && numOfClus<=3)||(numOfsingleClus>=1 && numOfsingleClus<=3)){
+    if(((numOfClus>=1 && numOfClus<=3)||(numOfsingleClus>=1 && numOfsingleClus<=3))
+		    &&(numOfClus>0 && numOfsingleClus>0)){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // =======================================
