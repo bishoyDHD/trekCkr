@@ -1889,7 +1889,7 @@ Long_t Det_ClusterCsI::process(){
     prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
     prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
     if(prim2lv.M()<0.09 || prim2lv.M()>.150) goto exitFilltree;
-    if(E2clust<0.100 || E2clust>.30) goto exitFilltree;
+    //if(E2clust<0.100 || E2clust>.30) goto exitFilltree;
     // Fill histos
     E2g->Fill(E2clust);
     // Fill tree var

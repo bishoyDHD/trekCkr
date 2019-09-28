@@ -2,6 +2,7 @@
 #define __COVFEFE__
 
 #include <marinateCsI.h>
+#include "evalClusters.h"
 #include "TObject.h"
 #include "Plugin.h"
 #include "TTree.h"
@@ -41,6 +42,7 @@ class covfefe:public Plugin{
                       {{303.75,311.25},{318.75,326.25}},
                       {{333.75,341.25},{348.75,356.25}}};
   double lowRange, upRange, apcsi;
+  evalClusters* clustEval;
  public:
   covfefe(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);
   virtual ~covfefe();

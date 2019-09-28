@@ -13,6 +13,9 @@
 
 Long_t covfefe::hist_clust(){
   gStyle->SetOptStat(0);
+  clustEval=new evalClusters();
+  //clustEval->setChannel(14); // must be called before defHistos (defaul chan7)
+  clustEval->defHistos();
   E_pi0[0]=dH1("Epi0", " E_{total}(2#gamma)",75.5,0.,0.60);
   M_pi0[0]=dH1("Mpi0", " M_{#pi^{0}}",50.5,0.,0.4);
   waveID[0]=dH1("waveID", "Waveform ID", 8,0.,8.);
@@ -214,6 +217,8 @@ Long_t covfefe::process_clust(){
       //E_pi0[0]->Fill(clsmar->Clus2E);
       //E_pi0[2]->Fill(clsmar->Clus1E);
       E_pi0[1]->Fill(clsmar->E_prim2);
+      clustEval->fillHistos(clsmar->M_prim2,clsmar->clCosTheta,clsmar->E_prim2,clsmar->prCosTheta);
+      clustEval->fillHistos(clsmar->cpid1theta,clsmar->cpid1phi,clsmar->cpid2theta,clsmar->cpid2phi,0,0);
     //}
   }
 
@@ -230,6 +235,7 @@ Long_t covfefe::finalize_clust(){
   TCanvas* c7=new TCanvas("c7"," Angle b/n pi+ and pi0 ",808,700);
   TCanvas* c8=new TCanvas("c8"," Angle b/n pi+ and 2gamma ",808,700);
   TCanvas* c9=new TCanvas("c9"," Parameters to check ",808,700);
+  clustEval->drawHistos();
   c1->Divide(2,2);
   c1->cd(3);
   gStyle->SetOptStat(0);
