@@ -1836,7 +1836,7 @@ Long_t Det_ClusterCsI::process(){
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
     }else
-    if(numOfClus<=3 && numOfsingleClus<=3){
+    if(numOfClus<=4 && numOfsingleClus<=4){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
       // =======================================
@@ -1888,8 +1888,8 @@ Long_t Det_ClusterCsI::process(){
     //ThreeVector for angular analysis
     prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
     prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-    if(prim2lv.M()<0.09 || prim2lv.M()>.150) goto exitFilltree;
-    //if(E2clust<0.100 || E2clust>.30) goto exitFilltree;
+    if(prim2lv.M()<0.07 || prim2lv.M()>.150) goto exitFilltree;
+    if(E2clust<0.090 || E2clust>.300) goto exitFilltree;
     // Fill histos
     E2g->Fill(E2clust);
     // Fill tree var
