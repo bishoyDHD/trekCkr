@@ -1888,7 +1888,7 @@ Long_t Det_ClusterCsI::process(){
     //ThreeVector for angular analysis
     prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
     prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-    if(prim2lv.M()<0.07 || prim2lv.M()>.150) goto exitFilltree;
+    if(prim2lv.M()<0.09 || prim2lv.M()>.130) goto exitFilltree;
     if(E2clust<0.090 || E2clust>.300) goto exitFilltree;
     // Fill histos
     E2g->Fill(E2clust);
