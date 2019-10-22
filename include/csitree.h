@@ -46,7 +46,7 @@ class CRTSingleCsI:public CRTBase{
   //Var for all pulse types
   Int_t ud, fb;
   Double_t ped, phei, calInt, tpeak, tref[3];
-  Double_t refpk[3], tcorr[3], refmn[3];
+  Double_t refpk[3], tcorr[3],rgaus[3],refmn[3];
   Double_t thSing, phiSing, trise;
   int crysID, typeAB;
   int indexCsI, clock;
@@ -68,6 +68,11 @@ class CRTSingleCsI:public CRTBase{
 };
 class CRTClusterCsI:public CRTBase{
  public:
+  // timing determination for CsI(Tl):
+  Double_t tpeak, tref[3],rgaus[3];
+  Double_t refpk[3], tcorr[3], refmn[3];
+  Double_t trise;
+  // cluster variables
   Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak

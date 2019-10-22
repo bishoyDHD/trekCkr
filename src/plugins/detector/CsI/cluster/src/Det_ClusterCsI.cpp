@@ -71,7 +71,13 @@ std::size_t get_nthIndex(ve, std::size_t k){
   );
   return indexes[k];
 }
-
+//function to get timing from ref. module
+std::string Det_ClusterCsI::refT(){                                                                            
+  char reft[1000], timing[1000];
+  sprintf(reft,"1-exp(-(x-[1])/[2])");
+  sprintf(timing,"[0]*(x-[1])/(%s)+[3]",reft);
+  return timing;
+}
 // Method to read in external files such as calibration par's
 void Det_ClusterCsI::readFiles(){
   string fileName="calibPar.txt";
@@ -202,7 +208,6 @@ void Det_ClusterCsI::initVar(){
   treeClus->waveID=dummy;
   treeClus->dubP_1=dummy;
   treeClus->channel=dummy;
-  // initialize some vector variables 
   treeClus->clusterM=dummy;      treeClus->E_prim2=dummy;
   treeClus->ClustCrys=dummy;     treeClus->M_prim2=dummy;
   treeClus->Ncrys=dummy;         treeClus->prim2M2=dummy;
@@ -283,6 +288,98 @@ Long_t Det_ClusterCsI::process(){
         }
       //}
     }*/
+
+    // reference timing from 3 modules
+    // timing from all 3 modules will considered
+    if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
+		    (indexClock==0 || indexClock==4 || indexClock==8)){
+      for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
+        h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
+      }
+      x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
+          GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
+      // use switch statement for various timing modules
+      // all 3 will be use and the timing analysis will be conducted accordingly
+      lowRange=x1-6; upRange=x1+6;
+      TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+      TF1* f2=new TF1("f2",refT().c_str(),0,50);
+      switch(indexClock){
+        case 0:
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[0]=f1->GetMaximum();
+          minfn[0]=f2->GetMinimum();
+          cf50[0]=.5*maxfn[0]+.5*minfn[0];
+          // Fill tree variables here:
+          T_ref[0]=f2->GetX(cf50[0]);
+          refgaus[0]=f1->GetX(maxfn[0]);
+          treeClus->rgaus[0]=refgaus[0];
+          treeClus->tref[0]=T_ref[0];   treeClus->refpk[0]=maxfn[0];
+          treeClus->refmn[0]=minfn[0];
+          //std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
+          //std::cout<< " Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time(1): "<<T_ref[0]<<" "<<refgaus[0]<<"\n";
+          //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        case 4:
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[1]=f1->GetMaximum();
+          minfn[1]=f2->GetMinimum();
+          cf50[1]=.5*maxfn[1]+.5*minfn[1];
+          // Fill tree variables here:
+          T_ref[1]=f2->GetX(cf50[1]);
+          refgaus[1]=f1->GetX(maxfn[1]);
+          treeClus->rgaus[1]=refgaus[1];
+          treeClus->tref[1]=T_ref[1];   treeClus->refpk[1]=maxfn[1];
+          treeClus->refmn[1]=minfn[1];
+          //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time (2): "<<T_ref[1]<<" "<<refgaus[1]<<"\n";
+          //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        case 8:
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[2]=f1->GetMaximum();
+          minfn[2]=f2->GetMinimum();
+          cf50[2]=.5*maxfn[2]+.5*minfn[2];
+          T_ref[2]=f2->GetX(cf50[2]);
+          refgaus[2]=f1->GetX(maxfn[2]);
+          // Fill tree variables here:
+          treeClus->rgaus[2]=refgaus[2];
+          treeClus->tref[2]=T_ref[2];   treeClus->refpk[2]=maxfn[2];
+          treeClus->refmn[2]=minfn[2];
+          //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time (3): "<<T_ref[2]<<" "<<refgaus[2]<<"\n";
+          ////std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        default:
+          break;
+      }
+    }
     // Looking at signal modules: ignore timing and reference modules
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
                     !(indexClock==0 || indexClock==2 || indexClock==4 ||
@@ -1244,7 +1341,8 @@ Long_t Det_ClusterCsI::process(){
     double ntheta, nphi;
     int numOfClus=0, numOfsingleClus=0;
     for(std::size_t mm=0; mm !=indexph.size(); mm++){
-      const auto index=get_nthIndex(indexph, mm);
+      //const auto index=get_nthIndex(indexph, mm);
+      const std::size_t index=get_nthIndex(indexph, mm);
       std::cout<<"  the greater index --> "<<index <<std::endl;
               //<< " with value "<<indexph[index]<<std::endl;
       //std::nth_element(begin(hcrys), begin(hcrys)+ii, end(hcrys));

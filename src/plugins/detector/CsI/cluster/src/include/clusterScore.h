@@ -52,6 +52,10 @@ public:
   // function for many crystal cluster case:
   // function for single crystal cluster case:
   void clusterEval(const std::vector<double> &mCrys,const std::vector<double> r,const std::vector<double> z,const std::vector<double> &mtheta,const std::vector<double> &mphi);
+  // in case r & z do not matter:
+  // for manyCrys and singleCrys and mixed cases
+  void clusterEval(const std::vector<double> &mCrys,const std::vector<double> &mtheta,const std::vector<double> &mphi);
+  void clusterEval(std::vector<double> &mcCrys,std::vector<double> &scCrys,std::vector<double> &theta1,std::vector<double> &phi1,std::vector<double>& th2,std::vector<double>& phi2);
   void setOpangClus(const std::vector<double> &theta,const std::vector<double> &phi);
   void setOpangPrimary(const std::vector<double> &theta,const std::vector<double> &phi);
   // set cluster PID

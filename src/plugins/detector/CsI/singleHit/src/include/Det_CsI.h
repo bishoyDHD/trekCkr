@@ -32,6 +32,7 @@ class Det_CsI:public Plugin{
   //CRTClusterCsI *treeClus; // Output branch for CSI cluster var
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
   bool loopX,csiT, firedCsI, notfire;
+  std::string refT();
  public:
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2, minx;
   double valx1, valx2;
@@ -83,7 +84,7 @@ class Det_CsI:public Plugin{
   Int_t ud, event, module, multip;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2, dummy;
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
-  Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
+  Double_t T_ref[3], maxfn[3], minfn[3], cf50[3], refgaus[3];
   std::vector<double> xpos, val, csThet, csPhi;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;

@@ -44,6 +44,7 @@ class Det_ClusterCsI:public Plugin{
   CRTClusterCsI *treeClus;  // Output branch for CSI single hit var
   TCanvas* c1;
   clusterScore* scoring;
+  std::string refT();
   bool resetH, notfire;
   const double M_pi0=0.1349766;
   const double M_piP=0.13957018;
@@ -173,7 +174,7 @@ class Det_ClusterCsI:public Plugin{
   Int_t ud, event, module, multip;
   Double_t ped, kmu2, phei, calInt, dubPed, tpeak, tref, f1chi2;
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
-  Double_t T_ref[3], maxfn[3], minfn[3], cf50[3];
+  Double_t T_ref[3], maxfn[3], minfn[3], cf50[3], refgaus[3];
   double pr2px, pr2py, pr2pz;
   double cl1px, cl1py, cl1pz;
   double cl2px, cl2py, cl2pz;

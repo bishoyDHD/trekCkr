@@ -125,11 +125,12 @@ void Det_CsI::initVar(){
     treeSing->refpk[i]=dummy;
     treeSing->tcorr[i]=dummy;
     treeSing->refmn[i]=dummy;
+    treeSing->rgaus[i]=dummy;
   }
 }
 
 //function to get timing from ref. module
-std::string refT(){
+std::string Det_CsI::refT(){
   char reft[1000], timing[1000];
   sprintf(reft,"1-exp(-(x-[1])/[2])");
   sprintf(timing,"[0]*(x-[1])/(%s)+[3]",reft);
@@ -167,9 +168,12 @@ Long_t Det_CsI::process(){
     if(p[1]=='b' || p[1]=='B') indexFB=1;
     int indexUD=0;
     if(p[0]=='d' || p[0]=='D') indexUD=1;
+    // since this is a calibration plugin,
+    // we should only consider single crystal hits
+    if(treeRaw->nChannel>7) goto exitLoop;
 
-    /*
-    //reference timing from 3 modules
+    // reference timing from 3 modules
+    // timing from all 3 modules will considered
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
@@ -177,110 +181,110 @@ Long_t Det_CsI::process(){
       }
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
           GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-      if(indexClock==0){
-        lowRange=x1-6; upRange=x1+6;
-        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
-        TF1* f2=new TF1("f2",refT().c_str(),0,50);
-        f2->SetParameters(21.3,29.6,1.85,120);
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
-        maxfn[0]=f1->GetMaximum();
-        minfn[0]=f2->GetMinimum();
-        cf50[0]=.5*maxfn[0]+.5*minfn[0];
-	// Fill tree variables here:
-        T_ref[0]=f2->GetX(cf50[0]);
-        treeSing->indexCsI=treeRaw->indexCsI[i];
-        treeSing->phei=dummy;
-        treeSing->csiArrange[0]=p[0];
-        treeSing->csiArrange[1]=p[1];
-        treeSing->clock=indexClock+1;
-        treeSing->ud=indexUD;         treeSing->fb=indexFB;
-        treeSing->tref[0]=T_ref[0];            treeSing->refpk[0]=maxfn[0];
-        treeSing->refmn[0]=minfn[0];
-
-	//std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
-        //std::cout<< " Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
-        //std::cout<<"\n ---------------------------------------------------------\n";
-        //std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
-        //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1; delete f2;
-	//break;
-      }
-      if(indexClock==4){
-        lowRange=x1-6; upRange=x1+6;
-        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
-        TF1* f2=new TF1("f2",refT().c_str(),0,50);
-        f2->SetParameters(21.3,29.6,1.85,120);
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
-        maxfn[1]=f1->GetMaximum();
-        minfn[1]=f2->GetMinimum();
-        cf50[1]=.5*maxfn[1]+.5*minfn[1];
-	// Fill tree variables here:
-        treeSing->indexCsI=treeRaw->indexCsI[i];
-        treeSing->phei=dummy;
-        treeSing->csiArrange[0]=p[0];
-        treeSing->csiArrange[1]=p[1];
-        treeSing->clock=indexClock+1;
-        treeSing->ud=indexUD;         treeSing->fb=indexFB;
-        T_ref[1]=f2->GetX(cf50[1]);
-        treeSing->tref[1]=T_ref[1];            treeSing->refpk[1]=maxfn[1];
-        treeSing->refmn[1]=minfn[1];
-        //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
-        //std::cout<<"\n ---------------------------------------------------------\n";
-        ////std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
-        //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1; delete f2;
-      }
-      if(indexClock==8){
-        csiT=true;
-        lowRange=x1-6; upRange=x1+6;
-        TF1* f1=new TF1("f1","gaus",lowRange,upRange);
-        TF1* f2=new TF1("f2",refT().c_str(),0,50);
-        f2->SetParameters(21.3,29.6,1.85,120);
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
-        h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
-        maxfn[2]=f1->GetMaximum();
-        minfn[2]=f2->GetMinimum();
-        cf50[2]=.5*maxfn[2]+.5*minfn[2];
-        T_ref[2]=f2->GetX(cf50[2]);
-	// Fill tree variables here:
-        treeSing->indexCsI=treeRaw->indexCsI[i];
-        treeSing->phei=dummy;
-        treeSing->csiArrange[0]=p[0];
-        treeSing->csiArrange[1]=p[1];
-        treeSing->clock=indexClock+1;
-        treeSing->ud=indexUD;         treeSing->fb=indexFB;
-        treeSing->tref[2]=T_ref[2];            treeSing->refpk[2]=maxfn[2];
-        treeSing->refmn[2]=minfn[2];
-        //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
-        //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-        //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-        //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-        //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
-        //std::cout<<"\n ---------------------------------------------------------\n";
-        ////std::cout<<" \n\n  ------> reference time:  "<<T_ref<<" \n\n";
-        ////std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
-        delete f1; delete f2;
-	if(csiT && firedCsI) // condition to go to next event
-	  goto exitLoop;  
-        //break;
-      //goto signalChan; //jail break after reaching this point
+      // use switch statement for various timing modules
+      // all 3 will be use and the timing analysis will be conducted accordingly
+      lowRange=x1-6; upRange=x1+6;
+      TF1* f1=new TF1("f1","gaus",lowRange,upRange);
+      TF1* f2=new TF1("f2",refT().c_str(),0,50);
+      switch(indexClock){
+        case 0:
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[0]=f1->GetMaximum();
+          minfn[0]=f2->GetMinimum();
+          cf50[0]=.5*maxfn[0]+.5*minfn[0];
+          // Fill tree variables here:
+          T_ref[0]=f2->GetX(cf50[0]);
+          refgaus[0]=f1->GetX(maxfn[0]);
+          treeSing->indexCsI=treeRaw->indexCsI[i];
+          treeSing->phei=dummy;
+          treeSing->rgaus[0]=refgaus[0];
+          treeSing->csiArrange[0]=p[0];
+          treeSing->csiArrange[1]=p[1];
+          treeSing->clock=indexClock+1;
+          treeSing->ud=indexUD;         treeSing->fb=indexFB;
+          treeSing->tref[0]=T_ref[0];   treeSing->refpk[0]=maxfn[0];
+          treeSing->refmn[0]=minfn[0];
+          //std::cout<<"\n Event number is:  "<<treeRaw->eventNo<<std::endl; 
+          //std::cout<< " Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time(1): "<<T_ref[0]<<" "<<refgaus[0]<<"\n";
+          //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        case 4:
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[1]=f1->GetMaximum();
+          minfn[1]=f2->GetMinimum();
+          cf50[1]=.5*maxfn[1]+.5*minfn[1];
+          // Fill tree variables here:
+          T_ref[1]=f2->GetX(cf50[1]);
+          refgaus[1]=f1->GetX(maxfn[1]);
+          treeSing->indexCsI=treeRaw->indexCsI[i];
+          treeSing->phei=dummy;
+          treeSing->rgaus[1]=refgaus[1];
+          treeSing->csiArrange[0]=p[0];
+          treeSing->csiArrange[1]=p[1];
+          treeSing->clock=indexClock+1;
+          treeSing->ud=indexUD;         treeSing->fb=indexFB;
+          treeSing->tref[1]=T_ref[1];   treeSing->refpk[1]=maxfn[1];
+          treeSing->refmn[1]=minfn[1];
+          //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time (2): "<<T_ref[1]<<" "<<refgaus[1]<<"\n";
+          //std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        case 8:
+          csiT=true;
+          f2->SetParameters(21.3,29.6,1.85,120);
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f2,"QR+");
+          h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1,"QR+");
+          maxfn[2]=f1->GetMaximum();
+          minfn[2]=f2->GetMinimum();
+          cf50[2]=.5*maxfn[2]+.5*minfn[2];
+          T_ref[2]=f2->GetX(cf50[2]);
+          refgaus[2]=f1->GetX(maxfn[2]);
+          // Fill tree variables here:
+          treeSing->indexCsI=treeRaw->indexCsI[i];
+          treeSing->phei=dummy;
+          treeSing->rgaus[2]=refgaus[2];
+          treeSing->csiArrange[0]=p[0];
+          treeSing->csiArrange[1]=p[1];
+          treeSing->clock=indexClock+1;
+          treeSing->ud=indexUD;         treeSing->fb=indexFB;
+          treeSing->tref[2]=T_ref[2];   treeSing->refpk[2]=maxfn[2];
+          treeSing->refmn[2]=minfn[2];
+          //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+          //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+          //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+          //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+          //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
+          //std::cout<<"\n ---------------------------------------------------------\n";
+          //std::cout<<" \n\n  ------>ref time and peak time (3): "<<T_ref[2]<<" "<<refgaus[2]<<"\n";
+          ////std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
+          delete f1; delete f2;
+          break;
+        default:
+          break;
       }
     }
+    /*
     if(firedCsI)
-      goto jailbreak; 
-    */
+      goto jailbreak; */
     // Painlessly remove the both event-tag and timing modules from 
     // larger analysis --> hope for loss in performance
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
@@ -307,16 +311,16 @@ Long_t Det_CsI::process(){
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
-          //if(treeRaw->indexCsI[i]-1==15){
-            //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
-            //std::cout<< " \n Index clock: "<<indexClock<<std::endl;
-            //std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
-            //std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
-            //std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
-            //std::cout<<"\n ---------------------------------------------------------\n";
+          if(treeRaw->indexCsI[i]-1==15){
+            std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
+            std::cout<< " \n Index clock: "<<indexClock<<std::endl;
+            std::cout<< " Gap config FB is  : " <<p[1]<<std::endl;
+            std::cout<< " Gap config UD is  : " <<p[0]<<std::endl;
+            std::cout<< " size of nChannel is : " <<treeRaw->indexCsI[i]-1<<std::endl;
+            std::cout<<"\n ---------------------------------------------------------\n";
             //std::cout<< " size of nSample is  : " <<treeRaw->nSample[i]<<std::endl;
             //std::cout<< " Chan No.: "<<treeRaw->nChannel<<std::endl;
-          //}
+          }
           xpos.clear();
           val.clear();
           double mn = h1Fits[indexClock][indexFB][indexUD][indexModule]->
@@ -479,159 +483,6 @@ Long_t Det_CsI::process(){
             //std::cout<< "  Size of x is:  "<<xpos.size()<<endl;
             xx1=xpos.size(); xx2=0; ymax=y1;
             nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
-            if(nfound>=3){
-	      int parV=13;
-              std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
-	      //if(nfound==4)
-                //pileUp=mn2.quadruplemodel();
-              TF1* f1=new TF1("f1",pileUp.c_str(),0.0,250);
-              for(int n=0; n<13; n+=1){
-                f1->SetParameter(n,mn2.par(n));
-                f1->SetParLimits(n,mn2.parmin(n),mn2.parlim(n));
-              }
-              double *xpeaks=s->GetPositionX();
-              double posX[3];
-              double valY[3];
-              for(int ivar=0; ivar<nfound; ivar++){
-                double a=xpeaks[ivar];
-                int bin=1+Int_t(a+.5);
-                posX[ivar]=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(bin);
-              }
-              sort(xpeaks,xpeaks+nfound);
-	      for(int valy=0; valy<nfound; valy++)
-                valY[valy]=h1Fits[indexClock][indexFB][indexUD][indexModule]->
-          	    GetBinContent(h1Fits[indexClock][indexFB][indexUD][indexModule]->FindBin(xpeaks[valy]));
-              f1->SetParameter(0,valY[0]);
-              f1->SetParLimits(0,valY[0]-11.7,valY[0]+71.7);
-              //f1->SetParLimits(0,y1-61.7,y1+971.7);
-              f1->SetParameter(1,xpeaks[0]);
-              f1->SetParLimits(1,xpeaks[0]-25.7,xpeaks[0]+10.7);
-              f1->SetParameter(8,bl);
-              f1->SetParLimits(8,bl-61.7,bl+171.7);
-              f1->SetParameter(9,xpeaks[1]+.9);
-              f1->SetParLimits(9,xpeaks[1]-31.7,xpeaks[1]+21.7);
-              f1->SetParameter(10,valY[1]);
-              f1->SetParLimits(10,valY[1]-61.7,valY[1]+171.7);
-              f1->SetParameter(12,xpeaks[2]+.1);
-              f1->SetParLimits(12,xpeaks[2]-61.7,xpeaks[2]+71.7);
-              f1->SetParameter(11,valY[2]);
-              f1->SetParLimits(11,valY[2]-61.7,valY[2]+101.7);
-	      //if(nfound==4){
-	      //  f1->SetParameter(13,valY[3]);
-              //  f1->SetParLimits(13,valY[3]-61.7,valY[3]+101.7);
-              //  f1->SetParameter(14,xpeaks[3]+.1);
-              //  f1->SetParLimits(14,xpeaks[3]-61.7,xpeaks[3]+71.7);
-	      //  parV=15;
-	      //}
-      	      p0->Fill(f1->GetParameter(0));
-      	      p1->Fill(f1->GetParameter(1));
-      	      p9->Fill(f1->GetParameter(9));
-      	      p10->Fill(f1->GetParameter(10));
-              h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f1); //,"0");
-      	      f1chi2=f1->GetChisquare();
-              std::cout<<" ****** Checking the position of the peaks: "<<xpeaks[0]<<", "<<xpeaks[1];
-	      std::cout<<", "<<xpeaks[2]<<std::endl;
-      	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
-              // Create wrapper for minimizer
-              fitfn3 ffcn1(xpos, xx1, xx2, val, ymax);
-              //fitfn4 ffcn2(xpos, xx1, xx2, val, ymax);
-              std::vector<double> param;
-              std::vector<double> parm(15), err(15);
-              param.clear(); parm.clear(); err.clear();
-              MnUserParameters upar;
-              for(int n=0; n<parV;n+=1){
-                upar.Add(mn2.nameL(n).c_str(), f1->GetParameter(n),1e-3); //,parmin(n), parlim(n), 0.1);
-                //upar.Add(nameL(n).c_str(), f1->GetParameter(n), parmin(n), parlim(n), 1e-3);
-              }
-              // create Migrad minimizer
-              MnMigrad migrad(ffcn1, upar);
-	      //MnMigrad migrad(ffcn2, upar);
-              //FunctionMinimum min = migrad();  //6000,1e-9);
-              FunctionMinimum min = migrad(180,1e-6);
-              std::cout<<"minimum: "<<min<<std::endl;
-              //MnHesse hesse;
-              for(int ivar=0; ivar<parV; ivar+=1){
-                param.push_back(migrad.Value(mn2.nameL(ivar).c_str()));
-                //std::cout<< "  par["<<i<<"] value --> ["<<param[ivar]<<"] \n";
-              }
-              for(int ivar=0; ivar<h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetNbinsX()+1; ivar+=1){
-                double x=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetBinCenter(ivar);
-                double yv=h1Fits[indexClock][indexFB][indexUD][indexModule]->GetBinContent(ivar);
-                double mnfit=mn2.model3(x, param);
-		//if(nfound==4)
-                  //mnfit=mn2.model4(x, param);
-                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
-                double res=100*(yv-mnfit)/yv;
-                h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
-                h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
-              }
-              double mnx,mny,max,may;
-              max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-          	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-              if(max>=60 && max<=65){
-		loopX=true; firedCsI=true;
-                mnx=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMinimumBin());
-                may=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(max));
-                mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
-                TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
-                int xmin=0, xmax=250;
-                int bmin=axis->FindBin(xmin);
-                int bmax=axis->FindBin(xmax);
-                int integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
-                integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
-                integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
-                      GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
-                double diff=may-mny;
-		double area=integral-mny*250;
-        	clock=indexClock;
-        	fb=indexFB;
-        	ud=indexUD;
-        	module=indexModule;
-                int imod=0, igap=4*indexClock+2;
-                int csimod=(-1*treeRaw->indexCsI[i])+1;
-                if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
-                if(p[1]=='b' || p[1]=='B') csimod=treeRaw->indexCsI[i];
-                h2clus->Fill(csimod,igap,diff);
-                h1kmu2->Fill(diff); h1ped->Fill(mny);
-		int tAB=0;
-                if((p[0]=='u' || p[0]=='U') && (indexModule>=9)) tAB=1;
-                std::cout<< " reading out value for Up and TypeB Crystal: "<<tAB<<endl;
-                if((p[0]=='d' || p[0]=='D') && (indexModule<=8)) tAB=1;
-                double csitheta=theta[indexFB][indexModule];
-                double csiphi=phi[indexClock][ud][tAB];
-                csThet.push_back(csitheta), csPhi.push_back(csiphi);
-		//Filling the TTree here:
-                treeSing->indexCsI=treeRaw->indexCsI[i];
-                treeSing->tpeak=max;
-                treeSing->trise=param[1];
-	        tsigL=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
-		if(nfound==3 && xpeaks[2]-xpeaks[1]<=20){
-                  treeSing->kmu2=diff;
-                  treeSing->dubphei=xpeaks[1];
-                  treeSing->intKmu2=area;
-		}
-                treeSing->phei=diff;          treeSing->ped=mny;
-                treeSing->dubPed=mny;         
-                treeSing->calInt=area;
-                treeSing->csiArrange[0]=p[0];
-                treeSing->csiArrange[1]=p[1];
-                treeSing->clock=indexClock+1;
-                treeSing->thSing=csitheta;
-                treeSing->phiSing=csiphi;
-                treeSing->waveID=3;
-                treeSing->ud=indexUD;         treeSing->fb=indexFB;
-                treeSing->tcorr[0]=(tsigL-T_ref[0]);
-                treeSing->tcorr[1]=(tsigL-T_ref[1]);
-                treeSing->tcorr[2]=(tsigL-T_ref[2]);
-		delete f1;
-	        //if(loopX && csiT)
-	          goto exitLoop;
-              } // <-- End of K+ decay time if loop
-            } //<-- Use to get rid of 3 peaks functions here * /
             if(nfound==2){
               TF1* f1=new TF1("f1",doubleFit.c_str(),1.0,250);
               for(int n=0; n<15; n+=1){
@@ -758,6 +609,8 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[0]=(tsigL-T_ref[0]);
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
+                treeSing->tcorr[2]=(tsigL-T_ref[2]);
+		std::cout<<" --->rise time: "<<param[1]<<"\n";
 		delete f1;
 	        //if(loopX && csiT)
 	          goto exitLoop;
@@ -865,6 +718,7 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[0]=(tsigL-T_ref[0]);
                 treeSing->tcorr[1]=(tsigL-T_ref[1]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
+		std::cout<<" --->rise time: "<<param[1]<<"\n";
 		delete f1;
 	        //if(loopX && csiT)
 	          goto exitLoop;
