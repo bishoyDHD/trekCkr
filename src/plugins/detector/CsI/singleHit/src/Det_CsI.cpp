@@ -279,6 +279,7 @@ Long_t Det_CsI::process(){
           delete f1; delete f2;
           break;
         default:
+          delete f1; delete f2;
           break;
       }
     }
