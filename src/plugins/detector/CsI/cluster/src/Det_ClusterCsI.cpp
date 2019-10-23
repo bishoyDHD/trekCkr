@@ -215,6 +215,7 @@ void Det_ClusterCsI::initVar(){
   treeClus->cpid1phiE=dummy;     treeClus->kM2=dummy;    
   treeClus->cpid2thetaE=dummy;   treeClus->cpid1E=dummy; 
   treeClus->cpid2phiE=dummy;     treeClus->cpid2E=dummy; 
+  E2clust=-1000;
 }
 Long_t Det_ClusterCsI::process(){
   phval=new vector<double>();
@@ -291,6 +292,7 @@ Long_t Det_ClusterCsI::process(){
 
     // reference timing from 3 modules
     // timing from all 3 modules will considered
+    /*
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
@@ -380,6 +382,7 @@ Long_t Det_ClusterCsI::process(){
           break;
       }
     }
+    */
     // Looking at signal modules: ignore timing and reference modules
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
                     !(indexClock==0 || indexClock==2 || indexClock==4 ||
@@ -1865,11 +1868,11 @@ Long_t Det_ClusterCsI::process(){
     pr1Etot=std::sqrt(std::pow(pr1p,2)+std::pow(M_piP,2));//-M_pi0;
     std::cout<<"\n ----------  pi0 E_tot = "<<T_pi0<<" ---------------\n";
     std::cout<<"\n  Checking cos(theta)s:      "<<std::cos(2*3.142)<<endl;
-    double E2clust=-1000;
     TLorentzVector prim1lv,prim2lv;
     TLorentzVector kaon;
     TVector3 prim1vec3,prim2vec3,gv1;
     double opAngle,prim2px,prim2py,prim2pz;
+    if(numOfClus>4 || numOfsingleClus>4) goto exitFilltree;
     if(numOfClus==2 && numOfsingleClus==0){
       // FIXME: Apply timing cut for clusters > 2
       // calculate 3-momentum direction for pi0: from (theta,phi) of 2*gamma
@@ -1898,9 +1901,15 @@ Long_t Det_ClusterCsI::process(){
       cl2E=scoring->getclE();
       cl2theta=scoring->getclTheta();
       cl2phi=scoring->getclPhi();
+      clustM=scoring->getClustM();
       std::cout<<" **** g1px is => "<<scoring->getclPx()<<"\n";
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
+      //ThreeVector for angular analysis
+      prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
+      prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
+      if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
+      if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
     }else
     if(numOfClus==0 && numOfsingleClus==2){
       // FIXME: Apply timing cut for clusters > 2
@@ -1930,9 +1939,15 @@ Long_t Det_ClusterCsI::process(){
       cl2E=scoring->getclE();
       cl2theta=scoring->getclTheta();
       cl2phi=scoring->getclPhi();
+      clustM=scoring->getClustM();
       std::cout<<" **** g1px is => "<<scoring->getclPx()<<"\n";
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
+      //ThreeVector for angular analysis
+      prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
+      prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
+      if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
+      if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
     }else
     if(numOfClus<=4 && numOfsingleClus<=4){
       // FIXME: Apply timing cut for clusters > 2
@@ -1973,9 +1988,17 @@ Long_t Det_ClusterCsI::process(){
       cl2E=scoring->getclE();
       cl2theta=scoring->getclTheta();
       cl2phi=scoring->getclPhi();
+      clustM=scoring->getClustM();
       std::cout<<" **** g1px is => "<<scoring->getclPx()<<"\n";
       opAngle=scoring->getOpAngleClust();
       prim2lv=scoring->getprimLV();
+      //ThreeVector for angular analysis
+      prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
+      prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
+      //if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
+      // set variables for multiple clusters
+      if(prim2lv.M()<0.09 || prim2lv.M()>.180) goto exitFilltree;
+      if(E2clust<0.100 || E2clust>.300) goto exitFilltree;
     }
     /****************************************************
      *     Fill tree Variables
@@ -1983,15 +2006,10 @@ Long_t Det_ClusterCsI::process(){
     // K+ Lorentz vector info. from pi+ and pi0
     prim1lv.SetPxPyPzE(pr1px, pr1py, pr1pz,pr1Etot);
     kaon=prim1lv+prim2lv;
-    //ThreeVector for angular analysis
-    prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
-    prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-    if(prim2lv.M()<0.09 || prim2lv.M()>.130) goto exitFilltree;
-    if(E2clust<0.090 || E2clust>.300) goto exitFilltree;
     // Fill histos
     E2g->Fill(E2clust);
     // Fill tree var
-    treeClus->E_prim2=cl1E+cl2E;
+    treeClus->E_prim2=E2clust;
     treeClus->cpid1Px=cl1px;       treeClus->cpid2Px=cl2px;      treeClus->prim2px=prim2lv.Px();
     treeClus->cpid1Py=cl1py;       treeClus->cpid2Py=cl2py;      treeClus->prim2py=prim2lv.Py();
     treeClus->cpid1Pz=cl1pz;       treeClus->cpid2Pz=cl2pz;      treeClus->prim2pz=prim2lv.Pz();
@@ -2016,12 +2034,14 @@ Long_t Det_ClusterCsI::process(){
     treeClus->cpid2thetaE=cl2theta;
     treeClus->cpid1phiE=cl1phi;
     treeClus->cpid2phiE=cl2phi;
+    treeClus->clusterM=clustM;
     std::cout<<"\n  piPecking total Cluster Energy:  "<<E2clust<<endl;
     std::cout<<"\n  Angular1 checking (centriod)   ("<<cl1theta<<", "<<cl1phi<<")\n";
     std::cout<<"\n  Angular2 checking (centriod)   ("<<cl2theta<<", "<<cl2phi<<")\n";
     std::cout<<"\n  Checking pi0 InvMass:      "<<prim2lv.M()<<endl;
     std::cout<<"\n  Checking cos(theta):       "<<opAngle<<std::endl;
     std::cout<<"\n  Checking vertex opening    "<<std::cos(prim1vec3.Angle(prim2vec3))<<endl;
+    std::cout<<"\n  Cluster multiplicity:      "<<clustM<<endl;
     treeClus->channel=(numOfClus+numOfsingleClus);
 exitFilltree:
     std::cout<<"\n\n  Number of clusters is   :  "<<numOfClus<<endl;

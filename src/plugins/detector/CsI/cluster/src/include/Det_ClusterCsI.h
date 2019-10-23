@@ -45,6 +45,7 @@ class Det_ClusterCsI:public Plugin{
   TCanvas* c1;
   clusterScore* scoring;
   std::string refT();
+  double E2clust=0;
   bool resetH, notfire;
   const double M_pi0=0.1349766;
   const double M_piP=0.13957018;
@@ -53,6 +54,7 @@ class Det_ClusterCsI:public Plugin{
   double T_pi0, pr1p, thetaE, phiE;
   double clusZ, clusR;
   double rtheta, rphi, z_w, r_w;
+  int clustM;
   //double masses[3];
  public:
   Det_ClusterCsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p);

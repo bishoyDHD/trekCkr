@@ -60,6 +60,8 @@ public:
   void setOpangPrimary(const std::vector<double> &theta,const std::vector<double> &phi);
   // set cluster PID
   void setCpid(int clustPID){cpid=clustPID;};
+  inline void setClustM(int val){cMultip=val;};
+  inline int getClustM(){return cMultip;};
   // set methods for various cluster variables
   // this if for tracked particle as well as cluster variables
   void setprPx(std::vector<clusterVar> &px);
@@ -102,7 +104,7 @@ protected:
   TLorentzVector particlelv;
   TVector3 particle3v;
 private:
-  int clustEvalNo;
+  int clustEvalNo,cMultip;
   int cpid; // determines which value std::map returns
   const int dummy=-1000;
   double particleM;

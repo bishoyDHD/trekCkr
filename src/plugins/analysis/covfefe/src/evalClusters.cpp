@@ -6,7 +6,7 @@ evalClusters::evalClusters():channelNo(7){
 evalClusters::~evalClusters(){
 
 }
-void evalClusters::setChannel(int val){
+void evalClusters::setChannel(int val=7){
   channelNo=val;
 }
 void evalClusters::defHistos(){
@@ -18,8 +18,8 @@ void evalClusters::defHistos(){
       title4="Opening angle of  #pi^{+}#pi^{0}";
       prname1="#pi^{+}";
       prname2="#pi^{0}";
-      clname1="#gamma_{1}";
-      clname2="#gamma_{2}";
+      clname1="#gamma";
+      clname2="#gamma";
       break;
     case 71: // should really be 7.1 for pi0->e+e-gamma. switch only takes int
       title1="Opening angle of 2#gamma";
@@ -42,7 +42,7 @@ void evalClusters::defHistos(){
       clname1="e^{+}";
       clname2="e^{-}";
       break;
-    case 15: // for A' (channel 14)
+    case 15: // for A' (channel 15)
       title1="Opening angle of e^{+}e^{-}";
       title2="Invariant Mass of A'";
       title3="Energy of e^{+}e^{-}";
@@ -67,18 +67,19 @@ void evalClusters::defHistos(){
       break;
   }// end of switch statement
   // Define various histograms
-  clustAng=new TH1D("clAng",title1.c_str(),55.0,-1.1,1.1);
-  invM=new TH1D("invM",title3.c_str(),37.5,0.0,.150);
-  Eclust=new TH1D("Eclust",title3.c_str(),75.0,0.0,.300);
-  primAng=new TH1D("primAng",title4.c_str(),55.0,-1.1,1.1);
+  clustAng=new TH1D("clAng",title1.c_str(),75.0,-1.1,1.1);
+  invM=new TH1D("invM",title2.c_str(),84.50,0.0,.210);
+  Eclust=new TH1D("Eclust",title3.c_str(),100.,0.0,.300);
+  primAng=new TH1D("primAng",title4.c_str(),75.0,-1.1,1.1);
   // needed regardless of channel no.
   thetaPhi=new TH2D("h2ang", "#theta Vs. #phi",24.0,0.,M_PI,48.0,0.,2.*M_PI);
+  clMltp=new TH1D("clusM"," Cluster multiplicity",10,-.5,9.5);
 }
 // function to plot actual histos
 void evalClusters::drawHistos(){
   switch(channelNo){
     case 7:
-      drawCanvas(clustAng,invM,Eclust,primAng,1);
+      drawCanvas(Eclust,invM,clustAng,primAng,1);
       drawCanvas(thetaPhi,1);
       break;
     case 14:
@@ -99,6 +100,10 @@ void evalClusters::fillHistos(double theta1,double phi1,double theta2,double phi
       break;
   }
 }
+// plot cluster multiplicity regardless of channel
+void evalClusters::fillMltp(int val){
+  clMltp->Fill(val);
+}
 void evalClusters::fillHistos(double InvMass,double opAng1,double Etot,double primOpAng){
   invM->Fill(InvMass);
   Eclust->Fill(Etot);
@@ -115,18 +120,22 @@ void evalClusters::drawCanvas(TH2D* h2,int val){
   h2->GetXaxis()->SetTitle(xtitle.c_str());
   h2->GetYaxis()->SetTitle(ytitle.c_str());
   h2->Draw("colz");
+  c1->Write();
 }
 void evalClusters::drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,int val=1){
   std::string cname="c";
+  std::string xtitle;
   cname+=val;
   TCanvas* c1=new TCanvas(cname.c_str(),"Sanity plots",900,800);
   c1->Divide(2,2);
-  std::string xtitle="cos(#theta_{";
+  c1->cd(1);
+  xtitle="E_{";
   xtitle+=clname1;
   xtitle+=clname2;
-  xtitle+="})";
-  c1->cd(1);
+  xtitle+="}";
+  //hist3->GetXaxis()->SetLabelFont(0.35);
   hist1->GetXaxis()->SetTitle(xtitle.c_str());
+  hist1->GetXaxis()->SetTitleSize(0.045);
   hist1->GetYaxis()->SetTitle("conts/bin");
   hist1->Draw("hist");
   c1->cd(2);
@@ -135,24 +144,41 @@ void evalClusters::drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,in
   xtitle+=clname2;
   xtitle+="}";
   hist2->GetXaxis()->SetTitle(xtitle.c_str());
+  hist2->GetXaxis()->SetTitleSize(0.045);
   hist2->GetYaxis()->SetTitle("conts/bin");
   hist2->Draw("hist");
   c1->cd(3);
-  xtitle="E_{";
+  xtitle="cos(#theta_{";
   xtitle+=clname1;
   xtitle+=clname2;
-  xtitle+="}";
-  //hist3->GetXaxis()->SetLabelFont(0.35);
+  xtitle+="})";
   hist3->GetXaxis()->SetTitle(xtitle.c_str());
+  hist3->GetXaxis()->SetTitleSize(0.045);
   hist3->GetYaxis()->SetTitle("conts/bin");
   hist3->Draw("hist");
+  /*
+  // Draw text
+  auto tex=new TLatex(0.,3.," Very preliminary");
+  tex->SetTextColor(17);
+  tex->SetTextSize(1.22);
+  tex->SetTextAngle(30.22);
+  tex->SetLineWidth(2);
+  tex->Draw();*/
   c1->cd(4);
   xtitle="cos(#theta_{";
   xtitle+=prname1;
   xtitle+=prname2;
   xtitle+="})";
   hist4->GetXaxis()->SetTitle(xtitle.c_str());
+  hist4->GetXaxis()->SetTitleSize(0.045);
   hist4->GetYaxis()->SetTitle("conts/bin");
   hist4->Draw("hist");
   c1->Write();
+  TCanvas* c2=new TCanvas("c2","cluster multiplicity",900,800);
+  c2->cd();
+  clMltp->GetXaxis()->SetTitle("number of #gamma cluster");
+  clMltp->GetXaxis()->SetTitleSize(0.045);
+  clMltp->GetYaxis()->SetTitle("conts/bin");
+  clMltp->Draw("hist");
+  c2->Write();
 }

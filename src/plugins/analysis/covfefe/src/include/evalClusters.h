@@ -9,6 +9,7 @@
 #include <TLegend.h>
 #include <TCanvas.h>
 #include <TStyle.h>
+#include <TLatex.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include "Plugin.h"
@@ -29,6 +30,7 @@ public:
   void drawCanvas(TH2D* h,int val);
   void drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,int val);
   void setChannel(int val); // select channel no. for eval
+  void fillMltp(int val);
 private:
   int channelNo; //used for iterating TCanvas and selecting No. of cluster to analyze.
   int Ncrys, Nclust;
@@ -39,6 +41,7 @@ private:
   double cpidphi1, cpidphi2, cpidphi3;
   TH1D* clustAng, *primAng, *Eclust, *invM;
   TH1D* cl1E, *cl2E, *cl3E;
+  TH1D* clMltp;
   TH2D* thetaPhi;
   // just in case I need this later down the line
   double cpid1x, cpid1y, cpid1z;

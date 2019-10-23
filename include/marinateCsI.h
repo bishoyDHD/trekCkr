@@ -33,7 +33,7 @@ class CATSingleCsI:public CATBase{
   //Var for all pulse types
   Int_t ud, fb;
   Double_t ped, phei, calInt, tpeak, tref[3];
-  Double_t refpk[3], tcorr[3], refmn[3];
+  Double_t refpk[3], tcorr[3],rgaus[3], refmn[3];
   Double_t thSing, phiSing, trise;
   int crysID, typeAB;
   int indexCsI, clock;
@@ -48,23 +48,6 @@ class CATSingleCsI:public CATBase{
   Double_t dubphei; //location of second peak
   //Overrange variables
   Double_t ovrpH, ovrpLoc, ovrped;
-  /*
-  Int_t ud, fb;
-  Double_t ped, phei, calInt, tpeak, tref;
-  Double_t thSing, phiSing, trise;
-  int crysID, typeAB;
-  int indexCsI, clock;
-  int csiArrange[2];
-  double tcsi,phdstr;
-  //single peak
-  Double_t sphei; // single peak pulse-height distribution
-  Double_t sptime; //timing of single peak
-  Double_t sped; // pedestal for single pulse
-  //Double peak var
-  Double_t kmu2, dubPed, intKmu2;
-  Double_t dubphei; //location of second peak
-  //Overrange variables
-  Double_t ovrpH, ovrpLoc, ovrped;*/
   CATSingleCsI();
   virtual ~CATSingleCsI();
   ClassDef(CATSingleCsI,1);
@@ -72,6 +55,11 @@ class CATSingleCsI:public CATBase{
 
 class CATClusterCsI:public CATBase{
  public:
+  // timing determination for CsI(Tl):                       
+  Double_t tpeak, tref[3],rgaus[3];
+  Double_t refpk[3], tcorr[3], refmn[3];
+  Double_t trise;
+  // cluster variables
   Int_t evtNo, channel;
   int waveID;  // distinguish between 4-different kinds of waves
   Int_t dubP_1; // pre-pile up with double peak

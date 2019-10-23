@@ -27,6 +27,7 @@ class covfefe:public Plugin{
   const double mpi0=0.1349766;
   const double mpip=0.13957018;
   double sigdE=3.25;
+  double T_0[3], tcorr[3], trefCorr[3], cdf50[3], refgaus[3];
   double theta[20]={18.75, 26.25, 33.75, 41.25, 48.75, 56.25, 63.75, 71.25, 78.75, 86.25,
                     93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
   double phi[12][2][2]={{{3.75, 11.25},{18.75, 26.25}},
@@ -82,6 +83,8 @@ class covfefe:public Plugin{
   TH1D *h1theta[2], *h1phi[2];
   TH1D *angPP[3], *piPang[3], *pi0ang[3];
   TH2D *h2corrAng;
+  // timining histograms
+  TH1D* h1t_0[3], *h1tcorr[3],*h1trefCorr[3],*h1cdf50[3],*h1refgaus[3];
 
   virtual Long_t cmdline(char * cmd);
 

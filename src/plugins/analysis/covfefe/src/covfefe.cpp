@@ -35,6 +35,13 @@ covfefe::~covfefe(){
       }
     }
   }
+  for(int i=0; i<3; i++){
+    delete h1t_0[i];
+    delete h1tcorr[i];
+    delete h1trefCorr[i];
+    delete h1cdf50[i];
+    delete h1refgaus[i];
+  }
   delete calibHist;
   delete Ecorr;
   delete integHist;
@@ -45,6 +52,16 @@ covfefe::~covfefe(){
 };
 
 Long_t covfefe::histos(){
+  for(int i=0; i<3; i++){
+    std::ostringstream name1, name2,name3,name4,name5;
+    name1<<"t_0_"; name2<<"tcorr_"; name3<<"trefCorr_"; name4<<"cdf50_"; name5<<"refgaus_";
+    name1<<i;name2<<i;name3<<i;name4<<i;name5<<i;
+    h1t_0[i]=new TH1D(name1.str().c_str(),"stats",50,-100,100);
+    h1tcorr[i]=new TH1D(name2.str().c_str(),"stats",50,-100,100);
+    h1trefCorr[i]=new TH1D(name3.str().c_str(),"stats",50,-100,100);
+    h1cdf50[i]=new TH1D(name4.str().c_str(),"stats",50,-100,100);
+    h1refgaus[i]=new TH1D(name5.str().c_str(),"stats",50,-100,100);
+  }
   std::ostringstream nameCal, ename, nameInt, inEne;
   nameCal<<"CalibCsI";
   ename<<"E_corr";
@@ -89,10 +106,12 @@ Long_t covfefe::process(){
   iclock=csimar->clock-1;
   iModule=csimar->indexCsI-1;
   iUD=csimar->ud; iFB=csimar->fb;
-  adcVal=csimar->kmu2;
+  adcVal=csimar->phei;
+  std::cout<<" ... so called adc val: "<<adcVal<<std::endl;
   intVal=csimar->intKmu2;
   phdis->Fill(csimar->phei);
   hkmu2->Fill(adcVal);
+  // timing variables
   //double t_ref=csimar->tref;
   if(adcVal > 0){
     std::cout<<" -----------------------------------" <<std::endl;
@@ -101,8 +120,15 @@ Long_t covfefe::process(){
     std::cout<<" value of iUD:    "<<iUD<<std::endl;
     std::cout<<" value of iFB:    "<<iFB<<std::endl;
     std::cout<<" value of adcVal: "<<adcVal<<std::endl;
-    h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
-    h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
+    //h1time[iclock][iFB][iUD][iModule]->Fill(adcVal);
+    //h1cali[iclock][iFB][iUD][iModule]->Fill(intVal);
+    // timing histos
+    for(int n=0; n<3; n++){
+    T_0[n]=csimar->tref[n]; tcorr[n]=csimar->tcorr[n];
+    refgaus[n]=csimar->rgaus[n];
+      h1t_0[n]->Fill(T_0[n]); h1tcorr[n]->Fill(tcorr[n]); 
+      h1refgaus[n]->Fill(refgaus[n]);
+    }
   }
   //if(t_ref> -900){
     //double t_rise=csimar->trise;
