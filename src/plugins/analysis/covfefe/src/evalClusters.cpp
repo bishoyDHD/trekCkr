@@ -71,6 +71,11 @@ void evalClusters::defHistos(){
   invM=new TH1D("invM",title2.c_str(),84.50,0.0,.210);
   Eclust=new TH1D("Eclust",title3.c_str(),100.,0.0,.300);
   primAng=new TH1D("primAng",title4.c_str(),75.0,-1.1,1.1);
+  // Cut histograms for 2 Cluster events
+  h1clstAng=new TH1D("h1Ang",title1.c_str(),75.0,-1.1,1.1);
+  h1invM=new TH1D("h1invM",title2.c_str(),84.50,0.0,.210);
+  h1Eclust=new TH1D("h1Eclst",title3.c_str(),100.,0.0,.300);
+  h1prmAng=new TH1D("h1prmAng",title4.c_str(),75.0,-1.1,1.1);
   // needed regardless of channel no.
   thetaPhi=new TH2D("h2ang", "#theta Vs. #phi",24.0,0.,M_PI,48.0,0.,2.*M_PI);
   clMltp=new TH1D("clusM"," Cluster multiplicity",10,-.5,9.5);
@@ -80,6 +85,7 @@ void evalClusters::drawHistos(){
   switch(channelNo){
     case 7:
       drawCanvas(Eclust,invM,clustAng,primAng,1);
+      drawCanvas(h1Eclust,h1invM,h1clstAng,h1prmAng,2);
       drawCanvas(thetaPhi,1);
       break;
     case 14:
@@ -110,6 +116,12 @@ void evalClusters::fillHistos(double InvMass,double opAng1,double Etot,double pr
   clustAng->Fill(opAng1);
   primAng->Fill(primOpAng);
 }
+void evalClusters::fillCutHistos(double InvMass,double opAng1,double Etot,double primOpAng){
+  h1invM->Fill(InvMass);
+  h1Eclust->Fill(Etot);
+  h1clstAng->Fill(opAng1);
+  h1prmAng->Fill(primOpAng);
+}
 void evalClusters::drawCanvas(TH2D* h2,int val){
   std::string cname="c_";
   cname+=val;
@@ -121,6 +133,15 @@ void evalClusters::drawCanvas(TH2D* h2,int val){
   h2->GetYaxis()->SetTitle(ytitle.c_str());
   h2->Draw("colz");
   c1->Write();
+}
+void evalClusters::singleCanvas(){
+  TCanvas* c2=new TCanvas("c2","cluster multiplicity",900,800);
+  c2->cd();
+  clMltp->GetXaxis()->SetTitle("number of #gamma cluster");
+  clMltp->GetXaxis()->SetTitleSize(0.045);
+  clMltp->GetYaxis()->SetTitle("conts/bin");
+  clMltp->Draw("hist");
+  c2->Write();
 }
 void evalClusters::drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,int val=1){
   std::string cname="c";
@@ -174,11 +195,4 @@ void evalClusters::drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,in
   hist4->GetYaxis()->SetTitle("conts/bin");
   hist4->Draw("hist");
   c1->Write();
-  TCanvas* c2=new TCanvas("c2","cluster multiplicity",900,800);
-  c2->cd();
-  clMltp->GetXaxis()->SetTitle("number of #gamma cluster");
-  clMltp->GetXaxis()->SetTitleSize(0.045);
-  clMltp->GetYaxis()->SetTitle("conts/bin");
-  clMltp->Draw("hist");
-  c2->Write();
 }

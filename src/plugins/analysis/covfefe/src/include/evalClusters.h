@@ -20,6 +20,7 @@ public:
   ~evalClusters();
   void defHistos();
   // fill histos for sanity checks
+  void fillCutHistos(double InvMass,double OpAng1,double Etot,double primOpAng);
   void fillHistos(double InvMass,double OpAng1,double Etot,double primOpAng);
   void fillHistos(double InvMass,double Etot,double primOpAng);
   // fill histos for centroid angles
@@ -31,6 +32,8 @@ public:
   void drawCanvas(TH1D* hist1,TH1D* hist2,TH1D* hist3,TH1D* hist4,int val);
   void setChannel(int val); // select channel no. for eval
   void fillMltp(int val);
+  void singleCanvas();
+  void singleCanvas(TH1D*);
 private:
   int channelNo; //used for iterating TCanvas and selecting No. of cluster to analyze.
   int Ncrys, Nclust;
@@ -40,6 +43,7 @@ private:
   double cpidtheta1, cpidtheta2, cpidtheta3;
   double cpidphi1, cpidphi2, cpidphi3;
   TH1D* clustAng, *primAng, *Eclust, *invM;
+  TH1D* h1clstAng, *h1prmAng, *h1Eclust, *h1invM;
   TH1D* cl1E, *cl2E, *cl3E;
   TH1D* clMltp;
   TH2D* thetaPhi;

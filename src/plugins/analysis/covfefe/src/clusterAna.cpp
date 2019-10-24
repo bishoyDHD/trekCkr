@@ -32,7 +32,7 @@ Long_t covfefe::startup_clust(){
 Long_t covfefe::process_clust(){
   if(clsmar->E_prim2>0){
       // Construct CM Lorentz vectors for 2gammas
-      std::cout<<" making sure this thing works "<<clsmar->clusterM<<" "<<clsmar->E_prim2<<" "<<clsmar->prCosTheta<<"\n";
+      //std::cout<<" making sure this thing works "<<clsmar->clusterM<<" "<<clsmar->E_prim2<<" "<<clsmar->Ncrys<<"\n";
       double piPpx=-1*clsmar->prim1px;
       double piPpy=-1*clsmar->prim1py;
       double piPpz=-1*clsmar->prim1pz;
@@ -47,6 +47,9 @@ Long_t covfefe::process_clust(){
       clustEval->fillHistos(clsmar->M_prim2,clsmar->clCosTheta,clsmar->E_prim2,clsmar->prCosTheta);
       //clustEval->fillHistos(clsmar->cpid1theta,clsmar->cpid1phi,clsmar->cpid2theta,clsmar->cpid2phi,0,0);
       clustEval->fillMltp(clsmar->clusterM);
+      if(clsmar->clusterM==2){
+        clustEval->fillCutHistos(clsmar->M_prim2,clsmar->clCosTheta,clsmar->E_prim2,clsmar->prCosTheta);
+      }
     //}
   }
 
