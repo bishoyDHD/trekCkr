@@ -282,7 +282,7 @@ Long_t Det_CsI::process(){
           delete f1; delete f2;
           break;
       }// end of switch statement
-      delete f1; delete f2;
+      //delete f1; delete f2;
     } // end of ref-time fired "if" loop
     /*
     if(firedCsI)
