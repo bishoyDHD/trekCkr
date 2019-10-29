@@ -86,8 +86,13 @@ class Det_CsI:public Plugin{
   Double_t clusE, thClus, phiClus, lowRange, upRange, tsigL;
   Double_t T_ref[3], maxfn[3], minfn[3], cf50[3], refgaus[3];
   std::vector<double> xpos, val, csThet, csPhi;
+  std::vector<double> param, parm,err,par;
   std::vector<int> idCrys, ncrys, nclus;
   std::vector<int> crysID, typeAB, gud, gno, gfb;
+  int xmin=0, xmax=250;
+  int bmin,bmax, integral;
+  double mnx,mny,max,may, diff, area;
+  double rtime, *xpeaks;
   //analysis methods and classes
   bool clus_csi;
   Long_t histos();

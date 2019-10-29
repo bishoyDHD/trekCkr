@@ -19,6 +19,7 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   loopX=false, notfire=false;
   firedCsI=false; csiT=false;
   dummy=-1000;
+  xpeaks=NULL;
 };
 
 Det_CsI::~Det_CsI(){
@@ -299,17 +300,6 @@ Long_t Det_CsI::process(){
       // Get x-bin corresponding to the max
       x1=h1Fits[indexClock][indexFB][indexUD][indexModule]->
       	GetBinLowEdge(h1Fits[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
-      //lowRange=x1-6; upRange=x1+6;
-      //TF1 f22("f22","[0]*exp(-0.5*(x-[1]/[2])**2)",lowRange,upRange);
-      //TF1* f22=new TF1("f22","gaus",lowRange,upRange);
-      //f22->SetParameter(1,x1);
-      //h1Fits[indexClock][indexFB][indexUD][indexModule]->Fit(f22,"Q");
-      //treeSing->phdstr=x1; //f22->GetMaximumX();
-      //std::cout<<" \n ---->   || "<<f22->GetMaximumX()<<" ||   <---------\n";
-      //delete f22;
-      //if(firedCsI) // go to next crystal if necessary
-        //goto nextCrys;
-      //std::cout<< " iHist: "<<iHist<<endl;
       if(x1>=50 && x1<=70){ // <-- prelim. timing cut if loop
         //std::cout<<"\n ------- Within Signal Loop Event number is:  "<<treeRaw->eventNo<<" -------\n\n";
         if(treeRaw->nChannel>=7){ // Start by checking how many CsI crystals have fired
@@ -353,7 +343,7 @@ Long_t Det_CsI::process(){
               f1->SetParLimits(ivar,mn2.parmin(ivar),mn2.parlim(ivar));
             }
 	    nfound=s->Search(h1Fits[indexClock][indexFB][indexUD][indexModule], 2,"",0.10);
-            double *xpeaks=NULL;
+	    xpeaks=new double();
 	    xpeaks=s->GetPositionX();
             double posX[2];
             for(int ivar=0; ivar<nfound; ivar++){
@@ -363,7 +353,7 @@ Long_t Det_CsI::process(){
             }
             sort(xpeaks,xpeaks+nfound);
 	    //std::cout<<"\n ---->  Gotta check the hell outta this shit \n";
-            double rtime=(xx1+xx2)/2;
+            rtime=(xx1+xx2)/2;
             f1->SetParameter(0,y1+1023*2);
             f1->SetParLimits(0,y1-61.7,y1+1723.7);
             f1->SetParameter(1,rtime+20.1);
@@ -376,7 +366,6 @@ Long_t Det_CsI::process(){
             ovrfn ffcn(xpos, xx1, xx2, val, ymax);
             // Create wrapper for minimizer
             MnUserParameters upar2;
-            std::vector<double> par(10), err(10);
             par.clear(); err.clear();
             //std::cout<< "  ----> Testing left and right x-limits: "<<xx1<< ", "<<xx2<<endl;
             for(int n=0; n<10;n+=1){
@@ -394,7 +383,6 @@ Long_t Det_CsI::process(){
             }
             std::cout<<"minimum: "<<min<<std::endl;
             MnHesse hesse;
-            std::vector<double> param;
             param.clear();
             for(int ivar=0; ivar<10; ivar+=1){
               param.push_back(migrad.Value(mn2.nameL(ivar).c_str()));
@@ -412,7 +400,6 @@ Long_t Det_CsI::process(){
                 h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
               }
             }
-            double mnx,mny,max,may;
             max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                   GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
             if(max>=60 && max<=65){
@@ -429,15 +416,14 @@ Long_t Det_CsI::process(){
                     GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
               //Integrating fitting function for more accurate gain calibration
               TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
-              int xmin=0, xmax=250;
-              int bmin=axis->FindBin(xmin);
-              int bmax=axis->FindBin(xmax);
-              int integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
+              bmin=axis->FindBin(xmin);
+              bmax=axis->FindBin(xmax);
+              integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
               integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
         		GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
               integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
         		GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
-              double area=integral-(mny*250);
+              area=integral-(mny*250);
               h1Intg->Fill(area);
               std::cout<<" =====> Value for integral1 is:" <<area<<"  "<<xpeaks[1]<<std::endl;
 	      int tAB=0;
@@ -449,7 +435,7 @@ Long_t Det_CsI::process(){
               csThet.push_back(csitheta), csPhi.push_back(csiphi);
               treeSing->thSing=csitheta;
               treeSing->phiSing=csiphi;
-              double diff=may-mny; int imod=0, igap=4*indexClock+2;
+              diff=may-mny; int imod=0, igap=4*indexClock+2;
 	      //double tsigH=h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindFirstBinAbove(.5*diff+mny);
               int csimod=(-1*treeRaw->indexCsI[i])+1;
               if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
@@ -476,7 +462,7 @@ Long_t Det_CsI::process(){
 	      if(nfound==2){
                 treeSing->ovrpLoc=xpeaks[1];
 	      }
-	      delete f1;
+	      delete f1,xpeaks;
 	      //if(loopX && csiT)
 	        goto exitLoop;
             } // <---  End of K+ decay time if loop
@@ -491,7 +477,8 @@ Long_t Det_CsI::process(){
                 f1->SetParameter(n,mn2.par(n));
                 f1->SetParLimits(n,mn2.parmin(n),mn2.parlim(n));
               }
-              double *xpeaks=s->GetPositionX();
+	      xpeaks=new double();
+              xpeaks=s->GetPositionX();
               double posX[2];
               for(int ivar=0; ivar<nfound; ivar++){
                 double a=xpeaks[ivar];
@@ -521,8 +508,6 @@ Long_t Det_CsI::process(){
       	      //std::cout<<" **************\n ******** Chi2 for F1 fit "<<f1->GetChisquare()<<endl;
               // Create wrapper for minimizer
               fitfn2 ffcn1(xpos, xx1, xx2, val, ymax);
-              std::vector<double> param;
-              std::vector<double> parm(15), err(15);
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
               for(int n=0; n<15;n+=1){
@@ -551,7 +536,6 @@ Long_t Det_CsI::process(){
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
                 h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
               }
-              double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
@@ -563,16 +547,15 @@ Long_t Det_CsI::process(){
                 mny=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
                 TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
-                int xmin=0, xmax=250;
-                int bmin=axis->FindBin(xmin);
-                int bmax=axis->FindBin(xmax);
-                int integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
+                bmin=axis->FindBin(xmin);
+                bmax=axis->FindBin(xmax);
+                integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
                 integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
                 integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
-                double diff=may-mny;
-		double area=integral-mny*250;
+                diff=may-mny;
+		area=integral-mny*250;
         	clock=indexClock;
         	fb=indexFB;
         	ud=indexUD;
@@ -613,7 +596,7 @@ Long_t Det_CsI::process(){
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
                 treeSing->tcorr[2]=(tsigL-T_ref[2]);
 		std::cout<<" --->rise time: "<<param[1]<<"\n";
-		delete f1;
+		delete f1,xpeaks;
 	        //if(loopX && csiT)
 	          goto exitLoop;
               } // <-- End of K+ decay time if loop
@@ -634,8 +617,6 @@ Long_t Det_CsI::process(){
       	      f1chi2=f1->GetChisquare();
               // Create wrapper for minimizer
               fitfn ffcn1(xpos, xx1, xx2, val, ymax);
-              std::vector<double> param;
-              std::vector<double> parm(15), err(15);
               param.clear(); parm.clear(); err.clear();
               MnUserParameters upar;
               for(int n=0; n<9;n+=1){
@@ -660,7 +641,6 @@ Long_t Det_CsI::process(){
                 h1Mnft[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, mnfit);
                 h1Diff[indexClock][indexFB][indexUD][indexModule]->SetBinContent(ivar, res);
               }
-              double mnx,mny,max,may;
               max=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
           	    GetBinLowEdge(h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetMaximumBin());
               if(max>=60 && max<=65){
@@ -677,15 +657,14 @@ Long_t Det_CsI::process(){
                     GetBinContent(h1Mnft[indexClock][indexFB][indexUD][indexModule]->FindBin(mnx));
                 //Integrating fitting function for more accurate gain calibration
                 TAxis* axis=h1Mnft[indexClock][indexFB][indexUD][indexModule]->GetXaxis();
-                int xmin=0, xmax=250;
-                int bmin=axis->FindBin(xmin);
-                int bmax=axis->FindBin(xmax);
-                int integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
+                bmin=axis->FindBin(xmin);
+                bmax=axis->FindBin(xmax);
+                integral=h1Mnft[indexClock][indexFB][indexUD][indexModule]->Integral(bmin,bmax);
                 integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(bmin)*(xmin-axis->GetBinLowEdge(bmin))/axis->GetBinWidth(bmin);
                 integral-=h1Mnft[indexClock][indexFB][indexUD][indexModule]->
                       GetBinContent(bmax)*(axis->GetBinLowEdge(bmin)-bmax)/axis->GetBinWidth(bmax);
-                double area=integral-mny*250;
+                area=integral-mny*250;
                 std::cout<<" =====> Value for integral1 is:" <<area<<endl;
                 h1Intg->Fill(area);  
 		int tAB=0;
@@ -695,7 +674,7 @@ Long_t Det_CsI::process(){
                 double csitheta=theta[indexFB][indexModule];
                 double csiphi=phi[indexClock][ud][tAB];
                 csThet.push_back(csitheta), csPhi.push_back(csiphi);
-                double diff=may-mny;
+                diff=may-mny;
                 int imod=0, igap=4*indexClock+2;
                 int csimod=(-1*treeRaw->indexCsI[i])+1;
                 if(p[0]=='u' || p[0]=='U') igap=4*(indexClock+1);
