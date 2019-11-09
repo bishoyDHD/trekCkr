@@ -44,10 +44,10 @@ class Det_CsI:public Plugin{
   boost::unordered_map<std::pair<double,double>,double, boost::hash<std::pair<double,double>>> csiph;
   boost::unordered_map<std::pair<double,double>,bool, boost::hash<std::pair<double,double>>> csiClus;
   //arranged theta[fb][crystalNo. 0-15]: f=0,b=1
-  double theta[2][16]={86.25, 78.75, 71.25, 63.75, 56.25, 48.75, 41.25, 33.75, 26.25,
-                                            63.75, 56.25, 48.75, 41.25, 33.75, 26.25, 18.75,
-                       93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,
-                                            116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25};
+  double theta[2][16]={{86.25, 78.75, 71.25, 63.75, 56.25, 48.75, 41.25, 33.75, 26.25,
+                                            63.75, 56.25, 48.75, 41.25, 33.75, 26.25, 18.75},
+	              {93.75, 101.25, 108.75, 116.25, 123.75, 131.25, 138.75, 146.25, 153.75,
+                                            116.25, 123.75, 131.25, 138.75, 146.25, 153.75, 161.25}};
   double phi[12][2][2]={{{3.75, 11.25},{18.75, 26.25}},
                         {{33.75,41.25},{48.75, 56.25}},
                       {{63.75,71.25},{78.75, 86.25}},
@@ -110,7 +110,6 @@ class Det_CsI:public Plugin{
   Long_t set_goodEvents(int, int);
   std::vector<std::pair<int,int> > listGoodEvent;
   void initVector();
-
   virtual Long_t cmdline(char * cmd);
 
   ClassDef(Det_CsI,1);
