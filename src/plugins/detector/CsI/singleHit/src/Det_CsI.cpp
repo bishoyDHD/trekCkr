@@ -20,6 +20,8 @@ Det_CsI::Det_CsI(TTree *in, TTree *out,TFile *inf_, TFile * outf_, TObject *p):P
   firedCsI=false; csiT=false;
   dummy=-1000;
   xpeaks=NULL;
+  name<<"stat_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
+  tname<<"time";
 };
 
 Det_CsI::~Det_CsI(){
@@ -31,11 +33,6 @@ Det_CsI::~Det_CsI(){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<16;iModule++){
           //delete h2Fits[iClock][iFB][iUD][iModule];
-          delete h1time[iClock][iFB][iUD][iModule];
-          delete h1Fits[iClock][iFB][iUD][iModule];
-          delete h1Amps[iClock][iFB][iUD][iModule];
-          delete h1Mnft[iClock][iFB][iUD][iModule];
-          delete h1Diff[iClock][iFB][iUD][iModule];
         }
       }
     }
@@ -56,21 +53,7 @@ Long_t Det_CsI::histos(){
     for(int iFB=0;iFB<2;iFB++){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<16;iModule++){
-          std::ostringstream name, name2, name3, name4, name5, name6, tname;
-          name<<"stat_"; name2<<"Mnfit_"; name3<<"F1fit_"; name4<<"Dhfit_"; name5<<"pHeight", name6<<"Diff";
-          tname<<"time";
-          name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name2<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name3<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name4<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name5<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
-          h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
-          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
-          h1Amps[iClock][iFB][iUD][iModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
-          h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
-          h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
+          //std::ostringstream name, name2, name3, name4, name5, name6, tname;
         }
       }
     }
@@ -175,6 +158,18 @@ Long_t Det_CsI::process(){
 
     // reference timing from 3 modules
     // timing from all 3 modules will considered
+    name<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    name2<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    name3<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    name4<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    name5<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    name6<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    tname<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    h1time[indexClock][indexFB][indexUD][indexModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
+    h1Fits[indexClock][indexFB][indexUD][indexModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
+    h1Amps[indexClock][indexFB][indexUD][indexModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
+    h1Mnft[indexClock][indexFB][indexUD][indexModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
+    h1Diff[indexClock][indexFB][indexUD][indexModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
@@ -711,6 +706,11 @@ Long_t Det_CsI::process(){
     jailbreak:
       firedCsI=true;
     } // <--- End of if loop
+    delete h1time[indexClock][indexFB][indexUD][indexModule];
+    delete h1Fits[indexClock][indexFB][indexUD][indexModule];
+    delete h1Amps[indexClock][indexFB][indexUD][indexModule];
+    delete h1Mnft[indexClock][indexFB][indexUD][indexModule];
+    delete h1Diff[indexClock][indexFB][indexUD][indexModule];
   } // <--- End of nChannel for loop
   exitLoop:
     loopX=false;

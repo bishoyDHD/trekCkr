@@ -33,6 +33,7 @@ class Det_CsI:public Plugin{
   CRTSingleCsI *treeSing;  // Output branch for CSI single hit var
   bool loopX,csiT, firedCsI, notfire;
   std::string refT();
+  std::ostringstream name, name2, name3, name4, name5, name6, tname;
  public:
   double m1, m2, x1, x2, y1, ymax, xx1, xx2, yy1, yy2, minx;
   double valx1, valx2;
@@ -101,15 +102,7 @@ class Det_CsI:public Plugin{
   Long_t finalize();
   //additional methods for an easy life
   void initVar(); //initialize storage variables
-  // clustering methods
-  Long_t histos_clus();
-  Long_t startup_clus();
-  Long_t process_clus();
-  Long_t finalize_clus();
-  Long_t setIdCsI(std::map<IdCsI,UInt_t>& mapCsI);
-  Long_t set_goodEvents(int, int);
-  std::vector<std::pair<int,int> > listGoodEvent;
-  void initVector();
+  void erase(); // erase histos at end of event
   virtual Long_t cmdline(char * cmd);
 
   ClassDef(Det_CsI,1);
