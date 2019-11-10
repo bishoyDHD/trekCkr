@@ -1908,8 +1908,8 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
       prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-      if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
-      if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
+      //if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
+      //if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
     }else
     if(numOfClus==0 && numOfsingleClus==2){
       // FIXME: Apply timing cut for clusters > 2
@@ -1946,8 +1946,8 @@ Long_t Det_ClusterCsI::process(){
       //ThreeVector for angular analysis
       prim1vec3.SetXYZ(pr1px,pr1py,pr1pz);
       prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
-      if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
-      if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
+      //if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
+      //if(prim2lv.M()<0.04 || prim2lv.M()>.160) goto exitFilltree;
     }else
     if(numOfClus<=4 && numOfsingleClus<=4){
       // FIXME: Apply timing cut for clusters > 2
@@ -1997,8 +1997,8 @@ Long_t Det_ClusterCsI::process(){
       prim2vec3.SetXYZ(pr2px,pr2py,pr2pz);
       //if(std::cos(prim1vec3.Angle(prim2vec3))>-.5) goto exitFilltree;
       // set variables for multiple clusters
-      if(prim2lv.M()<0.09 || prim2lv.M()>.180) goto exitFilltree;
-      if(E2clust<0.100 || E2clust>.300) goto exitFilltree;
+      //if(prim2lv.M()<0.09 || prim2lv.M()>.180) goto exitFilltree;
+      //if(E2clust<0.100 || E2clust>.300) goto exitFilltree;
     }
     /****************************************************
      *     Fill tree Variables

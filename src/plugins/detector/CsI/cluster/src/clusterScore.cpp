@@ -2,7 +2,7 @@
 
 //clusterVar::clusterVar(){}
 
-clusterScore::clusterScore():mass(0.1349766),cpid(1),clustEvalNo(2){
+clusterScore::clusterScore():/*mass(0.1349766),*/cpid(1),clustEvalNo(2){
  
 }
 clusterScore::~clusterScore(){
@@ -26,7 +26,7 @@ void clusterScore::init(){
 }
 // will be needed for sanity check plots and scoring
 // default is pi0
-void clusterScore::setScoreMass(double particleMass=0.1349766){
+void clusterScore::setScoreMass(double particleMass=0.0){ //0.1349766){
   mass=particleMass;
 }
 // must empty the bucket after every fill
