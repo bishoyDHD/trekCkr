@@ -243,7 +243,7 @@ Long_t Det_ClusterCsI::process(){
     std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<< "<<>> "<<tracktree->evtNum<<std::endl;
   }*/
   pr1p=tracktree->pVertpi0;
-  if(pr1p<0.185 || pr1p>0.215) goto exitLoop;
+  //if(pr1p<0.185 || pr1p>0.215) goto exitLoop;
   if(resetH)
     h2clus->Reset(); //need to reset stats in cluster event viewer
     //std::cout<<"  >>>>>>>>>>>>>>>>>> "<<ppip<<std::endl;
