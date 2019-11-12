@@ -170,7 +170,7 @@ Long_t Det_CsI::process(){
     // since this is a calibration plugin,
     // we should only consider single crystal hits
     if(treeRaw->nChannel>7) goto exitLoop;
-
+/*
     // reference timing from 3 modules
     // timing from all 3 modules will considered
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
@@ -283,7 +283,7 @@ Long_t Det_CsI::process(){
       delete h1Fits[indexClock][indexFB][indexUD][indexModule];
       //delete f1; delete f2;
     } // end of ref-time fired "if" loop
-    /*
+    
     if(firedCsI)
       goto jailbreak; */
     // Painlessly remove the both event-tag and timing modules from 
