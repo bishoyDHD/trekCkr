@@ -59,6 +59,7 @@ Long_t Det_CsI::histos(){
       for(int iUD=0;iUD<2;iUD++){
         for(int iModule=0;iModule<16;iModule++){
           //std::ostringstream name, name2, name3, name4, name5, name6, tname;
+          name<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name2<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name3<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           name4<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
@@ -66,6 +67,7 @@ Long_t Det_CsI::histos(){
           name6<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           tname<<iClock<<"_"<<iFB<<"_"<<iUD<<"_"<<iModule;
           h1time[iClock][iFB][iUD][iModule]=new TH1D(tname.str().c_str(),"stat",250,0,250);
+          h1Fits[iClock][iFB][iUD][iModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
           h1Amps[iClock][iFB][iUD][iModule]=new TH1D(name5.str().c_str(),"stat",250,0,250);
           h1Mnft[iClock][iFB][iUD][iModule]=new TH1D(name2.str().c_str(),"stat",250,0,250);
           h1Diff[iClock][iFB][iUD][iModule]=new TH1D(name6.str().c_str(),"stat",250,0,250);
@@ -170,15 +172,12 @@ Long_t Det_CsI::process(){
     // since this is a calibration plugin,
     // we should only consider single crystal hits
     if(treeRaw->nChannel>7) goto exitLoop;
-    name<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
-    h1Fits[indexClock][indexFB][indexUD][indexModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
-/*
+
+    /*
     // reference timing from 3 modules
     // timing from all 3 modules will considered
     if((treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) && 
 		    (indexClock==0 || indexClock==4 || indexClock==8)){
-      name<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
-      h1Fits[indexClock][indexFB][indexUD][indexModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -281,11 +280,12 @@ Long_t Det_CsI::process(){
           ////std::cout<<" \n\n  ------> CDF timing:  "<<(valx2-valx1)<<" \n\n";
           delete f1; delete f2;
           break;
+        default:
+          delete f1; delete f2;
+          break;
       }// end of switch statement
-      delete h1Fits[indexClock][indexFB][indexUD][indexModule];
       //delete f1; delete f2;
     } // end of ref-time fired "if" loop
-    
     if(firedCsI)
       goto jailbreak; */
     // Painlessly remove the both event-tag and timing modules from 
@@ -711,7 +711,6 @@ Long_t Det_CsI::process(){
     jailbreak:
       firedCsI=true;
     } // <--- End of if loop
-    delete h1Fits[indexClock][indexFB][indexUD][indexModule];
   } // <--- End of nChannel for loop
   exitLoop:
     loopX=false;
