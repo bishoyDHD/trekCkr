@@ -170,6 +170,8 @@ Long_t Det_CsI::process(){
     // since this is a calibration plugin,
     // we should only consider single crystal hits
     if(treeRaw->nChannel>7) goto exitLoop;
+    name<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
+    h1Fits[indexClock][indexFB][indexUD][indexModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
 /*
     // reference timing from 3 modules
     // timing from all 3 modules will considered
@@ -291,8 +293,6 @@ Long_t Det_CsI::process(){
     if(!(treeRaw->indexCsI[i]==16 && indexFB==0 && indexUD==0) ||
 		    !(indexClock==0 || indexClock==2 || indexClock==4 ||
 			    indexClock==6 || indexClock==8 || indexClock==10)){
-      name<<indexClock<<"_"<<indexFB<<"_"<<indexUD<<"_"<<indexModule;
-      h1Fits[indexClock][indexFB][indexUD][indexModule]=new TH1D(name.str().c_str(),"stat",250,0,250);
       for(UInt_t iData=0;iData<treeRaw->nSample[i];iData++){
         h1Fits[indexClock][indexFB][indexUD][indexModule]->SetBinContent(iData+1,treeRaw->data[i][iData]);
       }
@@ -710,8 +710,8 @@ Long_t Det_CsI::process(){
       } // <--- End of timing cut if loop
     jailbreak:
       firedCsI=true;
-      delete h1Fits[indexClock][indexFB][indexUD][indexModule];
     } // <--- End of if loop
+    delete h1Fits[indexClock][indexFB][indexUD][indexModule];
   } // <--- End of nChannel for loop
   exitLoop:
     loopX=false;
